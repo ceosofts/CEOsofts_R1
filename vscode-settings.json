@@ -1,0 +1,15 @@
+{
+    "css.validate": false,
+    "tailwindCSS.includeLanguages": {
+        "blade": "html",
+        "javascript": "javascript",
+        "php": "php"
+    },
+    "tailwindCSS.experimental.configFile": "tailwind.config.js",
+    "editor.quickSuggestions": {
+        "strings": true
+    },
+    "files.associations": {
+        "*.blade.php": "blade"
+    }
+}
