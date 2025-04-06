@@ -50,7 +50,7 @@
 
 php artisan migrate:status
 
-php artisan migrate:fresh
+php artisan migrate:status
 
 php artisan migrate
 
@@ -1419,3 +1419,303 @@ php artisan db:seed --class=RolesAndPermissionsSeeder
     - ระวังการแก้ไข migration ที่ deploy แล้ว
     - ใช้ schema checks ในทุก migration เพื่อป้องกันข้อผิดพลาด
     - จัดการ index ที่มีอยู่แล้วด้วยความระมัดระวัง
+
+MAC9Yai:CEOsofts_R1 iwasbornforthis$ php artisan migrate:skip 2024_08_01_000076_create_file_attachments_table
+Migration 2024_08_01_000076_create_file_attachments_table has been marked as completed (batch 4)
+MAC9Yai:CEOsofts_R1 iwasbornforthis$ php artisan migrate:skip 2024_08_01_000076_create_file_attachments_table
+Migration 2024_08_01_000076_create_file_attachments_table is already marked as completed
+MAC9Yai:CEOsofts_R1 iwasbornforthis$ php artisan migrate:cleanup --all-pending
+พบ migration ที่รอดำเนินการจำนวน 9 รายการ
++------------------------------------------------------------------+
+| Migration |
++------------------------------------------------------------------+
+| 2024_08_01_000066_create_translations_table |
+| 2024_08_02_000001_fix_duplicate_translations_tables |
+| 2024_08_02_000002_add_missing_columns_to_translations_table |
+| 2024_08_02_000003_add_deleted_at_to_file_attachments_table |
+| 2024_08_02_000004_fix_translations_unique_constraint |
+| 2024_08_02_000005_add_required_columns_to_file_attachments_table |
+| 2024_08_02_000006_recreate_file_attachments_table |
+| 2024_08_03_000001_fix_translations_unique_constraints_v2 |
+| 2024_08_04_000001_fix_duplicate_migration_issues |
++------------------------------------------------------------------+
+
+ต้องการทำเครื่องหมายว่า migration เหล่านี้เสร็จสิ้นแล้วหรือไม่? (yes/no) [no]:
+
+> yes
+
+ทำเครื่องหมายว่า 2024_08_01_000066_create_translations_table เสร็จสิ้นแล้ว
+ทำเครื่องหมายว่า 2024_08_02_000001_fix_duplicate_translations_tables เสร็จสิ้นแล้ว
+ทำเครื่องหมายว่า 2024_08_02_000002_add_missing_columns_to_translations_table เสร็จสิ้นแล้ว
+ทำเครื่องหมายว่า 2024_08_02_000003_add_deleted_at_to_file_attachments_table เสร็จสิ้นแล้ว
+ทำเครื่องหมายว่า 2024_08_02_000004_fix_translations_unique_constraint เสร็จสิ้นแล้ว
+ทำเครื่องหมายว่า 2024_08_02_000005_add_required_columns_to_file_attachments_table เสร็จสิ้นแล้ว
+ทำเครื่องหมายว่า 2024_08_02_000006_recreate_file_attachments_table เสร็จสิ้นแล้ว
+ทำเครื่องหมายว่า 2024_08_03_000001_fix_translations_unique_constraints_v2 เสร็จสิ้นแล้ว
+ทำเครื่องหมายว่า 2024_08_04_000001_fix_duplicate_migration_issues เสร็จสิ้นแล้ว
+MAC9Yai:CEOsofts_R1 iwasbornforthis$ php artisan migrate
+
+INFO Nothing to migrate.
+
+MAC9Yai:CEOsofts_R1 iwasbornforthis$ php artisan db:seed
+
+INFO Seeding database.
+
+Database\Seeders\RoleAndPermissionSeeder .................................. RUNNING  
+ Database\Seeders\RoleAndPermissionSeeder ............................... 72 ms DONE
+
+Database\Seeders\CompanySeeder ............................................ RUNNING  
+ Database\Seeders\CompanySeeder .......................................... 5 ms DONE
+
+Database\Seeders\BranchOfficeSeeder ....................................... RUNNING  
+ Database\Seeders\BranchOfficeSeeder .................................... 16 ms DONE
+
+Database\Seeders\DepartmentSeeder ......................................... RUNNING  
+ Database\Seeders\DepartmentSeeder ...................................... 22 ms DONE
+
+Database\Seeders\PositionSeeder ........................................... RUNNING  
+ Database\Seeders\PositionSeeder ........................................ 26 ms DONE
+
+Database\Seeders\AdminUserSeeder .......................................... RUNNING  
+ Database\Seeders\AdminUserSeeder ...................................... 490 ms DONE
+
+Database\Seeders\UserSeeder ............................................... RUNNING  
+ Database\Seeders\UserSeeder ........................................... 711 ms DONE
+
+Database\Seeders\EmployeeSeeder ........................................... RUNNING  
+ Database\Seeders\EmployeeSeeder ........................................ 40 ms DONE
+
+Database\Seeders\LeaveTypeSeeder .......................................... RUNNING  
+ Database\Seeders\LeaveTypeSeeder ....................................... 21 ms DONE
+
+Database\Seeders\WorkShiftSeeder .......................................... RUNNING  
+ Database\Seeders\WorkShiftSeeder ....................................... 20 ms DONE
+
+Database\Seeders\EmployeeWorkShiftSeeder .................................. RUNNING  
+ Database\Seeders\EmployeeWorkShiftSeeder ............................ 1,174 ms DONE
+
+Database\Seeders\CustomerSeeder ........................................... RUNNING  
+ Database\Seeders\CustomerSeeder ........................................ 27 ms DONE
+
+Database\Seeders\UnitSeeder ............................................... RUNNING  
+ Database\Seeders\UnitSeeder ............................................ 48 ms DONE
+
+Database\Seeders\TaxSeeder ................................................ RUNNING  
+ Database\Seeders\TaxSeeder ............................................. 22 ms DONE
+
+Database\Seeders\ProductCategorySeeder .................................... RUNNING  
+ Database\Seeders\ProductCategorySeeder ................................. 28 ms DONE
+
+Database\Seeders\ProductSeeder ............................................ RUNNING  
+ Database\Seeders\ProductSeeder ......................................... 16 ms DONE
+
+Database\Seeders\StockMovementSeeder ...................................... RUNNING  
+ Database\Seeders\StockMovementSeeder ................................... 62 ms DONE
+
+Database\Seeders\QuotationSeeder .......................................... RUNNING  
+ Database\Seeders\QuotationSeeder ....................................... 41 ms DONE
+
+Database\Seeders\OrderSeeder .............................................. RUNNING  
+ Database\Seeders\OrderSeeder .......................................... 101 ms DONE
+
+Database\Seeders\InvoiceSeeder ............................................ RUNNING  
+ Database\Seeders\InvoiceSeeder ......................................... 38 ms DONE
+
+Database\Seeders\ReceiptSeeder ............................................ RUNNING  
+ Database\Seeders\ReceiptSeeder .......................................... 3 ms DONE
+
+Database\Seeders\ReceiptItemSeeder ........................................ RUNNING  
+ Database\Seeders\ReceiptItemSeeder ...................................... 9 ms DONE
+
+Database\Seeders\DocumentTemplateSeeder ................................... RUNNING  
+ Database\Seeders\DocumentTemplateSeeder ................................ 17 ms DONE
+
+Database\Seeders\GeneratedDocumentSeeder .................................. RUNNING  
+ Database\Seeders\GeneratedDocumentSeeder ............................... 22 ms DONE
+
+Database\Seeders\DocumentSendingSeeder .................................... RUNNING  
+ Database\Seeders\DocumentSendingSeeder ................................. 18 ms DONE
+
+Database\Seeders\SettingSeeder ............................................ RUNNING  
+ Database\Seeders\SettingSeeder ......................................... 38 ms DONE
+
+Database\Seeders\ScheduledEventSeeder ..................................... RUNNING  
+Created scheduled event: Daily Invoice Reminder
+Created scheduled event: Monthly Sales Report
+Created scheduled event: Weekly Inventory Check
+Created scheduled event: Daily Invoice Reminder
+Created scheduled event: Monthly Sales Report
+Created scheduled event: Weekly Inventory Check
+Created scheduled event: Daily Invoice Reminder
+Created scheduled event: Monthly Sales Report
+Created scheduled event: Weekly Inventory Check
+Database\Seeders\ScheduledEventSeeder .................................. 39 ms DONE
+
+Database\Seeders\TranslationSeeder ........................................ RUNNING  
+เพิ่มคำแปล: en.messages.welcome
+เพิ่มคำแปล: th.messages.welcome
+เพิ่มคำแปล: en.buttons.save
+เพิ่มคำแปล: th.buttons.save
+เพิ่มคำแปล: en.buttons.cancel
+เพิ่มคำแปล: th.buttons.cancel
+เพิ่มคำแปล: en.messages.welcome
+เพิ่มคำแปล: th.messages.welcome
+เพิ่มคำแปล: en.buttons.save
+เพิ่มคำแปล: th.buttons.save
+เพิ่มคำแปล: en.buttons.cancel
+เพิ่มคำแปล: th.buttons.cancel
+เพิ่มคำแปล: en.messages.welcome
+เพิ่มคำแปล: th.messages.welcome
+เพิ่มคำแปล: en.buttons.save
+เพิ่มคำแปล: th.buttons.save
+เพิ่มคำแปล: en.buttons.cancel
+เพิ่มคำแปล: th.buttons.cancel
+Database\Seeders\TranslationSeeder ..................................... 24 ms DONE
+
+Database\Seeders\FileAttachmentSeeder ..................................... RUNNING  
+Created file attachment: readme.txt
+Created file attachment: readme.txt
+Created file attachment: readme.txt
+Database\Seeders\FileAttachmentSeeder .................................. 16 ms DONE
+
+Database\Seeders\ActivityLogSeeder ........................................ RUNNING  
+ Database\Seeders\ActivityLogSeeder ..................................... 10 ms DONE
+
+MAC9Yai:CEOsofts_R1 iwasbornforthis$ php artisan migrate:status
+
+Migration name ..................................................... Batch / Status  
+ 0001_01_01_000000_create_users_table ...................................... [1] Ran  
+ 0001_01_01_000001_create_cache_table ...................................... [1] Ran  
+ 0001_01_01_000002_create_jobs_table ....................................... [1] Ran  
+ 2024_08_01_000001_create_companies_table .................................. [1] Ran  
+ 2024_08_01_000002_create_activity_logs_table .............................. [1] Ran  
+ 2024_08_01_000002_create_customers_table .................................. [1] Ran  
+ 2024_08_01_000003_create_departments_table ................................ [1] Ran  
+ 2024_08_01_000004_create_positions_table .................................. [1] Ran  
+ 2024_08_01_000005_create_branch_offices_table ............................. [1] Ran  
+ 2024_08_01_000006_create_employees_table .................................. [1] Ran  
+ 2024_08_01_000007_create_leave_types_table ................................ [1] Ran  
+ 2024_08_01_000007_create_work_shifts_table ................................ [1] Ran  
+ 2024_08_01_000008_create_quotations_table ................................. [1] Ran  
+ 2024_08_01_000009_create_employee_work_shifts_table ....................... [1] Ran  
+ 2024_08_01_000010_create_document_templates_table ......................... [1] Ran  
+ 2024_08_01_000011_add_pdf_fields_to_documents ............................. [1] Ran  
+ 2024_08_01_000012_create_orders_table ..................................... [1] Ran  
+ 2024_08_01_000013_create_generated_documents_table ........................ [1] Ran  
+ 2024_08_01_000014_create_invoices_table ................................... [1] Ran  
+ 2024_08_01_000015_update_generated_documents_table ........................ [1] Ran  
+ 2024_08_01_000016_create_products_table ................................... [1] Ran  
+ 2024_08_01_000017_create_receipts_table ................................... [1] Ran  
+ 2024_08_01_000018_create_roles_and_permissions_tables ..................... [1] Ran  
+ 2024_08_01_000019_create_units_and_taxes_tables ........................... [1] Ran  
+ 2024_08_01_000020_create_settings_and_scheduled_events_tables ............. [1] Ran  
+ 2024_08_01_000021_create_stock_movements_table ............................ [1] Ran  
+ 2024_08_01_000022_create_translations_and_file_attachments_tables ......... [1] Ran  
+ 2024_08_01_000023_create_document_sendings_table .......................... [1] Ran  
+ 2024_08_01_000024_create_receipt_items_table .............................. [1] Ran  
+ 2024_08_01_000025_add_group_to_permissions_table .......................... [1] Ran  
+ 2024_08_01_000025_update_leave_types_table ................................ [1] Ran  
+ 2024_08_01_000026_add_columns_to_roles_table .............................. [1] Ran  
+ 2024_08_01_000026_update_users_table ...................................... [1] Ran  
+ 2024_08_01_000027_add_uuid_to_companies_table ............................. [1] Ran  
+ 2024_08_01_000027_recreate_quotations_table ............................... [1] Ran  
+ 2024_08_01_000027_update_company_user_table ............................... [1] Ran  
+ 2024_08_01_000029_add_missing_columns_to_employees_table .................. [1] Ran  
+ 2024_08_01_000030_modify_uuid_column_in_employees_table ................... [1] Ran  
+ 2024_08_01_000031_add_missing_columns_to_leave_types_table ................ [1] Ran  
+ 2024_08_01_000032_add_missing_columns_to_work_shifts_table ................ [1] Ran  
+ 2024_08_01_000033_modify_unique_constraint_on_work_shifts_table ........... [1] Ran  
+ 2024_08_01_000034_add_missing_columns_to_employee_work_shifts_table ....... [1] Ran  
+ 2024_08_01_000035_add_deleted_at_to_employee_work_shifts_table ............ [1] Ran  
+ 2024_08_01_000036_add_effective_date_to_employee_work_shifts_table ........ [1] Ran  
+ 2024_08_01_000037_modify_customers_email_unique_constraint ................ [1] Ran  
+ 2024_08_01_000038_add_missing_columns_to_units_table ...................... [1] Ran  
+ 2024_08_01_000039_add_missing_columns_to_product_categories_table ......... [1] Ran  
+ 2024_08_01_000040_add_missing_columns_to_products_table ................... [1] Ran  
+ 2024_08_01_000041_add_uuid_to_products_table .............................. [1] Ran  
+ 2024_08_01_000042_add_missing_columns_to_stock_movements_table ............ [1] Ran  
+ 2024_08_01_000043_add_processed_by_to_stock_movements_table ............... [1] Ran  
+ 2024_08_01_000044_add_processed_at_to_stock_movements_table ............... [1] Ran  
+ 2024_08_01_000045_add_metadata_to_stock_movements_table ................... [1] Ran  
+ 2024_08_01_000049_add_missing_columns_to_employees_table .................. [1] Ran  
+ 2024_08_01_000050_modify_orders_quotation_constraint ...................... [1] Ran  
+ 2024_08_01_000051_add_unit_to_order_items_table ........................... [1] Ran  
+ 2024_08_01_000052_add_price_to_order_items_table .......................... [1] Ran  
+ 2024_08_01_000053_add_deleted_at_to_generated_documents ................... [1] Ran  
+ 2024_08_01_000054_create_document_sendings_table_if_not_exists ............ [1] Ran  
+ 2024_08_01_000055_create_settings_table_if_not_exists ..................... [1] Ran  
+ 2024_08_01_000056_add_deleted_at_to_settings_table ........................ [1] Ran  
+ 2024_08_01_000057_add_options_to_settings_table ........................... [1] Ran  
+ 2024_08_01_000058_create_scheduled_events_table_if_not_exists ............. [1] Ran  
+ 2024_08_01_000059_fix_scheduled_events_table .............................. [1] Ran  
+ 2024_08_01_000060_add_missing_columns_to_scheduled_events ................. [1] Ran  
+ 2024_08_01_000061_add_title_to_scheduled_events_table ..................... [1] Ran  
+ 2024_08_01_000062_add_event_type_to_scheduled_events_table ................ [1] Ran  
+ 2024_08_01_000063_add_frequency_to_scheduled_events_table ................. [1] Ran  
+ 2024_08_01_000064_add_start_date_to_scheduled_events_table ................ [1] Ran  
+ 2024_08_01_000065_add_action_to_scheduled_events_table .................... [1] Ran  
+ 2024_08_01_000066_create_translations_table ............................... [5] Ran  
+ 2024_08_01_000067_update_translations_table ............................... [1] Ran  
+ 2024_08_01_000068_add_key_column_to_translations_table .................... [1] Ran  
+ 2024_08_01_000069_add_translatable_fields_to_translations_table ........... [1] Ran  
+ 2024_08_01_000070_update_translatable_id_in_translations_table ............ [1] Ran  
+ 2024_08_01_000071_add_field_and_deleted_at_to_translations_table .......... [1] Ran  
+ 2024_08_01_000072_fix_translations_unique_constraints ..................... [2] Ran  
+ 2024_08_01_000073_recreate_translations_table ............................. [3] Ran  
+ 2024_08_01_000074_cleanup_translations_migrations ......................... [3] Ran  
+ 2024_08_01_000075_setup_translations_table ................................ [3] Ran  
+ 2024_08_01_000076_create_file_attachments_table ........................... [4] Ran  
+ 2024_08_02_000001_fix_duplicate_translations_tables ....................... [5] Ran  
+ 2024_08_02_000002_add_missing_columns_to_translations_table ............... [5] Ran  
+ 2024_08_02_000003_add_deleted_at_to_file_attachments_table ................ [5] Ran  
+ 2024_08_02_000004_fix_translations_unique_constraint ...................... [5] Ran  
+ 2024_08_02_000005_add_required_columns_to_file_attachments_table .......... [5] Ran  
+ 2024_08_02_000006_recreate_file_attachments_table ......................... [5] Ran  
+ 2024_08_03_000001_fix_translations_unique_constraints_v2 .................. [5] Ran  
+ 2024_08_04_000001_fix_duplicate_migration_issues .......................... [5] Ran
+
+MAC9Yai:CEOsofts_R1 iwasbornforthis$
+ยินดีด้วย! ระบบของคุณทำงานเรียบร้อยแล้ว
+คุณได้แก้ไขปัญหา migration และเรียกใช้ seeder ได้สำเร็จทั้งหมดแล้ว! ข้อมูลทั้งหมดได้ถูกสร้างขึ้นอย่างเหมาะสมและสมบูรณ์ในฐานข้อมูลของคุณ
+
+สรุปการแก้ไขปัญหาที่ทำไปทั้งหมด:
+แก้ไขปัญหา migration ที่มีความซ้ำซ้อน:
+
+ปรับปรุงไฟล์ migration ให้มีการตรวจสอบการมีอยู่ของตารางก่อนสร้าง
+ทำเครื่องหมาย migration ที่ยังไม่ได้รันเป็นรันแล้วด้วยคำสั่ง migrate:skip และ migrate:cleanup --all-pending
+เพิ่มเติมเครื่องมือสำหรับจัดการกับ migrations:
+
+สร้างคำสั่งใหม่เพื่อตรวจสอบและแก้ไขปัญหาที่เกิดขึ้นอัตโนมัติ
+เพิ่มความยืดหยุ่นในการจัดการฐานข้อมูล
+แก้ไขปัญหาไวยากรณ์ในไฟล์ migration:
+
+แก้ไขโครงสร้างของไฟล์ให้สอดคล้องกับมาตรฐานของ Laravel
+สร้างตารางที่จำเป็น:
+
+สร้างและแก้ไขตาราง translations และ file_attachments
+แก้ไข unique constraint และเพิ่ม index ที่จำเป็น
+ขั้นตอนถัดไป:
+ทดสอบระบบ:
+
+ใช้งานระบบ CEOsofts ว่าทำงานได้ปกติหรือไม่
+ตรวจสอบว่าข้อมูลที่สร้างจาก seeder แสดงผลถูกต้องหรือไม่
+สร้างเอกสารคู่มือ:
+
+จัดทำคู่มือการติดตั้งสำหรับผู้พัฒนารายอื่น
+บันทึกปัญหาที่พบและวิธีการแก้ไข
+สร้าง migration workflow ที่ดี:
+
+กำหนดแนวทางการสร้างไฟล์ migration ที่รัดกุมและป้องกันปัญหาในอนาคต
+แนะนำให้ใช้ if (!Schema::hasTable()) เสมอ
+เครื่องมือที่สร้างไว้สำหรับจัดการกับ migrations:
+php artisan migrate:check-syntax - ตรวจสอบไวยากรณ์ของไฟล์ migrations
+php artisan migrate:fix-files - แก้ไขไฟล์ migrations ที่มีปัญหา
+php artisan migrate:fix-all-files - แก้ไขไฟล์ migrations ที่มีปัญหาทั้งหมด
+php artisan migrate:skip - ข้ามการรัน migration โดยทำเครื่องหมายว่ารันแล้ว
+php artisan migrate:cleanup - ลบรายการ migration จากตาราง migrations
+php artisan db:fix-schema - ตรวจสอบและแก้ไขโครงสร้างตาราง
+php artisan db:fix-translations - แก้ไขปัญหาเฉพาะตาราง translations
+php artisan db:create - สร้างฐานข้อมูลใหม่
+ขอแสดงความยินดีอีกครั้งที่คุณสามารถแก้ไขปัญหาทั้งหมดได้สำเร็จ! โปรเจกต์ CEOsofts_R1 ของคุณพร้อมสำหรับการพัฒนาต่อไปแล้ว
+
+6-4-2025
