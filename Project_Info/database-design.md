@@ -48,6 +48,14 @@
 
 ## โครงสร้างฐานข้อมูลแบ่งตาม Domain
 
+php artisan migrate:status
+
+php artisan migrate:fresh
+
+php artisan migrate
+
+php artisan db:seed
+
 ```
 +-------------------+         +----------------------+         +--------------------+
 |   Organization    |<------->|    HumanResources    |<------->|        Sales       |
@@ -681,6 +689,340 @@
 **Unique**: [company_id, code], [company_id, barcode]  
 **Full Text Index**: [name, description]
 
+## รายละเอียดตารางเพิ่มเติม
+
+### 1. ตารางหน่วยวัด (units)
+
+| Column            | Type            | Properties                  | Description                           |
+| ----------------- | --------------- | --------------------------- | ------------------------------------- |
+| id                | bigint unsigned | primary key, auto-increment |                                       |
+| company_id        | bigint unsigned | foreign key -> companies.id | onDelete: cascade                     |
+| name              | varchar(50)     | not null                    | ชื่อหน่วย (เช่น ชิ้น, กล่อง)          |
+| code              | varchar(10)     | not null                    | รหัสหน่วย (เช่น PCS, BOX)             |
+| symbol            | varchar(10)     | nullable                    | สัญลักษณ์ (เช่น kg, m)                |
+| base_unit_id      | bigint unsigned | nullable, FK -> units.id    | หน่วยพื้นฐาน (เช่น 1 กล่อง = 12 ชิ้น) |
+| conversion_factor | decimal(15,5)   | default: 1.00000            | ตัวคูณสำหรับการแปลงหน่วย              |
+| is_active         | boolean         | default: true               |                                       |
+| created_at        | timestamp       |                             |                                       |
+| updated_at        | timestamp       |                             |                                       |
+| deleted_at        | timestamp       | nullable                    |                                       |
+
+**Indexes**: company_id, name, code, is_active  
+**Unique**: [company_id, code]
+
+### 2. ตารางภาษี (taxes)
+
+| Column         | Type            | Properties                  | Description                   |
+| -------------- | --------------- | --------------------------- | ----------------------------- |
+| id             | bigint unsigned | primary key, auto-increment |                               |
+| company_id     | bigint unsigned | foreign key -> companies.id | onDelete: cascade             |
+| name           | varchar(100)    | not null                    | ชื่อภาษี (เช่น VAT 7%)        |
+| code           | varchar(20)     | not null                    | รหัสภาษี (เช่น VAT7)          |
+| rate           | decimal(5,2)    | not null                    | อัตราภาษี (เช่น 7.00)         |
+| type           | varchar(20)     | default: 'percentage'       | percentage, fixed             |
+| is_compound    | boolean         | default: false              | คำนวณทับภาษีอื่นหรือไม่       |
+| apply_to       | varchar(50)     | default: 'all'              | all, specific_items           |
+| is_recoverable | boolean         | default: true               | เป็นภาษีที่เรียกคืนได้หรือไม่ |
+| is_active      | boolean         | default: true               |                               |
+| metadata       | json            | nullable                    |                               |
+| created_at     | timestamp       |                             |                               |
+| updated_at     | timestamp       |                             |                               |
+| deleted_at     | timestamp       | nullable                    |                               |
+
+**Indexes**: company_id, name, code, rate, is_active  
+**Unique**: [company_id, code]
+
+### 3. ตารางประเภทการลา (leave_types) - รายละเอียดเพิ่มเติม
+
+| Column               | Type            | Properties                  | Description                              |
+| -------------------- | --------------- | --------------------------- | ---------------------------------------- |
+| id                   | bigint unsigned | primary key, auto-increment |                                          |
+| company_id           | bigint unsigned | foreign key -> companies.id | onDelete: cascade                        |
+| name                 | varchar(100)    | not null                    | ชื่อประเภทการลา (เช่น ลาป่วย, ลาพักร้อน) |
+| code                 | varchar(20)     | nullable                    | รหัสประเภทการลา (เช่น SICK, VAC)         |
+| description          | text            | nullable                    |                                          |
+| color                | varchar(7)      | default: '#cccccc'          | สีที่ใช้แสดงในปฏิทิน (Hex code)          |
+| annual_allowance     | decimal(8,2)    | default: 0                  | จำนวนวันต่อปี (0 = ไม่จำกัด)             |
+| max_consecutive_days | int             | default: 0                  | จำนวนวันติดต่อสูงสุด (0 = ไม่จำกัด)      |
+| min_advance_notice   | int             | default: 0                  | จำนวนวันล่วงหน้าขั้นต่ำ                  |
+| requires_approval    | boolean         | default: true               | ต้องได้รับการอนุมัติหรือไม่              |
+| requires_document    | boolean         | default: false              | ต้องแนบเอกสารหรือไม่                     |
+| is_paid              | boolean         | default: true               | เป็นวันลาแบบได้รับค่าจ้างหรือไม่         |
+| count_as_work_day    | boolean         | default: false              | นับเป็นวันทำงานหรือไม่                   |
+| is_active            | boolean         | default: true               |                                          |
+| metadata             | json            | nullable                    |                                          |
+| created_at           | timestamp       |                             |                                          |
+| updated_at           | timestamp       |                             |                                          |
+| deleted_at           | timestamp       | nullable                    |                                          |
+
+**Indexes**: company_id, name, code, is_active, is_paid  
+**Unique**: [company_id, code]
+
+### 4. ตารางการตั้งค่าระบบ (settings)
+
+| Column      | Type            | Properties                            | Description                          |
+| ----------- | --------------- | ------------------------------------- | ------------------------------------ |
+| id          | bigint unsigned | primary key, auto-increment           |                                      |
+| company_id  | bigint unsigned | nullable, foreign key -> companies.id | onDelete: cascade                    |
+| group       | varchar(50)     | not null                              | กลุ่มการตั้งค่า (เช่น system, email) |
+| key         | varchar(100)    | not null                              | คีย์สำหรับการตั้งค่า                 |
+| value       | text            | nullable                              | ค่าของการตั้งค่า                     |
+| type        | varchar(20)     | default: 'string'                     | string, boolean, integer, json, etc. |
+| is_public   | boolean         | default: false                        | เป็นการตั้งค่าสาธารณะหรือไม่         |
+| description | text            | nullable                              | คำอธิบายการตั้งค่า                   |
+| sort_order  | int             | default: 0                            | ลำดับการแสดงผล                       |
+| created_at  | timestamp       |                                       |                                      |
+| updated_at  | timestamp       |                                       |                                      |
+
+**Indexes**: company_id, [group, key], is_public  
+**Unique**: [company_id, group, key]
+
+### 5. ตารางผู้ใช้งาน (users) - รายละเอียดเพิ่มเติม
+
+| Column                    | Type            | Properties                  | Description                        |
+| ------------------------- | --------------- | --------------------------- | ---------------------------------- |
+| id                        | bigint unsigned | primary key, auto-increment |                                    |
+| uuid                      | ulid            | unique                      |                                    |
+| name                      | varchar(255)    | not null                    |                                    |
+| email                     | varchar(255)    | unique, not null            |                                    |
+| email_verified_at         | timestamp       | nullable                    | เวลาที่ยืนยันอีเมลแล้ว             |
+| password                  | varchar(255)    | not null                    |                                    |
+| two_factor_secret         | text            | nullable                    | สำหรับการยืนยันตัวตน 2 ขั้นตอน     |
+| two_factor_recovery_codes | text            | nullable                    | รหัสสำรองสำหรับการยืนยัน 2 ขั้นตอน |
+| remember_token            | varchar(100)    | nullable                    |                                    |
+| is_active                 | boolean         | default: true               |                                    |
+| is_system_admin           | boolean         | default: false              | เป็นผู้ดูแลระบบสูงสุดหรือไม่       |
+| language                  | varchar(5)      | default: 'th'               | ภาษาที่ใช้งาน (th, en, etc.)       |
+| timezone                  | varchar(50)     | default: 'Asia/Bangkok'     | เขตเวลาที่ใช้                      |
+| last_login_at             | timestamp       | nullable                    | การเข้าสู่ระบบล่าสุด               |
+| profile_photo_path        | varchar(2048)   | nullable                    | ที่อยู่รูปโปรไฟล์                  |
+| settings                  | json            | nullable                    | การตั้งค่าส่วนตัว                  |
+| created_at                | timestamp       |                             |                                    |
+| updated_at                | timestamp       |                             |                                    |
+| deleted_at                | timestamp       | nullable                    |                                    |
+
+**Indexes**: email, is_active, is_system_admin, last_login_at
+
+### 6. ตารางเหตุการณ์แบบตั้งเวลา (scheduled_events)
+
+| Column           | Type            | Properties                            | Description                          |
+| ---------------- | --------------- | ------------------------------------- | ------------------------------------ |
+| id               | bigint unsigned | primary key, auto-increment           |                                      |
+| company_id       | bigint unsigned | nullable, foreign key -> companies.id | onDelete: cascade                    |
+| title            | varchar(255)    | not null                              | ชื่อเหตุการณ์                        |
+| description      | text            | nullable                              |                                      |
+| event_type       | varchar(50)     | not null                              | report, notification, invoice, etc.  |
+| frequency        | varchar(20)     | not null                              | once, daily, weekly, monthly, yearly |
+| start_date       | date            | not null                              | วันที่เริ่มต้น                       |
+| end_date         | date            | nullable                              | วันที่สิ้นสุด (ถ้ามี)                |
+| time             | time            | nullable                              | เวลาที่จะทำงาน                       |
+| day_of_week      | varchar(10)     | nullable                              | วันในสัปดาห์ (1-7)                   |
+| day_of_month     | int             | nullable                              | วันที่ในเดือน (1-31)                 |
+| month            | int             | nullable                              | เดือน (1-12)                         |
+| timezone         | varchar(50)     | default: 'Asia/Bangkok'               | เขตเวลา                              |
+| is_active        | boolean         | default: true                         |                                      |
+| last_run         | timestamp       | nullable                              | เวลาที่ทำงานล่าสุด                   |
+| next_run         | timestamp       | nullable                              | เวลาที่จะทำงานถัดไป                  |
+| action           | varchar(255)    | not null                              | Action class หรือ command ที่จะเรียก |
+| parameters       | json            | nullable                              | พารามิเตอร์สำหรับ action             |
+| output           | text            | nullable                              | ผลลัพธ์ล่าสุด                        |
+| created_by       | bigint unsigned | nullable, foreign key -> users.id     | onDelete: set null                   |
+| notifications_to | json            | nullable                              | ผู้ที่จะได้รับการแจ้งเตือน           |
+| metadata         | json            | nullable                              |                                      |
+| created_at       | timestamp       |                                       |                                      |
+| updated_at       | timestamp       |                                       |                                      |
+
+**Indexes**: company_id, event_type, frequency, is_active, next_run, created_by
+
+### 7. ตารางหมวดหมู่สินค้า (product_categories)
+
+| Column      | Type            | Properties                            | Description                       |
+| ----------- | --------------- | ------------------------------------- | --------------------------------- |
+| id          | bigint unsigned | primary key, auto-increment           |                                   |
+| company_id  | bigint unsigned | foreign key -> companies.id           | onDelete: cascade                 |
+| name        | varchar(255)    | not null                              | ชื่อหมวดหมู่                      |
+| code        | varchar(30)     | nullable                              | รหัสหมวดหมู่                      |
+| description | text            | nullable                              | รายละเอียดหมวดหมู่                |
+| is_active   | boolean         | default: true                         |                                   |
+| parent_id   | bigint unsigned | nullable, FK -> product_categories.id | หมวดหมู่หลัก (สำหรับหมวดหมู่ย่อย) |
+| image       | varchar(255)    | nullable                              | รูปภาพประกอบหมวดหมู่              |
+| sort_order  | int             | default: 0                            | ลำดับการแสดงผล                    |
+| metadata    | json            | nullable                              | ข้อมูลเพิ่มเติม                   |
+| created_at  | timestamp       |                                       |                                   |
+| updated_at  | timestamp       |                                       |                                   |
+| deleted_at  | timestamp       | nullable                              |                                   |
+
+**Indexes**: company_id, parent_id, name, code, is_active  
+**Unique**: [company_id, code]
+
+### 8. ตารางสินค้า/บริการ (products) - รายละเอียดเพิ่มเติม
+
+| Column        | Type            | Properties                            | Description                        |
+| ------------- | --------------- | ------------------------------------- | ---------------------------------- |
+| id            | bigint unsigned | primary key, auto-increment           |                                    |
+| uuid          | ulid            | unique                                | Universal Unique ID (ULID)         |
+| company_id    | bigint unsigned | foreign key -> companies.id           | onDelete: cascade                  |
+| category_id   | bigint unsigned | nullable, FK -> product_categories.id | onDelete: set null                 |
+| code          | varchar(50)     | nullable                              | รหัสสินค้า                         |
+| sku           | varchar(50)     | nullable                              | Stock Keeping Unit                 |
+| barcode       | varchar(100)    | nullable                              | บาร์โค้ดสินค้า                     |
+| name          | varchar(255)    | not null                              | ชื่อสินค้า                         |
+| description   | text            | nullable                              | รายละเอียด                         |
+| unit_id       | bigint unsigned | nullable, FK -> units.id              | หน่วยสินค้า                        |
+| tax_id        | bigint unsigned | nullable, FK -> taxes.id              | ภาษี                               |
+| selling_price | decimal(15,2)   | not null                              | ราคาขาย                            |
+| buying_price  | decimal(15,2)   | nullable                              | ราคาซื้อ/ต้นทุน                    |
+| is_inventory  | boolean         | default: true                         | เป็นสินค้าคงคลังหรือไม่            |
+| is_service    | boolean         | default: false                        | เป็นบริการหรือไม่                  |
+| min_stock     | decimal(15,2)   | default: 0                            | สต๊อกขั้นต่ำ                       |
+| opening_stock | decimal(15,2)   | default: 0                            | สต๊อกเริ่มต้น                      |
+| current_stock | decimal(15,2)   | default: 0                            | สต๊อกปัจจุบัน (คำนวณจาก movements) |
+| weight        | decimal(10,3)   | nullable                              | น้ำหนัก (kg)                       |
+| length        | decimal(10,2)   | nullable                              | ความยาว (cm)                       |
+| width         | decimal(10,2)   | nullable                              | ความกว้าง (cm)                     |
+| height        | decimal(10,2)   | nullable                              | ความสูง (cm)                       |
+| image         | varchar(255)    | nullable                              | รูปภาพหลัก                         |
+| is_active     | boolean         | default: true                         | สถานะการใช้งาน                     |
+| is_featured   | boolean         | default: false                        | แสดงเป็นสินค้าแนะนำ                |
+| tags          | json            | nullable                              | แท็กสินค้า                         |
+| attributes    | json            | nullable                              | คุณลักษณะเพิ่มเติม                 |
+| metadata      | json            | nullable                              | ข้อมูลเพิ่มเติม                    |
+| created_at    | timestamp       |                                       |                                    |
+| updated_at    | timestamp       |                                       |                                    |
+| deleted_at    | timestamp       | nullable                              |                                    |
+| created_by    | bigint unsigned | nullable, FK -> users.id              | ผู้สร้าง                           |
+| updated_by    | bigint unsigned | nullable, FK -> users.id              | ผู้แก้ไขล่าสุด                     |
+
+**Indexes**: company_id, category_id, name, code, sku, barcode, is_active, is_inventory, is_service  
+**Unique**: [company_id, code], [company_id, sku], [company_id, barcode]  
+**Full Text Index**: [name, description]
+
+### 9. ตารางการเคลื่อนไหวสินค้า (stock_movements)
+
+| Column          | Type            | Properties                        | Description                         |
+| --------------- | --------------- | --------------------------------- | ----------------------------------- |
+| id              | bigint unsigned | primary key, auto-increment       |                                     |
+| company_id      | bigint unsigned | foreign key -> companies.id       | onDelete: cascade                   |
+| product_id      | bigint unsigned | foreign key -> products.id        | onDelete: cascade                   |
+| reference_type  | varchar(50)     | not null                          | order, invoice, adjustment, etc     |
+| reference_id    | bigint unsigned | not null                          | ID ของเอกสารอ้างอิง                 |
+| quantity        | decimal(15,2)   | not null                          | จำนวนที่เปลี่ยนแปลง (+ เข้า, - ออก) |
+| before_quantity | decimal(15,2)   | not null                          | จำนวนก่อนเปลี่ยนแปลง                |
+| after_quantity  | decimal(15,2)   | not null                          | จำนวนหลังเปลี่ยนแปลง                |
+| unit_id         | bigint unsigned | nullable, FK -> units.id          | หน่วยสินค้า                         |
+| unit_cost       | decimal(15,2)   | nullable                          | ต้นทุนต่อหน่วย                      |
+| note            | text            | nullable                          | บันทึกเพิ่มเติม                     |
+| created_by      | bigint unsigned | nullable, foreign key -> users.id | ผู้บันทึกรายการ                     |
+| created_at      | timestamp       |                                   |                                     |
+| updated_at      | timestamp       |                                   |                                     |
+
+**Indexes**: company_id, product_id, [reference_type, reference_id], created_at, created_by
+
+### 10. ตารางวิธีการชำระเงิน (payment_methods) - รายละเอียดเพิ่มเติม
+
+| Column                | Type            | Properties                  | Description                       |
+| --------------------- | --------------- | --------------------------- | --------------------------------- |
+| id                    | bigint unsigned | primary key, auto-increment |                                   |
+| company_id            | bigint unsigned | foreign key -> companies.id | onDelete: cascade                 |
+| name                  | varchar(100)    | not null                    | ชื่อวิธีการชำระเงิน               |
+| code                  | varchar(30)     | not null                    | รหัสวิธีการชำระเงิน               |
+| description           | text            | nullable                    | รายละเอียดเพิ่มเติม               |
+| instructions          | text            | nullable                    | คำแนะนำสำหรับลูกค้า               |
+| account_number        | varchar(50)     | nullable                    | เลขที่บัญชี (ถ้ามี)               |
+| account_name          | varchar(100)    | nullable                    | ชื่อบัญชี (ถ้ามี)                 |
+| bank_name             | varchar(100)    | nullable                    | ชื่อธนาคาร (ถ้ามี)                |
+| bank_branch           | varchar(100)    | nullable                    | สาขาธนาคาร (ถ้ามี)                |
+| is_online             | boolean         | default: false              | เป็นการชำระเงินออนไลน์หรือไม่     |
+| requires_verification | boolean         | default: true               | ต้องตรวจสอบการชำระเงินก่อนหรือไม่ |
+| gateway_code          | varchar(50)     | nullable                    | รหัสการเชื่อมต่อ payment gateway  |
+| config                | json            | nullable                    | การตั้งค่าสำหรับ payment gateway  |
+| is_active             | boolean         | default: true               |                                   |
+| sort_order            | int             | default: 0                  | ลำดับการแสดงผล                    |
+| metadata              | json            | nullable                    |                                   |
+| created_at            | timestamp       |                             |                                   |
+| updated_at            | timestamp       |                             |                                   |
+| deleted_at            | timestamp       | nullable                    |                                   |
+
+**Indexes**: company_id, code, is_active, is_online  
+**Unique**: [company_id, code]
+
+### 11. ตารางบทบาทผู้ใช้งาน (roles)
+
+| Column         | Type            | Properties                   | Description                            |
+| -------------- | --------------- | ---------------------------- | -------------------------------------- |
+| id             | bigint unsigned | primary key, auto-increment  |                                        |
+| company_id     | bigint unsigned | nullable, FK -> companies.id | onDelete: cascade (null = system role) |
+| name           | varchar(100)    | not null                     | ชื่อบทบาท                              |
+| guard_name     | varchar(100)    | default: 'web'               | guard name (web, api, etc)             |
+| display_name   | varchar(100)    | nullable                     | ชื่อแสดงผลภาษาไทย                      |
+| description    | text            | nullable                     | คำอธิบาย                               |
+| is_system_role | boolean         | default: false               | เป็นบทบาทระดับระบบหรือไม่              |
+| is_default     | boolean         | default: false               | เป็นบทบาทเริ่มต้นหรือไม่               |
+| level          | int             | default: 0                   | ระดับความสำคัญ (สูงกว่า = มากกว่า)     |
+| metadata       | json            | nullable                     |                                        |
+| created_at     | timestamp       |                              |                                        |
+| updated_at     | timestamp       |                              |                                        |
+
+**Indexes**: company_id, name, guard_name, is_system_role, is_default, level  
+**Unique**: [name, guard_name, company_id]
+
+### 12. ตารางสิทธิ์การใช้งาน (permissions)
+
+| Column       | Type            | Properties                  | Description                  |
+| ------------ | --------------- | --------------------------- | ---------------------------- |
+| id           | bigint unsigned | primary key, auto-increment |                              |
+| name         | varchar(100)    | not null                    | ชื่อสิทธิ์                   |
+| guard_name   | varchar(100)    | default: 'web'              | guard name (web, api, etc)   |
+| display_name | varchar(100)    | nullable                    | ชื่อแสดงผลภาษาไทย            |
+| description  | text            | nullable                    | คำอธิบาย                     |
+| group        | varchar(50)     | nullable                    | กลุ่มของสิทธิ์               |
+| is_core      | boolean         | default: false              | เป็นสิทธิ์หลักของระบบหรือไม่ |
+| created_at   | timestamp       |                             |                              |
+| updated_at   | timestamp       |                             |                              |
+
+**Indexes**: name, guard_name, group, is_core  
+**Unique**: [name, guard_name]
+
+### 13. ความสัมพันธ์ระหว่างบทบาทและสิทธิ์ (role_has_permissions)
+
+| Column        | Type            | Properties           | Description       |
+| ------------- | --------------- | -------------------- | ----------------- |
+| permission_id | bigint unsigned | FK -> permissions.id | onDelete: cascade |
+| role_id       | bigint unsigned | FK -> roles.id       | onDelete: cascade |
+
+**Primary Key**: [permission_id, role_id]  
+**Indexes**: permission_id, role_id
+
+### 14. ความสัมพันธ์ระหว่างผู้ใช้และบทบาท (model_has_roles)
+
+| Column     | Type            | Properties     | Description                        |
+| ---------- | --------------- | -------------- | ---------------------------------- |
+| role_id    | bigint unsigned | FK -> roles.id | onDelete: cascade                  |
+| model_type | varchar(255)    | not null       | โมเดลของผู้ใช้ (App\\Models\\User) |
+| model_id   | bigint unsigned | not null       | ID ของผู้ใช้                       |
+
+**Primary Key**: [role_id, model_id, model_type]  
+**Indexes**: [model_id, model_type]
+
+### 15. ความสัมพันธ์ระหว่างผู้ใช้และบริษัท (company_user)
+
+| Column           | Type            | Properties                  | Description                        |
+| ---------------- | --------------- | --------------------------- | ---------------------------------- |
+| id               | bigint unsigned | primary key, auto-increment |                                    |
+| company_id       | bigint unsigned | FK -> companies.id          | onDelete: cascade                  |
+| user_id          | bigint unsigned | FK -> users.id              | onDelete: cascade                  |
+| is_default       | boolean         | default: false              | เป็นบริษัทเริ่มต้นของผู้ใช้หรือไม่ |
+| status           | varchar(20)     | default: 'active'           | active, suspended, pending         |
+| role             | varchar(50)     | nullable                    | บทบาทในบริษัท (CEO, CFO, etc)      |
+| invitation_token | varchar(100)    | nullable                    | โทเค็นคำเชิญ                       |
+| invited_at       | timestamp       | nullable                    | วันเวลาที่เชิญ                     |
+| accepted_at      | timestamp       | nullable                    | วันเวลาที่ยอมรับคำเชิญ             |
+| created_at       | timestamp       |                             |                                    |
+| updated_at       | timestamp       |                             |                                    |
+
+**Indexes**: company_id, user_id, is_default, status  
+**Unique**: [company_id, user_id]
+
 ## ตารางระบบ และ Audit
 
 ### 1. activity_logs
@@ -854,4 +1196,226 @@
     - ตารางระดับกลาง: departments, positions, branch_offices, roles, permissions
     - ตารางอื่นๆ ตามลำดับความสัมพันธ์
 
-2. \*\*การตั้งชื่อ
+2. **การตั้งชื่อ Migration**:
+
+    - ใช้รูปแบบ `YYYY_MM_DD_NNNNNN_<action>_<table_name>_table.php`
+    - เช่น: `2024_08_01_000001_create_companies_table.php`
+    - เรียงลำดับตามการพึ่งพา (dependencies)
+
+3. **วิธีการเขียน Migration**:
+
+    - กำหนด foreign keys อย่างชัดเจนพร้อม `onDelete` และ `onUpdate`
+    - กำหนด indexes ทุกครั้ง
+    - เพิ่ม `softDeletes()` ในตารางที่จำเป็น
+    - ใช้ `timestamps()` ในทุกตาราง
+    - ระบุ character set และ collation ให้ชัดเจนถ้าจำเป็น
+
+4. **Checkpoint Migrations**:
+
+    - สร้าง migration สำหรับ seed data สำคัญ
+    - กำหนด migration เพื่อ update โครงสร้างในอนาคต
+    - แยกการสร้างตารางและการเพิ่ม foreign keys ในกรณีที่มีความซับซ้อน
+
+## การจัดการ Multi-tenancy
+
+ระบบนี้ใช้แนวทาง multi-tenancy แบบ **Single Database, Shared Schema** โดยมีหลักการดังนี้:
+
+1. **แยกข้อมูลด้วย Company ID**:
+
+    - ทุกตารางที่มีข้อมูลของลูกค้ามี column `company_id`
+    - ใช้ Global Scope ใน Laravel เพื่อกรองข้อมูลตาม company_id โดยอัตโนมัติ
+
+2. **สิทธิ์การเข้าถึง**:
+
+    - ผู้ใช้สามารถเข้าถึงได้เฉพาะข้อมูลของบริษัทที่ตนเองมีสิทธิ์
+    - มี pivot table `company_user` เพื่อเชื่อมโยงผู้ใช้กับบริษัท
+
+3. **Real-time Tenant Switching**:
+
+    - ผู้ใช้สามารถสลับระหว่างบริษัทต่างๆ ที่ตนเองมีสิทธิ์ได้
+    - จัดเก็บ current company ID ใน session
+
+4. **Shared Resources**:
+    - ตารางบางอย่างเช่น users, jobs เป็น shared resources ไม่แยกตาม company
+    - ตารางอื่นๆ เช่น settings, document_templates มีการแยกตาม company
+
+## แนวปฏิบัติในการพัฒนา
+
+1. **กฎการใช้งาน Domain Scope**:
+
+    - ไฟล์ migrations ควรอยู่ใน `database/migrations`
+    - Models ควรอยู่ใน domain ที่เหมาะสมตามหลัก DDD
+    - สร้าง interfaces และ repositories ตามแนวทาง DDD
+
+2. **ข้อกำหนดในการเขียน Model**:
+
+    - ใช้ trait `HasCompanyScope` สำหรับ model ที่แยกตาม company
+    - กำหนด relations อย่างชัดเจน
+    - ใช้ UUID/ULID สำหรับตารางสำคัญ
+    - ใช้ soft deletes เมื่อเหมาะสม
+
+3. **แนวทางการอัพเกรดฐานข้อมูล**:
+    - สร้าง migration ใหม่ทุกครั้งที่มีการเปลี่ยนแปลงโครงสร้าง
+    - หลีกเลี่ยงการแก้ไข migration ที่ถูก deploy แล้ว
+    - ให้ migration ทำงานได้ทั้งกับฐานข้อมูลเปล่าและฐานข้อมูลที่มีข้อมูลอยู่แล้ว
+    - มีการทดสอบการ rollback
+
+## สรุปและการนำไปใช้
+
+การออกแบบฐานข้อมูลนี้มีจุดมุ่งหมายเพื่อสร้างระบบที่มีความยืดหยุ่น ปรับขยายได้ และรองรับการทำงานแบบ multi-tenant อย่างสมบูรณ์ โดยใช้แนวคิด DDD (Domain-Driven Design) เพื่อแบ่งส่วนความรับผิดชอบอย่างชัดเจน
+
+ในการพัฒนาระบบ CEOsofts นี้ เราจะยึดตามโครงสร้างฐานข้อมูลที่ออกแบบไว้นี้ พร้อมทั้งปรับปรุงเมื่อมีความต้องการใหม่เกิดขึ้น โดยคำนึงถึงการรักษาความสมบูรณ์ของข้อมูลและประสิทธิภาพในการทำงาน
+
+## การจัดการสิทธิ์และการเข้าถึงข้อมูล
+
+### แนวทางการจัดการสิทธิ์แบบ RBAC & ABAC
+
+CEOsofts ใช้แนวทางผสมผสานระหว่าง Role-Based Access Control (RBAC) และ Attribute-Based Access Control (ABAC):
+
+1. **Role-Based Access Control**:
+
+    - กำหนดสิทธิ์ตามบทบาท (Roles) เช่น admin, manager, accountant, employee
+    - บทบาทประกอบด้วยชุดสิทธิ์ (Permissions) ที่กำหนดว่าทำอะไรได้บ้าง
+    - บทบาทเชื่อมโยงกับผู้ใช้งานผ่านตาราง `model_has_roles`
+
+2. **Attribute-Based Access Control**:
+
+    - กำหนดการเข้าถึงโดยพิจารณาจากแอตทริบิวต์อื่นๆ เช่น company_id, user_id, is_owner
+    - ใช้ Policies และ Gates ของ Laravel เพื่อตรวจสอบการเข้าถึง
+    - มีการนำ HasCompanyScope มาใช้เพื่อกรองข้อมูลตามบริษัท
+
+3. **Multi-Level Access Control**:
+    - สิทธิ์ระดับระบบ (System Level) - จัดการโดย superadmin
+    - สิทธิ์ระดับบริษัท (Company Level) - จัดการโดย company admin
+    - สิทธิ์ระดับแผนก (Department Level) - จัดการโดยหัวหน้าแผนก
+    - สิทธิ์ระดับผู้ใช้ (User Level) - สิทธิ์เฉพาะตัวพนักงาน
+
+## การพัฒนา Multi-tenancy กับ Laravel
+
+### 1. การใช้งาน HasCompanyScope Trait
+
+เราได้สร้าง trait `HasCompanyScope` เพื่อนำไปใช้กับทุก Model ที่ต้องการแบ่งแยกข้อมูลตามบริษัท:
+
+```php
+// ตัวอย่างการใช้งาน HasCompanyScope ใน Model
+use App\Domain\Shared\Traits\HasCompanyScope;
+
+class Invoice extends Model
+{
+    use HasCompanyScope;
+
+    // ...model code...
+}
+```
+
+Trait นี้ทำงานดังนี้:
+
+-   เพิ่ม global scope ให้กับทุกคำสั่ง query โดยอัตโนมัติ
+-   กรองข้อมูลเฉพาะบริษัทปัจจุบันที่ผู้ใช้กำลังใช้งานอยู่
+-   มีเมธอดพิเศษสำหรับทำงานข้ามบริษัท เช่น `withoutCompanyScope()` และ `forCompany()`
+
+### 2. การจัดการข้อมูลบริษัทปัจจุบันด้วย CompanySessionService
+
+เราได้สร้าง service `CompanySessionService` เพื่อจัดการกับการเลือกและเปลี่ยนบริษัทปัจจุบัน:
+
+```php
+// ตัวอย่างการใช้งาน
+$companyService = app(CompanySessionService::class);
+$currentCompanyId = $companyService->getCurrentCompanyId();
+
+// เปลี่ยนบริษัท
+$companyService->setCurrentCompanyId($newCompanyId);
+```
+
+Service นี้ช่วยจัดการ:
+
+-   การเก็บ company_id ปัจจุบันใน session
+-   การตรวจสอบสิทธิ์การเข้าถึงบริษัท
+-   การดึงรายชื่อบริษัททั้งหมดที่ผู้ใช้มีสิทธิ์เข้าถึง
+
+### 3. รูปแบบ Domain-Driven Design (DDD)
+
+เพื่อให้โค้ดมีความเป็นระเบียบและบำรุงรักษาได้ง่าย เราได้จัดโครงสร้างโปรเจคตามแนวทาง DDD:
+
+```
+app/
+├── Domain/
+│   ├── DocumentGeneration/
+│   │   ├── Commands/
+│   │   ├── Events/
+│   │   ├── Listeners/
+│   │   ├── Models/
+│   │   ├── Repositories/
+│   │   └── Services/
+│   ├── HumanResources/
+│   ├── Inventory/
+│   ├── Organization/
+│   ├── Sales/
+│   ├── Settings/
+│   └── Shared/
+│       └── Traits/
+│           └── HasCompanyScope.php
+└── Http/
+```
+
+## การสร้างและจัดการฐานข้อมูล
+
+### 1. สร้างฐานข้อมูลด้วย Custom Command
+
+เราได้สร้าง command `db:create` สำหรับการสร้างฐานข้อมูลโดยง่าย:
+
+```bash
+php artisan db:create ceosofts_db_R1
+```
+
+### 2. การใช้งาน Migration
+
+หลังจากสร้างฐานข้อมูลแล้ว ใช้คำสั่งต่อไปนี้เพื่อสร้างตาราง:
+
+```bash
+# สร้างฐานข้อมูลใหม่ (ใช้เมื่อต้องการเริ่มต้นใหม่)
+php artisan migrate:fresh
+
+# เพิ่ม migration ใหม่
+php artisan migrate
+
+# ตรวจสอบสถานะ migration
+php artisan migrate:status
+```
+
+### 3. การเตรียมข้อมูลตั้งต้น (Seeding)
+
+เพื่อเตรียมข้อมูลพื้นฐานสำหรับการเริ่มใช้งานระบบ:
+
+```bash
+# seed ข้อมูลพื้นฐานทั้งหมด
+php artisan db:seed
+
+# seed ข้อมูลเฉพาะ class
+php artisan db:seed --class=RolesAndPermissionsSeeder
+```
+
+## ข้อควรระวังและคำแนะนำในการพัฒนา
+
+1. **ความปลอดภัยของข้อมูล**:
+
+    - ตรวจสอบ `company_id` ในทุกคำสั่ง query ที่เขียนเอง
+    - ใช้ HasCompanyScope กับทุก model ที่แบ่งแยกตามบริษัท
+    - ระวังการใช้ `withoutCompanyScope()` เพราะจะข้ามการตรวจสอบบริษัท
+
+2. **ประสิทธิภาพ**:
+
+    - ออกแบบ index ของตารางให้เหมาะสมกับรูปแบบการค้นหา
+    - ใช้ eager loading เมื่อดึงข้อมูลที่มีความสัมพันธ์กัน
+    - ระวังการใช้ json columns ในการค้นหาข้อมูลปริมาณมาก
+
+3. **การสร้าง Models**:
+
+    - ใช้ trait `HasCompanyScope` กับทุกโมเดลที่ต้องแยกตามบริษัท
+    - กำหนด fillable, casts, relationships ให้ครบถ้วนและชัดเจน
+    - เพิ่ม method scopes ที่จำเป็นเพื่อช่วยในการ query
+
+4. **การ Deployment**:
+    - ระวังการแก้ไข migration ที่ deploy แล้ว
+    - ใช้ schema checks ในทุก migration เพื่อป้องกันข้อผิดพลาด
+    - จัดการ index ที่มีอยู่แล้วด้วยความระมัดระวัง

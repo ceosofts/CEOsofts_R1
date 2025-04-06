@@ -21,11 +21,13 @@ return new class extends Migration
         ];
         
         foreach ($tables as $table) {
-            Schema::table($table, function (Blueprint $table) {
-                $table->foreignId('last_generated_document_id')->nullable()->constrained('generated_documents')->nullOnDelete();
-                $table->timestamp('last_pdf_generated_at')->nullable();
-                $table->boolean('needs_pdf_regeneration')->default(false);
-            });
+            if (Schema::hasTable($table)) {
+                Schema::table($table, function (Blueprint $table) {
+                    $table->foreignId('last_generated_document_id')->nullable()->constrained('generated_documents')->nullOnDelete();
+                    $table->timestamp('last_pdf_generated_at')->nullable();
+                    $table->boolean('needs_pdf_regeneration')->default(false);
+                });
+            }
         }
     }
 
@@ -43,12 +45,14 @@ return new class extends Migration
         ];
         
         foreach ($tables as $table) {
-            Schema::table($table, function (Blueprint $table) {
-                $table->dropForeign(['last_generated_document_id']);
-                $table->dropColumn('last_generated_document_id');
-                $table->dropColumn('last_pdf_generated_at');
-                $table->dropColumn('needs_pdf_regeneration');
-            });
+            if (Schema::hasTable($table)) {
+                Schema::table($table, function (Blueprint $table) {
+                    $table->dropForeign(['last_generated_document_id']);
+                    $table->dropColumn('last_generated_document_id');
+                    $table->dropColumn('last_pdf_generated_at');
+                    $table->dropColumn('needs_pdf_regeneration');
+                });
+            }
         }
     }
 };
