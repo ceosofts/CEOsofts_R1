@@ -57,6 +57,37 @@ php artisan migrate
 php artisan db:seed
 
 ```
+
+### Domain Organization
+
+บริษัท (companies), สาขา (branch_offices), แผนก (departments), ตำแหน่งงาน (positions)
+
+### Domain Human Resources
+
+พนักงาน (employees), กะการทำงาน (work_shifts), ประเภทการลา (leave_types), การขอลา (leave_requests)
+
+### Domain Sales
+
+ลูกค้า (customers), ใบเสนอราคา (quotations), คำสั่งซื้อ (orders), ใบกำกับภาษี/ใบแจ้งหนี้ (invoices), ใบเสร็จรับเงิน (receipts)
+
+### Domain Inventory
+
+สินค้า (products), หมวดหมู่สินค้า (product_categories), หน่วยวัด (units), ภาษี (taxes), การเคลื่อนไหวสต็อก (stock_movements)
+
+### Domain Finance
+
+การชำระเงิน (payments), วิธีการชำระเงิน (payment_methods)
+
+### Domain Settings
+
+การตั้งค่า (settings), เหตุการณ์แบบตั้งเวลา (scheduled_events), การแปลภาษา (translations)
+
+### System Tables
+
+ผู้ใช้งาน (users), บทบาท (roles), สิทธิ์การใช้งาน (permissions), บันทึกกิจกรรม (activity_logs), ไฟล์แนบ (file_attachments)
+
+
+
 +-------------------+         +----------------------+         +--------------------+
 |   Organization    |<------->|    HumanResources    |<------->|        Sales       |
 +-------------------+         +----------------------+         +--------------------+
