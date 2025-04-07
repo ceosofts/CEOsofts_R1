@@ -2,43 +2,53 @@
 
 namespace App\Domain\Organization\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Domain\Shared\Traits\HasCompanyScope;
+use App\Domain\Shared\Traits\HasUlid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Str;
 
 class Company extends Model
 {
-    use HasFactory, SoftDeletes;
-
+    use HasUlid, SoftDeletes;
+    
     protected $fillable = [
-        'uuid',
         'name',
-        'code',
+        'tax_id',
         'address',
         'phone',
         'email',
-        'tax_id',
         'website',
         'logo',
         'is_active',
-        'status',
-        'settings',
-        'metadata',
+        'settings'
     ];
-
+    
     protected $casts = [
-        'settings' => 'json',
-        'metadata' => 'json',
         'is_active' => 'boolean',
+        'settings' => 'array',
     ];
-
-    protected static function boot()
+    
+    /**
+     * แผนกในบริษัท
+     */
+    public function departments()
     {
-        parent::boot();
-
-        static::creating(function ($model) {
-            $model->uuid = (string) Str::uuid();
-        });
+        return $this->hasMany(Department::class);
+    }
+    
+    /**
+     * พนักงานในบริษัท
+     */
+    public function employees()
+    {
+        return $this->hasMany(\App\Domain\HumanResources\Models\Employee::class);
+    }
+    
+    /**
+     * สาขาของบริษัท
+     */
+    public function branches()
+    {
+        return $this->hasMany(BranchOffice::class);
     }
 }
