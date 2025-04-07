@@ -1,366 +1,362 @@
-# โครงสร้างไฟล์สำหรับ CEOsofts_R1 (DDD Architecture)
+# โครงสร้างไฟล์ CEOsofts R1
 
-## แนวคิดหลักในการออกแบบโครงสร้าง
+## ภาพรวม
 
-CEOsofts_R1 ได้รับการออกแบบตามหลักการของ Domain-Driven Design (DDD) ซึ่งแบ่งแยกโค้ดออกเป็นชั้น (layers) ตามความรับผิดชอบที่แตกต่างกัน:
+CEOsofts R1 ใช้แนวทาง Domain-Driven Design (DDD) ในการจัดองค์ประกอบของโค้ด ทำให้โค้ดมีความเป็นระเบียบและบำรุงรักษาง่าย โดยแบ่งโค้ดออกเป็นส่วนต่างๆ ตาม Domain ทางธุรกิจ
 
-1. **Domain Layer** - เป็นหัวใจของระบบ ประกอบด้วย business logic และ business rules
-2. **Application Layer** - ทำหน้าที่ประสานงานระหว่าง Domain และชั้นอื่นๆ
-3. **Infrastructure Layer** - จัดการรายละเอียดทางเทคนิค เช่น การเชื่อมต่อกับฐานข้อมูล
-4. **UI Layer** - ส่วนติดต่อกับผู้ใช้งาน
-
-การแบ่งโค้ดในลักษณะนี้ช่วยให้ระบบ:
-
--   มีความชัดเจนในความรับผิดชอบของแต่ละส่วน
--   ทำการทดสอบได้ง่าย
--   มีความยืดหยุ่นต่อการเปลี่ยนแปลงในอนาคต
--   ลดการพึ่งพาระหว่างองค์ประกอบต่างๆ
-
-## โครงสร้างโฟลเดอร์หลัก
+## โครงสร้างไดเร็กทอรีหลัก
 
 ```
-CEOsofts_R1/                      # โปรเจคหลัก
-├── app/                          # โค้ดหลักของแอพพลิเคชั่น
-│   ├── Domain/                   # Domain Layer - ประกอบด้วย business logic และ business rules
-│   │   ├── Organization/         # Organization Domain (Companies, Departments, etc.)
-│   │   ├── HumanResources/       # HR Domain (Employees, Workshift, Leaves, etc.)
-│   │   ├── Sales/                # Sales Domain (Customers, Orders, Invoices, etc.)
-│   │   ├── Finance/              # Finance Domain (Payments, Accounts, etc.)
-│   │   ├── Inventory/            # Inventory Domain (Products, Stock, etc.)
-│   │   ├── Settings/             # Settings Domain (Users, Roles, Permissions, etc.)
-│   │   ├── DocumentGeneration/   # Document Generation Domain (PDF Documents, Templates, etc.)
-│   │   └── Shared/               # Shared elements ระหว่าง domains
-│   │
-│   ├── Application/              # Application Layer - ประสานงานระหว่าง Domain และชั้นอื่นๆ
-│   │   ├── Commands/             # Command handlers
-│   │   ├── Queries/              # Query handlers
-│   │   ├── DTOs/                 # Data Transfer Objects
-│   │   ├── Events/               # Application events
-│   │   ├── Interfaces/           # Application interfaces
-│   │   └── Services/             # Application services
-│   │
-│   ├── Infrastructure/           # Infrastructure Layer - รายละเอียดทางเทคนิค
-│   │   ├── Repositories/         # Repository implementations
-│   │   ├── Services/             # Service implementations
-│   │   ├── Persistence/          # Database-specific code
-│   │   ├── External/             # External service integration
-│   │   └── Support/              # Support utilities
-│   │
-│   ├── UI/                       # User Interface Layer
-│   │   ├── Web/                  # Web interface (Controllers, Livewire/Inertia)
-│   │   ├── API/                  # API interface
-│   │   └── Console/              # CLI interface
-│   │
-│   ├── Http/                     # Laravel HTTP components
-│   │   ├── Controllers/          # Controllers (legacy, แนะนำให้ใช้ app/UI/Web/Controllers แทน)
-│   │   ├── Middleware/           # HTTP middleware
-│   │   └── Requests/             # Form requests
-│   │
-│   └── Providers/                # Service providers
-│       ├── AppServiceProvider.php
-│       ├── DomainServiceProvider.php
-│       └── ...
+CEOsofts_R1/
+├── app/                      # โค้ดหลักของระบบ
+│   ├── Console/              # คำสั่ง Artisan
+│   ├── Domain/               # โค้ดแยกตาม Domain (DDD)
+│   ├── Exceptions/           # Exception Handlers
+│   ├── Http/                 # Controllers, Middleware, Requests
+│   ├── Providers/            # Service Providers
+│   └── Support/              # Utilities & Helper functions
+├── bootstrap/                # โค้ด Bootstrap ของ Laravel
+├── config/                   # ไฟล์การตั้งค่าต่างๆ
+├── database/                 # Migrations, Seeds, Factories
+│   ├── migrations/           # ไฟล์ Database Migrations
+│   └── seeders/              # ไฟล์ Database Seeders
+├── lang/                     # ข้อความภาษาต่างๆ
+├── public/                   # Assets สาธารณะ, index.php
+├── resources/                # Views, Assets ต้นฉบับ
+│   ├── css/                  # CSS ต้นฉบับ
+│   ├── js/                   # JavaScript ต้นฉบับ
+│   └── views/                # Blade Templates
+├── routes/                   # ไฟล์กำหนด Routes
+├── storage/                  # ไฟล์ที่ระบบสร้างขึ้น
+├── tests/                    # Test Cases
+├── vendor/                   # Dependencies (Composer)
+└── Project_Info/             # เอกสารโครงการ
+```
+
+## โครงสร้าง DDD (Domain-Driven Design)
+
+โครงสร้าง Domain-Driven Design ถูกจัดอยู่ในโฟลเดอร์ `app/Domain/` โดยแต่ละ Domain มีโครงสร้างภายในคล้ายกัน:
+
+```
+app/Domain/
+├── Organization/             # Domain: การจัดการองค์กร
+│   ├── Actions/              # Business Actions/Use Cases
+│   ├── DataTransferObjects/  # DTOs
+│   ├── Events/               # Domain Events
+│   ├── Exceptions/           # Domain-specific Exceptions
+│   ├── Models/               # Eloquent Models
+│   ├── Policies/             # Authorization Policies
+│   ├── Repositories/         # Repository Pattern
+│   └── Services/             # Domain Services
 │
-├── bootstrap/                    # Laravel bootstrap files
-├── config/                       # Configuration files
-├── database/                     # Database-related files
-│   ├── migrations/               # Database migrations
-│   ├── factories/                # Model factories
-│   └── seeders/                  # Database seeders
+├── HumanResources/           # Domain: ทรัพยากรบุคคล
+│   ├── Actions/
+│   ├── DataTransferObjects/
+│   ├── Events/
+│   ├── Exceptions/
+│   ├── Models/
+│   ├── Policies/
+│   ├── Repositories/
+│   └── Services/
 │
-├── docker/                       # Docker-related files
-│   └── mysql/                    # MySQL configuration and init scripts
-│       └── create-database.sql   # Database initialization script
+├── Sales/                    # Domain: การขาย
+│   ├── Actions/
+│   ├── DataTransferObjects/
+│   ├── Events/
+│   ├── Exceptions/
+│   ├── Models/
+│   ├── Policies/
+│   ├── Repositories/
+│   └── Services/
 │
-├── public/                       # Public assets
-├── resources/                    # Frontend resources
-│   ├── js/                       # JavaScript files
-│   │   ├── Components/           # Vue/React components organized by domain
-│   │   └── Pages/                # Page components organized by domain
-│   │
-│   ├── views/                    # Blade templates organized by domain
-│   │   ├── organizations/        # Organization-related views
-│   │   ├── human-resources/      # HR-related views
-│   │   ├── sales/                # Sales-related views
-│   │   └── ...
-│   │
-│   ├── css/                      # CSS/SCSS files
-│   └── lang/                     # Language files
-│       ├── th/                   # Thai language (default)
-│       └── en/                   # English language
+├── Finance/                  # Domain: การเงิน
+│   ├── Actions/
+│   ├── DataTransferObjects/
+│   ├── Events/
+│   ├── Exceptions/
+│   ├── Models/
+│   ├── Policies/
+│   ├── Repositories/
+│   └── Services/
 │
-├── routes/                       # Route definitions
-│   ├── web.php                   # Web routes
-│   ├── api.php                   # API routes
-│   └── domains/                  # Domain-specific routes
-│       ├── organization.php      # Organization domain routes
-│       ├── human-resources.php   # HR domain routes
-│       └── ...
+├── Inventory/                # Domain: คลังสินค้า
+│   ├── Actions/
+│   ├── DataTransferObjects/
+│   ├── Events/
+│   ├── Exceptions/
+│   ├── Models/
+│   ├── Policies/
+│   ├── Repositories/
+│   └── Services/
 │
-├── storage/                      # Laravel storage
-├── tests/                        # Test files
-│   ├── Feature/                  # Feature tests organized by domain
-│   │   ├── Organization/         # Organization domain tests
-│   │   ├── HumanResources/       # HR domain tests
-│   │   └── ...
-│   │
-│   ├── Unit/                     # Unit tests organized by domain
-│   │   ├── Domain/               # Domain layer tests
-│   │   ├── Application/          # Application layer tests
-│   │   └── ...
-│   │
-│   └── Integrations/             # Integration tests
+├── Settings/                 # Domain: การตั้งค่าระบบ
+│   ├── Actions/
+│   ├── DataTransferObjects/
+│   ├── Events/
+│   ├── Exceptions/
+│   ├── Models/
+│   ├── Policies/
+│   ├── Repositories/
+│   └── Services/
 │
-├── vendor/                       # Composer dependencies
-├── node_modules/                 # NPM dependencies
-├── Project_Info/                 # Project documentation and information
-│   ├── database-design.md        # Database schema and design documentation
-│   ├── development-workflow.md   # Development workflow guidelines
-│   └── ...
-│
-├── .env                          # Environment variables for Docker
-├── .env.local                    # Environment variables for local development
-├── docker-compose.yml           # Docker Compose configuration
-├── composer.json                # PHP dependencies
-└── package.json                 # JavaScript dependencies
+└── Shared/                   # Shared Components
+    ├── Actions/
+    ├── DataTransferObjects/
+    ├── Events/
+    ├── Exceptions/
+    ├── Models/
+    ├── Policies/
+    ├── Repositories/
+    ├── Services/
+    └── Traits/               # Shared Traits (เช่น HasCompanyScope)
 ```
 
-## โครงสร้างแต่ละ Domain
+## คำอธิบายโครงสร้างภายใน Domain
 
-แต่ละโฟลเดอร์ใน `app/Domain/` จะมีโครงสร้างเหมือนกัน เพื่อความสม่ำเสมอและง่ายต่อการเข้าใจ:
+แต่ละ Domain จะมีโครงสร้างภายในที่แบ่งตามหน้าที่ ดังนี้:
 
-```
-Domain/
-├── Organization/
-│   ├── Models/                    # Eloquent models
-│   ├── ValueObjects/              # Value Objects สำหรับข้อมูลที่มีความหมายในตัวเอง
-│   ├── Events/                    # Domain Events
-│   ├── Exceptions/                # Domain-specific Exceptions
-│   ├── Repositories/              # Repository Interfaces (contracts)
-│   │   └── Contracts/             # Repository Interfaces
-│   ├── Services/                  # Domain Services
-│   │   ├── Contracts/             # Service Interfaces
-│   │   └── Implementations/       # Service Implementations
-│   ├── DTOs/                      # Data Transfer Objects
-│   ├── Factories/                 # Domain object factories
-│   ├── Policies/                  # Authorization policies
-│   └── Enums/                     # Enumerations
-```
+### Actions
 
-## โครงสร้าง Application Layer
+ส่วนนี้ประกอบด้วยคลาสที่จัดการ business logic เฉพาะ โดยออกแบบให้เป็นคลาสเดียว มีหน้าที่เดียว (Single Responsibility)
 
-Application Layer ทำหน้าที่เป็นตัวกลางระหว่าง Domain Layer และ UI Layer:
+**ตัวอย่าง:**
 
-```
-Application/
-├── Commands/                      # Command handlers
-│   ├── Organization/              # Organization domain commands
-│   │   ├── CreateCompanyCommand.php
-│   │   ├── UpdateCompanyCommand.php
-│   │   └── ...
-│   └── ...
-│
-├── Queries/                       # Query handlers
-│   ├── Organization/              # Organization domain queries
-│   │   ├── GetCompanyByIdQuery.php
-│   │   ├── ListCompaniesQuery.php
-│   │   └── ...
-│   └── ...
-│
-├── DTOs/                          # Data Transfer Objects
-│   ├── Organization/
-│   │   ├── CompanyDTO.php
-│   │   └── ...
-│   └── ...
-│
-├── Events/                        # Application Events
-│   ├── UserRegisteredEvent.php
-│   └── ...
-│
-└── Services/                      # Application Services
-    ├── OrganizationService.php
-    ├── HumanResourcesService.php
-    └── ...
-```
+-   `CreateCompanyAction.php` - สร้างบริษัทใหม่
+-   `UpdateEmployeeAction.php` - อัปเดตข้อมูลพนักงาน
+-   `CreateInvoiceAction.php` - สร้างใบแจ้งหนี้ใหม่
 
-## โครงสร้าง Infrastructure Layer
+### Models
 
-Infrastructure Layer จัดการกับรายละเอียดทางเทคนิคและการเชื่อมต่อกับระบบภายนอก:
+แบบจำลองข้อมูลที่ใช้ Eloquent ORM ของ Laravel
 
-```
-Infrastructure/
-├── Repositories/                  # Repository Implementations
-│   ├── Organization/
-│   │   ├── EloquentCompanyRepository.php
-│   │   └── ...
-│   └── ...
-│
-├── Services/                      # Service Implementations
-│   ├── Pdf/
-│   │   ├── DomPdfAdapter.php
-│   │   └── ...
-│   ├── Email/
-│   │   ├── MailServiceAdapter.php
-│   │   └── ...
-│   └── ...
-│
-├── Persistence/                   # Database-specific code
-│   ├── Eloquent/
-│   │   ├── EloquentBaseRepository.php
-│   │   └── ...
-│   └── ...
-│
-├── External/                      # External service integration
-│   ├── Payment/
-│   │   ├── PaymentGatewayAdapter.php
-│   │   └── ...
-│   ├── Sms/
-│   │   └── ...
-│   └── ...
-│
-└── Support/                       # Support utilities
-    ├── Traits/
-    │   ├── HasCompanyScope.php     # Trait สำหรับ multi-tenancy
-    │   └── ...
-    └── Helpers/
-        ├── DateHelper.php
-        └── ...
-```
+**ตัวอย่าง:**
 
-## โครงสร้าง UI Layer
+-   `Company.php` - โมเดลบริษัท
+-   `Employee.php` - โมเดลพนักงาน
+-   `Product.php` - โมเดลสินค้า
 
-UI Layer แบ่งออกเป็น 3 ส่วนหลัก:
+### Repositories
 
-### 1. Web UI (สำหรับ web browser)
+ส่วนที่จัดการการเข้าถึงข้อมูล แยกการทำงานกับฐานข้อมูลออกจาก business logic
 
-```
-UI/
-├── Web/
-│   ├── Controllers/               # Web controllers
-│   │   ├── Organization/
-│   │   │   ├── CompanyController.php
-│   │   │   └── ...
-│   │   └── ...
-│   │
-│   ├── Livewire/                  # Livewire components
-│   │   ├── Organization/
-│   │   │   ├── CompanyForm.php
-│   │   │   ├── CompanyList.php
-│   │   │   └── ...
-│   │   └── ...
-│   │
-│   ├── ViewModels/                # View models for Blade templates
-│   │   ├── Organization/
-│   │   │   ├── CompanyViewModel.php
-│   │   │   └── ...
-│   │   └── ...
-│   │
-│   └── Middleware/                # Web-specific middleware
-│       ├── SetupCompanyContext.php
-│       └── ...
+**ตัวอย่าง:**
+
+-   `CompanyRepository.php` - เข้าถึงข้อมูลบริษัท
+-   `EmployeeRepository.php` - เข้าถึงข้อมูลพนักงาน
+-   `ProductRepository.php` - เข้าถึงข้อมูลสินค้า
+
+### Services
+
+บริการที่ทำงานกับหลาย entity หรือมีความซับซ้อนมากกว่า Actions
+
+**ตัวอย่าง:**
+
+-   `CompanyService.php` - บริการจัดการบริษัท
+-   `PayrollService.php` - บริการคำนวณเงินเดือน
+-   `InvoicingService.php` - บริการออกใบแจ้งหนี้
+
+### Events
+
+เหตุการณ์ที่เกิดขึ้นในระบบ ใช้สำหรับการสื่อสารระหว่าง Domain
+
+**ตัวอย่าง:**
+
+-   `CompanyCreated.php` - เหตุการณ์เมื่อสร้างบริษัทใหม่
+-   `InvoiceIssued.php` - เหตุการณ์เมื่อออกใบแจ้งหนี้
+-   `EmployeeHired.php` - เหตุการณ์เมื่อจ้างพนักงานใหม่
+
+### Policies
+
+ใช้สำหรับกำหนดสิทธิ์การเข้าถึงทรัพยากร
+
+**ตัวอย่าง:**
+
+-   `CompanyPolicy.php` - นโยบายการเข้าถึงข้อมูลบริษัท
+-   `EmployeePolicy.php` - นโยบายการเข้าถึงข้อมูลพนักงาน
+-   `InvoicePolicy.php` - นโยบายการเข้าถึงใบแจ้งหนี้
+
+## คำอธิบาย Domain หลัก
+
+### Organization
+
+จัดการข้อมูลพื้นฐานขององค์กร เช่น บริษัท สาขา แผนก ตำแหน่งงาน
+
+**โมเดลหลัก:** Company, BranchOffice, Department, Position
+
+### HumanResources
+
+จัดการข้อมูลพนักงาน การลางาน การเข้างาน กะการทำงาน
+
+**โมเดลหลัก:** Employee, Leave, Attendance, WorkShift
+
+### Sales
+
+จัดการการขาย ลูกค้า ใบเสนอราคา ใบสั่งซื้อ ใบแจ้งหนี้
+
+**โมเดลหลัก:** Customer, Quotation, Order, Invoice
+
+### Finance
+
+จัดการการเงิน การชำระเงิน ใบเสร็จ
+
+**โมเดลหลัก:** Payment, Receipt, BankAccount, PaymentMethod
+
+### Inventory
+
+จัดการสินค้าและคลังสินค้า
+
+**โมเดลหลัก:** Product, ProductCategory, StockMovement, Unit
+
+### Settings
+
+จัดการการตั้งค่าระบบ
+
+**โมเดลหลัก:** Setting, ScheduledEvent, Translation
+
+### Shared
+
+คอมโพเนนต์ที่ใช้ร่วมกันระหว่าง Domain ต่างๆ
+
+**โมเดลหลัก:** ActivityLog, FileAttachment
+
+## Traits สำคัญ
+
+### HasCompanyScope
+
+Trait หลักสำหรับการทำ multi-tenancy โดยจะกรองข้อมูลตาม company_id โดยอัตโนมัติ
+
+**ตัวอย่างการใช้งาน:**
+
+```php
+use App\Domain\Shared\Traits\HasCompanyScope;
+
+class Employee extends Model
+{
+    use HasCompanyScope;
+
+    // ...model definition...
+}
 ```
 
-### 2. API
+### HasUlid
 
-```
-UI/
-├── API/
-│   ├── Controllers/               # API controllers
-│   │   ├── V1/                    # API version 1
-│   │   │   ├── Organization/
-│   │   │   │   ├── CompanyController.php
-│   │   │   │   └── ...
-│   │   │   └── ...
-│   │   └── ...
-│   │
-│   ├── Resources/                 # API resources
-│   │   ├── Organization/
-│   │   │   ├── CompanyResource.php
-│   │   │   └── ...
-│   │   └── ...
-│   │
-│   ├── Requests/                  # API request validators
-│   │   ├── Organization/
-│   │   │   ├── CreateCompanyRequest.php
-│   │   │   └── ...
-│   │   └── ...
-│   │
-│   └── Middleware/                # API-specific middleware
-│       ├── ApiAuthentication.php
-│       └── ...
+Trait สำหรับการใช้งาน ULID (Universally Unique Lexicographically Sortable Identifier)
+
+**ตัวอย่างการใช้งาน:**
+
+```php
+use App\Domain\Shared\Traits\HasUlid;
+
+class Product extends Model
+{
+    use HasUlid;
+
+    // ...model definition...
+}
 ```
 
-### 3. Console
+## คำสั่ง Artisan ที่เพิ่มเข้ามา
 
-```
-UI/
-└── Console/
-    └── Commands/                  # Console commands
-        ├── Organization/
-        │   ├── ImportCompanyDataCommand.php
-        │   └── ...
-        └── ...
-```
+คำสั่ง Artisan เพิ่มเติมทั้งหมดอยู่ในโฟลเดอร์ `app/Console/Commands/`:
 
-## การนำไปใช้
+### FixTranslationsUniqueConstraints
 
-ในการพัฒนาระบบ CEOsofts_R1 ตามโครงสร้างนี้ ให้ดำเนินการตามลำดับดังนี้:
+แก้ไข unique constraints ในตาราง translations
 
-1. **กำหนดขอบเขตของแต่ละ Domain** - เริ่มต้นด้วยการแบ่งระบบออกเป็นโดเมนต่างๆ ตามความรับผิดชอบทางธุรกิจ
+### FixTranslationsTable
 
-2. **สร้าง Domain Model** - ออกแบบและสร้าง entities, value objects, repositories, และ domain services
+แก้ไขปัญหากับตาราง translations โดยรวม
 
-3. **สร้าง Application Services** - สร้าง application services, commands และ queries ที่ใช้ domain models
+### FixMigrationFiles
 
-4. **พัฒนา Infrastructure Layer** - สร้าง repository implementations และ service adapters
+แก้ไขไวยากรณ์ของไฟล์ migration
 
-5. **พัฒนา UI Layer** - สร้าง controllers, views, และ API endpoints ที่ใช้ application services
+### FixDatabaseSchema
 
-## คำแนะนำเพิ่มเติม
+ตรวจสอบและแก้ไขโครงสร้างตารางในฐานข้อมูล
 
--   **Domain Layer ควรเป็นอิสระ** - Domain Layer ไม่ควรพึ่งพาชั้นอื่นๆ
--   **Application Layer เป็นตัวกลาง** - Application Layer เป็นตัวกลางระหว่าง Domain และ Infrastructure/UI
+### FixAllMigrationFiles
 
--   **การจัดการ Dependencies** - ใช้ Dependency Injection เพื่อลดการเชื่อมต่อโดยตรงระหว่างชั้นต่างๆ
+แก้ไขไฟล์ migration ทั้งหมดที่มีปัญหา
 
--   **Service Providers** - ลงทะเบียน interfaces และ implementations ใน service providers
+### CreateDatabase
 
--   **Global Scopes สำหรับ Multi-tenancy** - ใช้ global scopes ใน Eloquent models เพื่อแยกข้อมูลตาม company_id
+สร้างฐานข้อมูล MySQL ใหม่
 
--   **Authorization** - ใช้ Policies สำหรับการตรวจสอบสิทธิ์ในการเข้าถึงข้อมูล
+### CheckMigrationSyntax
 
--   **Validations** - ใช้ Form Requests สำหรับการตรวจสอบข้อมูลที่ถูกส่งมา
+ตรวจสอบไวยากรณ์ของไฟล์ migration
 
-## ตัวอย่างการทำงานของระบบ
+## ไฟล์การตั้งค่าหลัก
 
-### 1. การสร้าง Company ใหม่
+### .env
 
-```
-UI/Web/Controllers/Organization/CompanyController
-  ↓ (calls)
-Application/Commands/Organization/CreateCompanyCommand
-  ↓ (calls)
-Domain/Organization/Services/CompanyService
-  ↓ (calls)
-Domain/Organization/Repositories/CompanyRepository
-  ↓ (implemented by)
-Infrastructure/Repositories/Organization/EloquentCompanyRepository
-  ↓ (uses)
-Domain/Organization/Models/Company
+ไฟล์การตั้งค่าสภาพแวดล้อม สำหรับเก็บค่า configuration ต่างๆ
+
+### .env.local
+
+ไฟล์การตั้งค่าสภาพแวดล้อมสำหรับการใช้งานในเครื่อง local
+
+## การติดตั้งและใช้งานโครงการ
+
+1. Clone repository:
+
+```bash
+git clone https://github.com/yourrepository/CEOsofts_R1.git
+cd CEOsofts_R1
 ```
 
-### 2. การดึงข้อมูล Companies
+2. ติดตั้ง dependencies:
 
+```bash
+composer install
+npm install
 ```
-UI/API/Controllers/V1/Organization/CompanyController
-  ↓ (calls)
-Application/Queries/Organization/ListCompaniesQuery
-  ↓ (calls)
-Domain/Organization/Repositories/CompanyRepository
-  ↓ (implemented by)
-Infrastructure/Repositories/Organization/EloquentCompanyRepository
-  ↓ (uses)
-Domain/Organization/Models/Company
-  ↓ (returns to)
-UI/API/Resources/Organization/CompanyResource
+
+3. สร้างฐานข้อมูล:
+
+```bash
+php artisan db:create ceosofts_db_R1
 ```
+
+4. รัน migrations:
+
+```bash
+php artisan migrate
+```
+
+5. Seed ข้อมูลเริ่มต้น:
+
+```bash
+php artisan db:seed
+```
+
+6. รัน server:
+
+```bash
+php artisan serve
+```
+
+## แนวทางการพัฒนาต่อ
+
+1. **การเพิ่ม Model ใหม่**
+
+    - สร้างโมเดลในโฟลเดอร์ Models ของ Domain ที่เกี่ยวข้อง
+    - เพิ่ม migration สำหรับสร้างตาราง
+    - ใช้ traits ที่จำเป็น เช่น HasCompanyScope, HasUlid
+
+2. **การเพิ่มฟีเจอร์ใหม่**
+
+    - สร้าง Action ในโฟลเดอร์ Actions ของ Domain ที่เกี่ยวข้อง
+    - สร้าง Service ถ้าจำเป็น
+    - สร้าง Events และ Listeners ถ้ามีการทำงานแบบ async
+
+3. **การสร้าง API**
+    - สร้าง Controller ใน `app/Http/Controllers/Api/`
+    - สร้าง Resource ใน `app/Http/Resources/` สำหรับ response format
+    - เพิ่ม routes ใน `routes/api.php`
+
+---
+
+**อัปเดตล่าสุด**: 6 เมษายน 2568  
+**จัดทำโดย**: ทีมพัฒนา CEOsofts
