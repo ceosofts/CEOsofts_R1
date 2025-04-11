@@ -1,0 +1,53 @@
+<?php
+
+use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Configuration\Exceptions;
+use Illuminate\Foundation\Configuration\Middleware;
+
+// สร้าง Application
+$app = Application::configure(basePath: dirname(__DIR__))
+    ->withRouting(
+        web: __DIR__.'/../routes/web.php',
+        commands: __DIR__.'/../routes/console.php',
+        health: '/up',
+    )
+    ->withMiddleware(function (Middleware $middleware) {
+        //
+    })
+    ->withExceptions(function (Exceptions $exceptions) {
+        //
+    });
+
+// แก้ไขปัญหาการโหลด Encrypter
+$app->singleton('encrypter', function ($app) {
+    // ตรวจสอบว่ามีคลาส SimpleEncrypter หรือไม่
+    if (class_exists('App\Encryption\SimpleEncrypter')) {
+        return new \App\Encryption\SimpleEncrypter();
+    }
+    
+    // หาก SimpleEncrypter ไม่พบ ให้ใช้ Encrypter ของ Laravel แทน
+    try {
+        $config = $app->make('config')->get('app');
+        
+        if (empty($config['key'])) {
+            throw new RuntimeException('No application encryption key has been specified.');
+        }
+        
+        $key = $config['key'];
+        
+        // ถ้า key เริ่มต้นด้วย base64: ให้ถอดรหัส
+        if (str_starts_with($key, 'base64:')) {
+            $key = base64_decode(substr($key, 7));
+        }
+        
+        $cipher = $config['cipher'] ?? 'aes-256-cbc';
+        
+        return new \Illuminate\Encryption\Encrypter($key, $cipher);
+    } catch (\Throwable $e) {
+        // สร้างด้วย key สุ่มเพื่อให้ระบบทำงานต่อได้
+        $key = random_bytes(32);
+        return new \Illuminate\Encryption\Encrypter($key, 'aes-256-cbc');
+    }
+});
+
+return $app;

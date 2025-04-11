@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ตั้งค่า font สำหรับทั้งแอพพลิเคชัน */
+@layer base {
+    html {
+        font-family: 'Sarabun', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+    }
+}
+
+/* Custom Components */
+@layer components {
+    .btn {
+        @apply inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed;
+    }
+
+    .btn-primary {
+        @apply bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors;
+    }
+    
+    .btn-secondary {
+        @apply bg-gray-500 text-white hover:bg-gray-600 px-4 py-2 rounded-lg transition-colors;
+    }
+    
+    .form-input {
+        @apply block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 mt-1;
+    }
+    
+    .card {
+        @apply bg-white dark:bg-gray-800 rounded-xl shadow-md p-6;
+    }
+}
+
+/* Custom Utilities */
+@layer utilities {
+    .text-gradient {
+        @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-teal-400;
+    }
+}
