@@ -3,6 +3,8 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 return new class extends Migration
 {
@@ -11,17 +13,35 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('scheduled_events', function (Blueprint $table) {
-            if (!Schema::hasColumn('scheduled_events', 'start_date')) {
-                $table->timestamp('start_date')->nullable()->after('frequency');
-            }
-        });
-        
-        // อัปเดตค่า start_date ให้กับข้อมูลที่มีอยู่แล้ว
-        DB::statement('UPDATE scheduled_events SET start_date = created_at WHERE start_date IS NULL');
-        
-        // ปรับให้ start_date เป็น NOT NULL และมีค่า default
-        DB::statement('ALTER TABLE scheduled_events MODIFY start_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP');
+        $driver = DB::getDriverName();
+
+        if ($driver === 'sqlite') {
+            // สำหรับ SQLite: ใช้วิธีสร้างตารางใหม่และย้ายข้อมูล
+            Schema::create('scheduled_events_temp', function (Blueprint $table) {
+                $table->id();
+                $table->string('title')->nullable();
+                $table->string('event_type')->default('general')->nullable(false);
+                $table->string('frequency')->nullable();
+                $table->timestamp('start_date')->default(DB::raw('CURRENT_TIMESTAMP'))->nullable(false);
+                $table->timestamps();
+            });
+
+            // ย้ายข้อมูลจากตารางเดิมไปยังตารางใหม่
+            DB::statement('
+                INSERT INTO scheduled_events_temp (id, title, event_type, frequency, start_date, created_at, updated_at)
+                SELECT id, title, event_type, frequency, COALESCE(start_date, CURRENT_TIMESTAMP), created_at, updated_at
+                FROM scheduled_events
+            ');
+
+            // ลบตารางเดิมและเปลี่ยนชื่อ
+            Schema::drop('scheduled_events');
+            Schema::rename('scheduled_events_temp', 'scheduled_events');
+        } else {
+            // สำหรับ MySQL หรือฐานข้อมูลอื่นๆ
+            Schema::table('scheduled_events', function (Blueprint $table) {
+                $table->timestamp('start_date')->default(DB::raw('CURRENT_TIMESTAMP'))->nullable(false)->change();
+            });
+        }
     }
 
     /**
@@ -29,10 +49,34 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('scheduled_events', function (Blueprint $table) {
-            if (Schema::hasColumn('scheduled_events', 'start_date')) {
-                $table->dropColumn('start_date');
-            }
-        });
+        $driver = DB::getDriverName();
+
+        if ($driver === 'sqlite') {
+            // สำหรับ SQLite: ใช้วิธีสร้างตารางใหม่และย้ายข้อมูลกลับ
+            Schema::create('scheduled_events_temp', function (Blueprint $table) {
+                $table->id();
+                $table->string('title')->nullable();
+                $table->string('event_type')->default('general')->nullable(false);
+                $table->string('frequency')->nullable();
+                $table->timestamp('start_date')->nullable();
+                $table->timestamps();
+            });
+
+            // ย้ายข้อมูลกลับไปยังตารางใหม่
+            DB::statement('
+                INSERT INTO scheduled_events_temp (id, title, event_type, frequency, start_date, created_at, updated_at)
+                SELECT id, title, event_type, frequency, start_date, created_at, updated_at
+                FROM scheduled_events
+            ');
+
+            // ลบตารางเดิมและเปลี่ยนชื่อ
+            Schema::drop('scheduled_events');
+            Schema::rename('scheduled_events_temp', 'scheduled_events');
+        } else {
+            // สำหรับ MySQL หรือฐานข้อมูลอื่นๆ
+            Schema::table('scheduled_events', function (Blueprint $table) {
+                $table->timestamp('start_date')->nullable()->change();
+            });
+        }
     }
 };

@@ -1,125 +1,130 @@
-<div
+<aside
+    class="bg-secondary-800 text-white w-64 flex-shrink-0 overflow-y-auto fixed h-full md:sticky md:top-0 transition-transform duration-300 transform"
     x-data="{ open: true }"
-    x-init="if (window.innerWidth < 768) open = false"
-    @resize.window="open = window.innerWidth >= 768"
-    :class="{ 'w-64': open, 'w-16': !open }"
-    class="bg-primary-800 dark:bg-gray-800 text-white transition-width duration-300 flex flex-col"
+    x-on:toggle-sidebar.window="open = !open"
+    :class="{'translate-x-0': open, '-translate-x-full': !open, 'md:translate-x-0': true}"
 >
-    <!-- Logo -->
-    <div class="flex items-center px-4 py-5 h-16 border-b border-primary-700 dark:border-gray-700">
-        <a href="{{ route('dashboard') }}" class="flex items-center">
-            @if (open)
-                <img src="{{ asset('img/logo.svg') }}" alt="{{ config('app.name') }}" class="h-8">
-            @else
-                <img src="{{ asset('img/logo-sm.svg') }}" alt="{{ config('app.name') }}" class="h-8">
-            @endif
-        </a>
-        <button
-            @click="open = !open"
-            class="ml-auto md:ml-4 p-1 rounded-full bg-primary-700 dark:bg-gray-700 hover:bg-primary-600 dark:hover:bg-gray-600 focus:outline-none"
-        >
-            <svg x-show="open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
-            <svg x-show="!open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            </svg>
-        </button>
-    </div>
-    
-    <!-- Navigation -->
-    <nav class="flex-1 pt-5 pb-4 overflow-y-auto">
-        <ul class="space-y-1 px-2">
-            <!-- Dashboard -->
-            <x-sidebar.nav-item route="dashboard" icon="home">
-                <span x-show="open">แดชบอร์ด</span>
-            </x-sidebar.nav-item>
-            
-            <!-- Organization Menu -->
-            <x-sidebar.dropdown icon="building-office" text="องค์กร">
-                <x-sidebar.nav-item route="companies.index" icon="building">
-                    <span x-show="open">บริษัท</span>
-                </x-sidebar.nav-item>
-                <x-sidebar.nav-item route="departments.index" icon="user-group">
-                    <span x-show="open">แผนก</span>
-                </x-sidebar.nav-item>
-                <x-sidebar.nav-item route="positions.index" icon="briefcase">
-                    <span x-show="open">ตำแหน่ง</span>
-                </x-sidebar.nav-item>
-            </x-sidebar.dropdown>
-            
-            <!-- HR Menu -->
-            <x-sidebar.dropdown icon="users" text="บุคลากร">
-                <x-sidebar.nav-item route="employees.index" icon="user">
-                    <span x-show="open">พนักงาน</span>
-                </x-sidebar.nav-item>
-                <x-sidebar.nav-item route="leaves.index" icon="calendar">
-                    <span x-show="open">การลา</span>
-                </x-sidebar.nav-item>
-            </x-sidebar.dropdown>
-            
-            <!-- Sales Menu -->
-            <x-sidebar.dropdown icon="shopping-cart" text="การขาย">
-                <x-sidebar.nav-item route="customers.index" icon="user-circle">
-                    <span x-show="open">ลูกค้า</span>
-                </x-sidebar.nav-item>
-                <x-sidebar.nav-item route="quotations.index" icon="document-text">
-                    <span x-show="open">ใบเสนอราคา</span>
-                </x-sidebar.nav-item>
-                <x-sidebar.nav-item route="orders.index" icon="clipboard-document-list">
-                    <span x-show="open">คำสั่งซื้อ</span>
-                </x-sidebar.nav-item>
-                <x-sidebar.nav-item route="invoices.index" icon="receipt-percent">
-                    <span x-show="open">ใบแจ้งหนี้</span>
-                </x-sidebar.nav-item>
-            </x-sidebar.dropdown>
-            
-            <!-- Inventory -->
-            <x-sidebar.dropdown icon="cube" text="สินค้า/คลัง">
-                <x-sidebar.nav-item route="products.index" icon="archive-box">
-                    <span x-show="open">สินค้า</span>
-                </x-sidebar.nav-item>
-                <x-sidebar.nav-item route="stock.index" icon="truck">
-                    <span x-show="open">คลังสินค้า</span>
-                </x-sidebar.nav-item>
-            </x-sidebar.dropdown>
-            
-            <!-- Settings -->
-            <x-sidebar.nav-item route="settings.index" icon="cog">
-                <span x-show="open">การตั้งค่า</span>
-            </x-sidebar.nav-item>
-        </ul>
-    </nav>
-    
-    <!-- User Menu -->
-    <div class="border-t border-primary-700 dark:border-gray-700 p-4">
-        <div x-data="{ openUserMenu: false }" class="relative">
-            <button @click="openUserMenu = !openUserMenu" class="flex items-center w-full text-left">
-                <img src="{{ Auth::user()->profile_photo_url }}" alt="{{ Auth::user()->name }}" class="h-8 w-8 rounded-full">
-                <div x-show="open" class="ml-3">
-                    <p class="text-sm font-medium">{{ Auth::user()->name }}</p>
-                    <p class="text-xs text-primary-300 dark:text-gray-400">{{ Auth::user()->email }}</p>
-                </div>
-                <svg x-show="open" class="ml-auto h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                </svg>
-            </button>
-            
-            <div
-                x-show="openUserMenu"
-                @click.away="openUserMenu = false"
-                class="absolute bottom-0 left-0 mb-12 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5"
-            >
-                <a href="{{ route('profile.show') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                    บัญชีผู้ใช้
-                </a>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                        ออกจากระบบ
-                    </button>
-                </form>
+    <div class="flex flex-col h-full">
+        <!-- Logo -->
+        <div class="flex items-center justify-center h-16 bg-secondary-900">
+            <a href="{{ route('dashboard') }}" class="flex items-center">
+                <img src="/img/logo.svg" alt="CEOsofts logo" class="h-8 w-auto">
+                <span class="ml-2 text-lg font-semibold">CEOsofts R1</span>
+            </a>
+        </div>
+        
+        <!-- Company Info -->
+        @if(auth()->check() && session('current_company_id'))
+            <div class="bg-secondary-900/50 px-4 py-3">
+                <p class="text-xs text-secondary-400 uppercase">บริษัท</p>
+                <p class="font-medium truncate">{{ \App\Models\Company::find(session('current_company_id'))->name }}</p>
             </div>
+        @endif
+
+        <!-- Navigation -->
+        <nav class="flex-1 px-2 py-4 space-y-1">
+            <!-- Dashboard -->
+            <a href="{{ route('dashboard') }}" 
+               class="{{ request()->routeIs('dashboard') ? 'bg-secondary-900 text-white' : 'text-secondary-300 hover:bg-secondary-700' }} flex items-center px-4 py-2 text-sm rounded-md">
+                <svg class="mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                แดชบอร์ด
+            </a>
+            
+            <!-- Organization Management -->
+            <div x-data="{ open: {{ request()->routeIs('companies.*') || request()->routeIs('departments.*') || request()->routeIs('positions.*') ? 'true' : 'false' }} }">
+                <button @click="open = !open" class="flex items-center justify-between w-full px-4 py-2 text-sm text-secondary-300 hover:bg-secondary-700 rounded-md">
+                    <div class="flex items-center">
+                        <svg class="mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        จัดการองค์กร
+                    </div>
+                    <svg x-show="!open" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                    <svg x-show="open" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <div x-show="open" class="pl-6 mt-1 space-y-1">
+                    <a href="{{ route('companies.index') }}" class="{{ request()->routeIs('companies.*') ? 'bg-secondary-900 text-white' : 'text-secondary-300 hover:bg-secondary-700' }} flex items-center px-4 py-2 text-sm rounded-md">
+                        บริษัท
+                    </a>
+                    <a href="{{ route('departments.index') }}" class="{{ request()->routeIs('departments.*') ? 'bg-secondary-900 text-white' : 'text-secondary-300 hover:bg-secondary-700' }} flex items-center px-4 py-2 text-sm rounded-md">
+                        แผนก
+                    </a>
+                    <a href="{{ route('positions.index') }}" class="{{ request()->routeIs('positions.*') ? 'bg-secondary-900 text-white' : 'text-secondary-300 hover:bg-secondary-700' }} flex items-center px-4 py-2 text-sm rounded-md">
+                        ตำแหน่ง
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Human Resources -->
+            <div x-data="{ open: {{ request()->routeIs('employees.*') || request()->routeIs('work-shifts.*') ? 'true' : 'false' }} }">
+                <button @click="open = !open" class="flex items-center justify-between w-full px-4 py-2 text-sm text-secondary-300 hover:bg-secondary-700 rounded-md">
+                    <div class="flex items-center">
+                        <svg class="mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        ทรัพยากรบุคคล
+                    </div>
+                    <svg x-show="!open" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                    <svg x-show="open" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <div x-show="open" class="pl-6 mt-1 space-y-1">
+                    <a href="{{ route('employees.index') }}" class="{{ request()->routeIs('employees.*') ? 'bg-secondary-900 text-white' : 'text-secondary-300 hover:bg-secondary-700' }} flex items-center px-4 py-2 text-sm rounded-md">
+                        พนักงาน
+                    </a>
+                    <a href="{{ route('work-shifts.index') }}" class="{{ request()->routeIs('work-shifts.*') ? 'bg-secondary-900 text-white' : 'text-secondary-300 hover:bg-secondary-700' }} flex items-center px-4 py-2 text-sm rounded-md">
+                        กะการทำงาน
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Sales -->
+            <div x-data="{ open: {{ request()->routeIs('customers.*') || request()->routeIs('quotations.*') || request()->routeIs('orders.*') ? 'true' : 'false' }} }">
+                <button @click="open = !open" class="flex items-center justify-between w-full px-4 py-2 text-sm text-secondary-300 hover:bg-secondary-700 rounded-md">
+                    <div class="flex items-center">
+                        <svg class="mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        ขาย
+                    </div>
+                    <svg x-show="!open" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                    <svg x-show="open" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <div x-show="open" class="pl-6 mt-1 space-y-1">
+                    <a href="{{ route('customers.index') }}" class="{{ request()->routeIs('customers.*') ? 'bg-secondary-900 text-white' : 'text-secondary-300 hover:bg-secondary-700' }} flex items-center px-4 py-2 text-sm rounded-md">
+                        ลูกค้า
+                    </a>
+                    <a href="{{ route('quotations.index') }}" class="{{ request()->routeIs('quotations.*') ? 'bg-secondary-900 text-white' : 'text-secondary-300 hover:bg-secondary-700' }} flex items-center px-4 py-2 text-sm rounded-md">
+                        ใบเสนอราคา
+                    </a>
+                    <a href="{{ route('orders.index') }}" class="{{ request()->routeIs('orders.*') ? 'bg-secondary-900 text-white' : 'text-secondary-300 hover:bg-secondary-700' }} flex items-center px-4 py-2 text-sm rounded-md">
+                        ใบสั่งขาย
+                    </a>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- Help Link -->
+        <div class="border-t border-secondary-700 p-4">
+            <a href="#" class="flex items-center text-sm text-secondary-400 hover:text-white transition-colors duration-150">
+                <svg class="mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                ช่วยเหลือ
+            </a>
         </div>
     </div>
-</div>
+</aside>

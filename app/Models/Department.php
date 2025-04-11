@@ -2,11 +2,9 @@
 
 namespace App\Models;
 
-use App\Infrastructure\MultiTenancy\HasCompanyScope;
+use App\Shared\Traits\HasCompanyScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Department extends Model
@@ -16,15 +14,16 @@ class Department extends Model
     /**
      * The attributes that are mass assignable.
      *
-     * @var array
+     * @var array<int, string>
      */
     protected $fillable = [
-        'company_id',
         'name',
+        'name_en',
         'code',
         'description',
         'is_active',
         'parent_id',
+        'company_id',
     ];
 
     /**
@@ -39,23 +38,15 @@ class Department extends Model
     /**
      * Get the company that owns the department.
      */
-    public function company(): BelongsTo
+    public function company()
     {
         return $this->belongsTo(Company::class);
     }
 
     /**
-     * Get the positions for the department.
-     */
-    public function positions(): HasMany
-    {
-        return $this->hasMany(Position::class);
-    }
-
-    /**
      * Get the parent department.
      */
-    public function parent(): BelongsTo
+    public function parent()
     {
         return $this->belongsTo(Department::class, 'parent_id');
     }
@@ -63,8 +54,54 @@ class Department extends Model
     /**
      * Get the child departments.
      */
-    public function children(): HasMany
+    public function children()
     {
         return $this->hasMany(Department::class, 'parent_id');
+    }
+
+    /**
+     * Get all child departments (recursive).
+     */
+    public function allChildren()
+    {
+        return $this->children()->with('allChildren');
+    }
+
+    /**
+     * Get the positions for the department.
+     */
+    public function positions()
+    {
+        return $this->hasMany(Position::class);
+    }
+
+    /**
+     * Get the employees for the department.
+     */
+    public function employees()
+    {
+        return $this->hasMany(Employee::class);
+    }
+
+    /**
+     * Scope a query to only include active departments.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    /**
+     * Scope a query to only include root departments (no parent).
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeRoot($query)
+    {
+        return $query->whereNull('parent_id');
     }
 }

@@ -4,6 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 return new class extends Migration
 {
@@ -12,6 +13,15 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // ตรวจสอบชนิดของฐานข้อมูล
+        $driver = DB::getDriverName();
+
+        if ($driver === 'sqlite') {
+            // SQLite ไม่รองรับ information_schema
+            Log::info('Skipping foreign key modification for SQLite.');
+            return;
+        }
+
         // ตรวจสอบการมีอยู่ของ foreign key ใน order ที่อ้างอิงไปยัง quotations
         if (Schema::hasTable('orders') && Schema::hasColumn('orders', 'quotation_id')) {
             Schema::table('orders', function (Blueprint $table) {
@@ -70,6 +80,13 @@ return new class extends Migration
      */
     public function down(): void
     {
+        $driver = DB::getDriverName();
+
+        if ($driver === 'sqlite') {
+            Log::info('Skipping foreign key rollback for SQLite.');
+            return;
+        }
+
         // สร้าง foreign key constraint กลับคืน (ถ้าจำเป็น)
         if (Schema::hasTable('quotations') && Schema::hasTable('orders') && 
             Schema::hasColumn('orders', 'quotation_id')) {

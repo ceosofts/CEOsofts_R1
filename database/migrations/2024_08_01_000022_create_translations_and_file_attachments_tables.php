@@ -13,6 +13,7 @@ return new class extends Migration
     {
         // สร้างตาราง translations ถ้ายังไม่มี
         if (!Schema::hasTable('translations')) {
+            if (!Schema::hasTable('translations')) {
             Schema::create('translations', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('company_id')->constrained()->onDelete('cascade');
@@ -42,6 +43,7 @@ return new class extends Migration
 
         // สร้างตาราง file_attachments ถ้ายังไม่มี
         if (!Schema::hasTable('file_attachments')) {
+            if (!Schema::hasTable('file_attachments')) {
             Schema::create('file_attachments', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('company_id')->constrained()->onDelete('cascade');

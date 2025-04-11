@@ -1,64 +1,93 @@
-import defaultTheme from 'tailwindcss/defaultTheme';
-import forms from '@tailwindcss/forms';
-import typography from '@tailwindcss/typography';
-
 /** @type {import('tailwindcss').Config} */
 export default {
-    content: [
-        './resources/**/*.blade.php',
-        './resources/**/*.js',
-        './resources/**/*.vue',
-        './resources/**/*.css',
-        './resources/**/*.ts',
-        './resources/**/*.tsx',
-        './resources/**/*.html', // Add this if you use raw HTML files
-    ],
-
-    theme: {
-        extend: {
-            fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
-                heading: ['Prompt', 'sans-serif'],
-            },
-            colors: {
-                primary: {
-                    50: '#f0f9ff',
-                    100: '#e0f2fe',
-                    200: '#bae6fd',
-                    300: '#7dd3fc',
-                    400: '#38bdf8',
-                    500: '#0ea5e9',
-                    600: '#0284c7',
-                    700: '#0369a1',
-                    800: '#075985',
-                    900: '#0c4a6e',
-                    950: '#082f49',
-                },
-                secondary: {
-                    50: '#f8fafc',
-                    100: '#f1f5f9',
-                    200: '#e2e8f0',
-                    300: '#cbd5e1',
-                    400: '#94a3b8',
-                    500: '#64748b',
-                    600: '#475569',
-                    700: '#334155',
-                    800: '#1e293b',
-                    900: '#0f172a',
-                    950: '#020617',
-                },
-            },
-            spacing: {
-                '72': '18rem',
-                '84': '21rem',
-                '96': '24rem',
-            },
-            borderRadius: {
-                'xl': '1rem',
-                '2xl': '2rem',
-            }
+  content: [
+    "./resources/**/*.blade.php",
+    "./resources/**/*.js",
+    "./resources/**/*.vue",
+    "./resources/**/*.css",
+    "./app/**/*.php",
+    "./config/**/*.php",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        primary: {
+          50: '#eef2ff',
+          100: '#e0e7ff',
+          200: '#c7d2fe',
+          300: '#a5b4fc',
+          400: '#818cf8',
+          500: '#6366f1',
+          600: '#4f46e5',
+          700: '#4338ca',
+          800: '#3730a3',
+          900: '#312e81',
+          950: '#1e1b4b',
         },
+        secondary: {
+          50: '#f0fdfa',
+          100: '#ccfbf1',
+          200: '#99f6e4',
+          300: '#5eead4',
+          400: '#2dd4bf',
+          500: '#14b8a6',
+          600: '#0d9488',
+          700: '#0f766e',
+          800: '#115e59',
+          900: '#134e4a',
+          950: '#042f2e',
+        },
+        accent: {
+          50: '#fff9eb',
+          100: '#ffefc2',
+          200: '#ffe095',
+          300: '#ffca58',
+          400: '#ffb01c',
+          500: '#fe9c03',
+          600: '#ef7c00',
+          700: '#c05b03',
+          800: '#9a480c',
+          900: '#7e3c0f',
+          950: '#461e05',
+        }
+      },
+      fontFamily: {
+        sans: ['Sarabun', 'sans-serif'],
+        heading: ['Prompt', 'sans-serif'],
+      },
+      spacing: {
+        '72': '18rem',
+        '84': '21rem',
+        '96': '24rem',
+        '128': '32rem',
+        '144': '36rem',
+      },
+      borderRadius: {
+        'xl': '1rem',
+        '2xl': '2rem',
+        '3xl': '3rem',
+        '4xl': '4rem',
+      },
+      screens: {
+        'xs': '475px',
+        '3xl': '1920px',
+      },
+      animation: {
+        'spin-slow': 'spin 3s linear infinite',
+        'bounce-slow': 'bounce 3s infinite',
+        'fade-in': 'fadeIn 0.5s ease-in-out',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+      },
     },
-
-    plugins: [forms, typography],
-};
+  },
+  plugins: [
+    require('@tailwindcss/forms'),
+    require('@tailwindcss/typography'),
+    // require('@tailwindcss/aspect-ratio'),
+  ],
+}

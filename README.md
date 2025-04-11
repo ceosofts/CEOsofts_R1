@@ -7,17 +7,143 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+# CEOsofts R1
+
+## Overview
+
+This is a web application built with Laravel and styled with Tailwind CSS. It provides a modern, responsive interface with Thai language support through the Prompt and Sarabun font families.
+
+## Setup
+
+### Prerequisites
+
+-   PHP 8.1 or higher
+-   Composer
+-   Node.js & NPM
+-   MySQL or another database system
+
+### Installation
+
+1. Clone the repository
+
+```bash
+git clone [repository-url]
+cd CEOsofts_R1
+```
+
+2. Install PHP dependencies
+
+```bash
+composer install
+```
+
+3. Install JavaScript dependencies
+
+```bash
+npm install
+```
+
+4. Set up environment variables
+
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+5. Configure your database in the `.env` file
+
+```
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=ceosoft_r1
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+6. Run migrations
+
+```bash
+php artisan migrate
+```
+
+7. Build assets
+
+```bash
+npm run dev
+```
+
+8. Start the server
+
+```bash
+php artisan serve
+```
+
+## Key Features
+
+-   Responsive design with Tailwind CSS
+-   Thai language support with Prompt and Sarabun fonts
+-   Custom UI components (buttons, cards, etc.)
+-   Dark/light mode support
+-   Reusable Blade components
+
+## Component Usage
+
+### Button Component
+
+```blade
+<x-button type="primary">Submit</x-button>
+<x-button type="secondary" href="/destination">Go to Destination</x-button>
+<x-button type="accent" wire:click="save">Save</x-button>
+<x-button type="outline">Cancel</x-button>
+<x-button type="danger">Delete</x-button>
+```
+
+### Card Component
+
+```blade
+<x-card>
+    <p>This is a simple card with content.</p>
+</x-card>
+
+<x-card>
+    <x-slot:header>
+        <h2 class="font-semibold text-lg">Card Title</h2>
+    </x-slot:header>
+
+    <p>Card content here</p>
+
+    <x-slot:footer>
+        <div class="flex justify-end">
+            <x-button>Action</x-button>
+        </div>
+    </x-slot:footer>
+</x-card>
+```
+
+## Tailwind CSS Utilities
+
+This project includes several custom utility classes:
+
+-   `.btn`, `.btn-primary`, `.btn-secondary`, `.btn-accent` - Button styles
+-   `.card` - Card container style
+-   `.form-input` - Form input styling
+
+## Support
+
+For support, please contact [support@ceosoft.com](mailto:support@ceosoft.com).
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+-   [Simple, fast routing engine](https://laravel.com/docs/routing).
+-   [Powerful dependency injection container](https://laravel.com/docs/container).
+-   Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
+-   Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
+-   Database agnostic [schema migrations](https://laravel.com/docs/migrations).
+-   [Robust background job processing](https://laravel.com/docs/queues).
+-   [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
 
 Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
@@ -35,19 +161,19 @@ We would like to extend our thanks to the following sponsors for funding Laravel
 
 ### Premium Partners
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+-   **[Vehikl](https://vehikl.com/)**
+-   **[Tighten Co.](https://tighten.co)**
+-   **[WebReinvent](https://webreinvent.com/)**
+-   **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
+-   **[64 Robots](https://64robots.com)**
+-   **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
+-   **[Cyber-Duck](https://cyber-duck.co.uk)**
+-   **[DevSquad](https://devsquad.com/hire-laravel-developers)**
+-   **[Jump24](https://jump24.co.uk)**
+-   **[Redberry](https://redberry.international/laravel/)**
+-   **[Active Logic](https://activelogic.com)**
+-   **[byte5](https://byte5.de)**
+-   **[OP.GG](https://op.gg)**
 
 ## Contributing
 
