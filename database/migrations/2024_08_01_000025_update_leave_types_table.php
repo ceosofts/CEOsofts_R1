@@ -4,6 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 return new class extends Migration
 {
@@ -58,7 +59,7 @@ return new class extends Migration
                     if ($duplicates->count() > 0) {
                         // มี duplicate อยู่ ให้ log warning และข้ามการสร้าง constraint
                         foreach ($duplicates as $dupe) {
-                            \Log::warning("พบข้อมูลซ้ำใน leave_types: company_id = {$dupe->company_id}, code = {$dupe->code}, count = {$dupe->count}");
+                            Log::warning("พบข้อมูลซ้ำใน leave_types: company_id = {$dupe->company_id}, code = {$dupe->code}, count = {$dupe->count}");
                         }
                     } else {
                         // ไม่มี duplicate สามารถสร้าง constraint ได้
@@ -67,7 +68,7 @@ return new class extends Migration
                 }
             } catch (\Exception $e) {
                 // เกิดข้อผิดพลาด ให้บันทึกลงใน log แต่ให้ migration ทำงานต่อไปได้
-                \Log::warning("ไม่สามารถจัดการ unique constraint ได้: " . $e->getMessage());
+                Log::warning("ไม่สามารถจัดการ unique constraint ได้: " . $e->getMessage());
             }
         }
     }
@@ -85,7 +86,7 @@ return new class extends Migration
                     DB::statement('ALTER TABLE `leave_types` DROP INDEX `leave_types_company_id_code_unique`');
                 }
             } catch (\Exception $e) {
-                \Log::warning("ไม่สามารถลบ unique constraint ได้: " . $e->getMessage());
+                Log::warning("ไม่สามารถลบ unique constraint ได้: " . $e->getMessage());
             }
             
             // ลบคอลัมน์

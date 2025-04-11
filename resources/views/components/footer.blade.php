@@ -1,11 +1,19 @@
-<footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-4">
-    <div class="mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex flex-col sm:flex-row items-center justify-between">
-            <div class="text-sm text-gray-500 dark:text-gray-400">
-                &copy; {{ date('Y') }} {{ config('app.name') }} - เวอร์ชั่น 1.0.0
+<footer class="bg-white shadow-inner mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="py-4 text-center text-sm text-secondary-500 sm:flex sm:justify-between sm:items-center">
+            <div>
+                <span>&copy; {{ date('Y') }} {{ config('app.name') }}. สงวนลิขสิทธิ์.</span>
             </div>
-            <div class="mt-2 sm:mt-0 text-sm text-gray-500 dark:text-gray-400">
-                พัฒนาโดย CEOsofts ทีม
+            <div class="mt-2 sm:mt-0">
+                <span>เวอร์ชั่น 1.0</span>
+                @if(config('app.debug'))
+                    <span class="mx-2">•</span>
+                    <span>{{ config('app.env') }} mode</span>
+                    <span class="mx-2">•</span>
+                    <span>Laravel v{{ Illuminate\Foundation\Application::VERSION }}</span>
+                    <span class="mx-2">•</span>
+                    <span>PHP v{{ PHP_VERSION }}</span>
+                @endif
             </div>
         </div>
     </div>

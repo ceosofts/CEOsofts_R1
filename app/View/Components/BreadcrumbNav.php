@@ -2,63 +2,56 @@
 
 namespace App\View\Components;
 
-use Closure;
 use Illuminate\View\Component;
 use Illuminate\View\View;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Collection;
 
 class BreadcrumbNav extends Component
 {
     /**
-     * รายการ Breadcrumb
+     * The breadcrumbs data.
      *
      * @var array
      */
-    public array $items;
+    public $breadcrumbs;
+
+    /**
+     * Whether to show the home icon.
+     *
+     * @var bool
+     */
+    public $showHomeIcon;
 
     /**
      * Create a new component instance.
      *
-     * @param array|\Illuminate\Support\Collection $items
+     * @param array $breadcrumbs
+     * @param bool $showHomeIcon
+     * @return void
      */
-    public function __construct($items = [])
+    public function __construct($breadcrumbs = [], $showHomeIcon = true)
     {
-        // แปลง Collection เป็น array ถ้าจำเป็น
-        if ($items instanceof Collection) {
-            $items = $items->toArray();
+        // Convert from string to array if necessary
+        if (is_string($breadcrumbs)) {
+            $breadcrumbs = json_decode($breadcrumbs, true) ?? [];
+        }
+        
+        // Ensure home link is always first
+        if ($showHomeIcon && !isset($breadcrumbs['หน้าหลัก']) && !in_array('หน้าหลัก', array_keys($breadcrumbs))) {
+            $this->breadcrumbs = ['หน้าหลัก' => route('dashboard')] + (is_array($breadcrumbs) ? $breadcrumbs : []);
+        } else {
+            $this->breadcrumbs = is_array($breadcrumbs) ? $breadcrumbs : [];
         }
 
-        $this->items = $this->formatItems($items);
-    }
-
-    /**
-     * จัดรูปแบบรายการให้เป็นมาตรฐาน
-     *
-     * @param array $items
-     * @return array
-     */
-    protected function formatItems(array $items): array
-    {
-        return array_map(function($item) {
-            // หากเป็น string จะถือว่ามีแค่ label ไม่มี url
-            if (is_string($item)) {
-                return ['label' => $item, 'url' => null];
-            }
-            
-            // ตรวจสอบว่ามี key ที่จำเป็นหรือไม่
-            return [
-                'label' => Arr::get($item, 'label', ''),
-                'url' => Arr::get($item, 'url'),
-            ];
-        }, $items);
+        $this->showHomeIcon = $showHomeIcon;
     }
 
     /**
      * Get the view / contents that represent the component.
+     *
+     * @return \Illuminate\View\View
      */
-    public function render(): View|Closure|string
+    public function render(): View
     {
-        return view('organization.partials.breadcrumb-nav');
+        return view('components.breadcrumb-nav');
     }
 }

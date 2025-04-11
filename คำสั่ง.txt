@@ -14,6 +14,8 @@ php artisan test                      # รัน Unit Tests
 admin@example.com
 password123
 
+php artisan project:structure --output=project_structure.txt
+
 http://127.0.0.1:8000/dev/explore
 
 php /Users/iwasbornforthis/MyProject/CEOsofts/show_structure.php > structure.txt
