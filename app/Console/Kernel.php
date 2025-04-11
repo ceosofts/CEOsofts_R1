@@ -37,5 +37,6 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         \App\Console\Commands\OptimizeDatabaseCommand::class,
+        \App\Console\Commands\ProjectStructureCommand::class,
     ];
 }
