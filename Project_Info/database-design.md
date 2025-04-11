@@ -50,7 +50,7 @@
 
 php artisan migrate:status
 
-php artisan migrate:status
+php artisan migrate:fresh --seed
 
 php artisan migrate
 
