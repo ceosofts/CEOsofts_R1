@@ -11,30 +11,34 @@ use App\Http\Controllers\Organization\PositionController;
 |--------------------------------------------------------------------------
 |
 | These routes are related to organization management, including companies,
-| departments, and positions. All routes in this file are protected by the
-| 'auth' and 'ensure.company.access' middleware.
+| departments, positions, and branch offices.
 |
 */
 
-// Companies routes (admin only)
-Route::middleware(['can:manage-companies'])->group(function () {
+// องค์กร: เส้นทางสำหรับการจัดการข้อมูลบริษัท
+Route::middleware(['web'])->group(function () {
+    // Companies
     Route::resource('companies', CompanyController::class);
+
+    // สร้าง routes เฉพาะเมื่อ class controller มีอยู่จริง
+    if (class_exists(DepartmentController::class)) {
+        Route::resource('departments', DepartmentController::class);
+
+        // Department structure viewer
+        Route::get('departments/organization-structure', [DepartmentController::class, 'organizationStructure'])
+            ->name('departments.organization-structure');
+
+        // Department import/export
+        Route::get('departments/export', [DepartmentController::class, 'export'])->name('departments.export');
+        Route::post('departments/import', [DepartmentController::class, 'import'])->name('departments.import');
+    }
+
+    // สร้าง routes เฉพาะเมื่อ class controller มีอยู่จริง
+    if (class_exists(PositionController::class)) {
+        Route::resource('positions', PositionController::class);
+
+        // Position import/export 
+        Route::get('positions/export', [PositionController::class, 'export'])->name('positions.export');
+        Route::post('positions/import', [PositionController::class, 'import'])->name('positions.import');
+    }
 });
-
-// Department routes
-Route::resource('departments', DepartmentController::class);
-
-// Position routes
-Route::resource('positions', PositionController::class);
-
-// Department structure viewer
-Route::get('departments/organization-structure', [DepartmentController::class, 'organizationStructure'])
-    ->name('departments.organization-structure');
-
-// Department import/export
-Route::get('departments/export', [DepartmentController::class, 'export'])->name('departments.export');
-Route::post('departments/import', [DepartmentController::class, 'import'])->name('departments.import');
-
-// Position import/export 
-Route::get('positions/export', [PositionController::class, 'export'])->name('positions.export');
-Route::post('positions/import', [PositionController::class, 'import'])->name('positions.import');
