@@ -190,3 +190,6 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+# IDE Settings
+โปรเจคนี้ใช้ Visual Studio Code พร้อมกับส่วนขยาย intelephense สำหรับการพัฒนา PHP
+คุณสามารถใช้การตั้งค่าที่แนะนำได้โดยเปิดโปรเจคใน VS Code

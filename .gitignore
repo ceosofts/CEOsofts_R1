@@ -22,3 +22,5 @@ storage/logs/laravel.log
 storage/framework/cache/*
 storage/framework/views/*
 storage/framework/sessions/*
+/archive/
+/tools/
