@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Log;
 use App\Domain\Sales\Models\Quotation;
 use App\Domain\Sales\Models\Customer;
 use App\Domain\Organization\Models\Company;
@@ -13,7 +14,7 @@ class QuotationSeeder extends Seeder
     public function run(): void
     {
         $companies = Company::all();
-        
+
         foreach ($companies as $company) {
             $this->createQuotationsForCompany($company);
         }
@@ -22,7 +23,7 @@ class QuotationSeeder extends Seeder
     private function createQuotationsForCompany($company)
     {
         $customers = Customer::where('company_id', $company->id)->get();
-        
+
         if ($customers->isEmpty()) {
             return;
         }
@@ -32,7 +33,7 @@ class QuotationSeeder extends Seeder
             $uniqueTimestamp = microtime(true) * 10000;
             $randomSuffix1 = str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
             $randomSuffix2 = str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
-            
+
             $quotations = [
                 [
                     'company_id' => $company->id,
@@ -97,17 +98,17 @@ class QuotationSeeder extends Seeder
                         // สร้างเลขที่ใหม่ที่มั่นใจว่าไม่ซ้ำ
                         $uniqueID = uniqid('', true);
                         $quotation['quotation_number'] = 'QT' . date('Ym') . substr(md5($uniqueID . $index), 0, 5);
-                        
+
                         // ลองบันทึกอีกครั้ง
                         try {
                             Quotation::create($quotation);
                         } catch (\Exception $innerEx) {
                             // บันทึกข้อผิดพลาดถ้ายังไม่สำเร็จ
-                            \Log::error("Failed to create quotation after retry: " . $innerEx->getMessage());
+                            Log::error("Failed to create quotation after retry: " . $innerEx->getMessage());
                         }
                     } else {
                         // บันทึกข้อผิดพลาดประเภทอื่น
-                        \Log::error("Error creating quotation: " . $e->getMessage());
+                        Log::error("Error creating quotation: " . $e->getMessage());
                     }
                 }
             }

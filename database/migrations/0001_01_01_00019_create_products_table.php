@@ -13,6 +13,8 @@ return new class extends Migration
      * รวมการทำงานจากไฟล์:
      * - 2024_08_01_000040_add_missing_columns_to_products_table.php
      * - 2024_08_01_000041_add_uuid_to_products_table.php
+     * - 0001_01_01_00044_add_current_stock_to_products_table.php
+     * - 0001_01_01_00045_add_unit_id_to_products_table.php
      */
     public function up(): void
     {
@@ -44,6 +46,7 @@ return new class extends Migration
             $table->string('uuid', 36)->unique(); // จาก add_uuid_to_products_table.php
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->foreignId('category_id')->nullable()->constrained('product_categories')->onDelete('set null');
+            $table->foreignId('unit_id')->nullable(); // จาก 0001_01_01_00045_add_unit_id_to_products_table.php
             $table->string('name');
             $table->string('code', 30)->nullable();
             $table->text('description')->nullable();
@@ -52,10 +55,14 @@ return new class extends Migration
             $table->string('unit', 30)->nullable();
             $table->string('sku', 50)->nullable();
             $table->string('barcode', 50)->nullable();
-            $table->integer('stock')->default(0);
+            $table->integer('stock_quantity')->default(0); // จำนวนสต็อกเริ่มต้น
+            $table->integer('current_stock')->default(0);  // จาก 0001_01_01_00044_add_current_stock_to_products_table.php
+            $table->string('location', 100)->nullable(); // ตำแหน่งในคลังสินค้า
             $table->string('image')->nullable();
             $table->boolean('is_active')->default(true);
             $table->boolean('is_inventory_tracked')->default(true);
+            $table->boolean('is_service')->default(false);
+            $table->json('dimension')->nullable();
 
             // คอลัมน์เพิ่มเติมจาก add_missing_columns_to_products_table.php
             $table->decimal('list_price', 15, 2)->nullable(); // ราคาแนะนำ
@@ -93,16 +100,20 @@ return new class extends Migration
             // Indexes
             $table->index('company_id');
             $table->index('category_id');
+            $table->index('unit_id'); // จาก 0001_01_01_00045_add_unit_id_to_products_table.php
             $table->index('name');
             $table->index('code');
             $table->index('sku');
             $table->index('barcode');
+            $table->index('location');
             $table->index('is_active');
             $table->index('uuid'); // index สำหรับคอลัมน์ uuid
             $table->index('is_featured'); // indexes เพิ่มเติม
             $table->index('is_bestseller');
             $table->index('is_new');
             $table->index('inventory_status');
+            $table->index('is_service');
+            $table->index('current_stock'); // จาก 0001_01_01_00044_add_current_stock_to_products_table.php
 
             // Unique constraints
             $table->unique(['company_id', 'code']);

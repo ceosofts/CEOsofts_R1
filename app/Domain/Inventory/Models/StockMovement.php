@@ -17,29 +17,30 @@ class StockMovement extends Model
         'company_id',
         'product_id',
         'type',
-        'quantity',
-        'unit_price',
-        'total_price',
-        'before_quantity',
-        'after_quantity',
+        'movement_type',
         'reference_type',
         'reference_id',
-        'location_from',
-        'location_to',
+        'quantity',
+        'before_quantity',
+        'after_quantity',
+        'unit_cost',
+        'total_cost',
+        'location',
+        'notes',
         'processed_by',
         'processed_at',
-        'notes',
-        'metadata'
+        'status',
+        'metadata',
     ];
 
     protected $casts = [
         'quantity' => 'decimal:2',
-        'unit_price' => 'decimal:2',
-        'total_price' => 'decimal:2',
         'before_quantity' => 'decimal:2',
         'after_quantity' => 'decimal:2',
+        'unit_cost' => 'decimal:2',
+        'total_cost' => 'decimal:2',
         'processed_at' => 'datetime',
-        'metadata' => 'json'
+        'metadata' => 'json',
     ];
 
     public function company()
@@ -65,11 +66,11 @@ class StockMovement extends Model
     public function scopeByReference($query, $type, $id = null)
     {
         $query->where('reference_type', $type);
-        
+
         if ($id) {
             $query->where('reference_id', $id);
         }
-        
+
         return $query;
     }
 
@@ -86,10 +87,15 @@ class StockMovement extends Model
             if (!$model->processed_at) {
                 $model->processed_at = now();
             }
-            
+
             // คำนวณราคารวม
             if ($model->quantity && $model->unit_price) {
                 $model->total_price = $model->quantity * $model->unit_price;
+            }
+
+            // ถ้าไม่ได้กำหนดค่า before_quantity ให้กำหนดเป็น 0
+            if ($model->before_quantity === null) {
+                $model->before_quantity = 0;
             }
         });
 
@@ -97,17 +103,25 @@ class StockMovement extends Model
             // อัปเดตจำนวนสินค้าคงเหลือ
             $product = $model->product;
             if ($product) {
-                $model->before_quantity = $product->current_stock;
-                
+                // แก้ไขโดยกำหนดค่าเริ่มต้นถ้า current_stock เป็น null
+                $model->before_quantity = $product->current_stock ?? 0;
+
                 if ($model->type === 'receive') {
-                    $product->current_stock += $model->quantity;
+                    $product->current_stock = ($product->current_stock ?? 0) + $model->quantity;
                 } elseif ($model->type === 'issue') {
-                    $product->current_stock -= $model->quantity;
+                    $product->current_stock = ($product->current_stock ?? 0) - $model->quantity;
                 }
-                
-                $model->after_quantity = $product->current_stock;
+
+                $model->after_quantity = $product->current_stock ?? 0;
                 $model->saveQuietly();
                 $product->save();
+            }
+        });
+
+        static::updating(function ($model) {
+            // ป้องกันการตั้งค่า before_quantity เป็น null
+            if ($model->before_quantity === null) {
+                $model->before_quantity = 0;
             }
         });
     }

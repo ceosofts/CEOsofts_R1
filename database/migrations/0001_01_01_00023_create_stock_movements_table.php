@@ -40,12 +40,18 @@ return new class extends Migration
             $table->id();
             $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
-            $table->string('movement_type'); // IN, OUT
-            $table->integer('quantity');
-            $table->string('reference_type')->nullable(); // e.g. PurchaseOrder, SalesOrder
+            $table->string('type', 30); // เพิ่มคอลัมน์ type สำหรับประเภท (receive, issue, return, adjust)
+            $table->string('movement_type')->nullable(); // IN, OUT (เก็บไว้เพื่อความเข้ากันได้กับระบบเก่า)
+            $table->integer('quantity'); // จำนวนที่เคลื่อนไหว
+            $table->decimal('before_quantity', 15, 2)->default(0); // จำนวนก่อนการเคลื่อนไหว
+            $table->decimal('after_quantity', 15, 2); // จำนวนหลังการเคลื่อนไหว
+            $table->string('reference_type', 50)->nullable(); // e.g. PurchaseOrder, SalesOrder
             $table->unsignedBigInteger('reference_id')->nullable();
             $table->text('notes')->nullable();
-            $table->decimal('unit_price', 15, 4)->nullable();
+            $table->decimal('unit_price', 15, 4)->nullable(); // ราคาต่อหน่วย
+            $table->decimal('unit_cost', 15, 4)->nullable(); // ต้นทุนต่อหน่วย
+            $table->decimal('total_price', 15, 4)->nullable(); // ราคารวม
+            $table->decimal('total_cost', 15, 4)->nullable(); // ต้นทุนรวม
             $table->string('location')->nullable();
             $table->string('batch_number')->nullable();
             $table->date('expiry_date')->nullable();
@@ -56,9 +62,7 @@ return new class extends Migration
             $table->string('transaction_id')->nullable()->unique(); // รหัสธุรกรรม
             $table->string('source_location')->nullable(); // ตำแหน่งต้นทาง
             $table->string('destination_location')->nullable(); // ตำแหน่งปลายทาง
-            $table->decimal('total_price', 15, 4)->nullable(); // ราคารวม
             $table->string('currency', 10)->default('THB'); // สกุลเงิน
-            $table->decimal('cost_price', 15, 4)->nullable(); // ต้นทุน
             $table->date('transaction_date')->nullable(); // วันที่ทำธุรกรรม
             $table->string('reason_code', 50)->nullable(); // รหัสเหตุผล
             $table->text('reason_notes')->nullable(); // รายละเอียดเหตุผล
@@ -82,6 +86,7 @@ return new class extends Migration
             $table->index(['company_id', 'product_id']);
             $table->index(['transaction_date']);
             $table->index(['status']);
+            $table->index('type');
         });
 
         // นำข้อมูลเดิมกลับเข้าระบบ ถ้ามี

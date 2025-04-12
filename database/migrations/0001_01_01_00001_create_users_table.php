@@ -46,12 +46,14 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->boolean('is_admin')->default(false);
             $table->boolean('is_system')->default(false);
+            $table->boolean('is_system_admin')->default(false); // เพิ่มคอลัมน์นี้
             $table->timestamp('last_login_at')->nullable();
             $table->string('last_login_ip', 45)->nullable();
             $table->timestamp('password_changed_at')->nullable();
             $table->json('metadata')->nullable();
             $table->foreignId('created_by')->nullable();
             $table->foreignId('updated_by')->nullable();
+            $table->string('language', 10)->default('th'); // เพิ่มคอลัมน์สำหรับภาษา
 
             $table->timestamps();
             $table->softDeletes();
@@ -63,6 +65,7 @@ return new class extends Migration
             $table->index('phone');
             $table->index('is_active');
             $table->index('is_admin');
+            $table->index('is_system_admin'); // เพิ่ม index
             $table->index('last_login_at');
         });
 
@@ -92,6 +95,15 @@ return new class extends Migration
                     // ตรวจสอบว่าจำเป็นต้องเพิ่ม UUID หรือไม่
                     if (!isset($userData['uuid']) || empty($userData['uuid'])) {
                         $userData['uuid'] = \Illuminate\Support\Str::uuid()->toString();
+                    }
+
+                    // เพิ่มค่า default สำหรับคอลัมน์ใหม่
+                    if (!isset($userData['is_system_admin'])) {
+                        $userData['is_system_admin'] = false;
+                    }
+
+                    if (!isset($userData['language'])) {
+                        $userData['language'] = 'th';
                     }
 
                     DB::table('users')->insert($userData);

@@ -32,6 +32,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->foreignId('document_template_id')->constrained()->onDelete('cascade');
+            $table->foreignId('template_id')->nullable(); // เพิ่มคอลัมน์ template_id
             $table->morphs('documentable'); // polymorphic relationship สำหรับเชื่อมกับ model ต่างๆ
             $table->string('filename');
             $table->string('display_name');
@@ -46,6 +47,7 @@ return new class extends Migration
             // Indexes
             $table->index('company_id');
             $table->index('document_template_id');
+            $table->index('template_id'); // เพิ่ม index สำหรับ template_id
             $table->index('status');
             $table->index('created_by');
             $table->index('created_at');

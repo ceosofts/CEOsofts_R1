@@ -15,7 +15,7 @@ class ProductSeeder extends Seeder
     public function run(): void
     {
         $companies = Company::all();
-        
+
         foreach ($companies as $company) {
             $this->createProductsForCompany($company->id);
         }
@@ -30,7 +30,7 @@ class ProductSeeder extends Seeder
                 'name' => 'คอมพิวเตอร์โน้ตบุ๊ค รุ่น X1',
                 'description' => 'โน้ตบุ๊คสำหรับงานออฟฟิศทั่วไป',
                 'category_id' => 1, // IT Equipment
-                'unit_id' => 1, // PCS
+                // 'unit_id' => 1, // ลบหรือคอมเมนต์บรรทัดนี้
                 'barcode' => '8850001234567',
                 'sku' => 'NB-X1-2024',
                 'price' => 25000.00,
@@ -62,7 +62,7 @@ class ProductSeeder extends Seeder
                 'name' => 'บริการติดตั้งระบบเครือข่าย',
                 'description' => 'บริการติดตั้งและตั้งค่าระบบเครือข่ายองค์กร',
                 'category_id' => 2, // Services
-                'unit_id' => 2, // Service
+                // 'unit_id' => 2, // ลบหรือคอมเมนต์บรรทัดนี้
                 'barcode' => null,
                 'sku' => 'SVC-NET-2024',
                 'price' => 15000.00,
