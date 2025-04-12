@@ -29,7 +29,7 @@ return new class extends Migration
             // ย้ายข้อมูลจากตารางเดิมไปยังตารางใหม่
             DB::statement('
                 INSERT INTO scheduled_events_temp (id, title, event_type, frequency, start_date, created_at, updated_at)
-                SELECT id, title, event_type, frequency, COALESCE(start_date, CURRENT_TIMESTAMP), created_at, updated_at
+                SELECT id, title, event_type, frequency, CURRENT_TIMESTAMP, created_at, updated_at
                 FROM scheduled_events
             ');
 
@@ -39,7 +39,7 @@ return new class extends Migration
         } else {
             // สำหรับ MySQL หรือฐานข้อมูลอื่นๆ
             Schema::table('scheduled_events', function (Blueprint $table) {
-                $table->timestamp('start_date')->default(DB::raw('CURRENT_TIMESTAMP'))->nullable(false)->change();
+                $table->timestamp('start_date')->default(DB::raw('CURRENT_TIMESTAMP'))->nullable(false)->after('frequency');
             });
         }
     }
@@ -58,14 +58,13 @@ return new class extends Migration
                 $table->string('title')->nullable();
                 $table->string('event_type')->default('general')->nullable(false);
                 $table->string('frequency')->nullable();
-                $table->timestamp('start_date')->nullable();
                 $table->timestamps();
             });
 
             // ย้ายข้อมูลกลับไปยังตารางใหม่
             DB::statement('
-                INSERT INTO scheduled_events_temp (id, title, event_type, frequency, start_date, created_at, updated_at)
-                SELECT id, title, event_type, frequency, start_date, created_at, updated_at
+                INSERT INTO scheduled_events_temp (id, title, event_type, frequency, created_at, updated_at)
+                SELECT id, title, event_type, frequency, created_at, updated_at
                 FROM scheduled_events
             ');
 
@@ -75,7 +74,7 @@ return new class extends Migration
         } else {
             // สำหรับ MySQL หรือฐานข้อมูลอื่นๆ
             Schema::table('scheduled_events', function (Blueprint $table) {
-                $table->timestamp('start_date')->nullable()->change();
+                $table->dropColumn('start_date');
             });
         }
     }

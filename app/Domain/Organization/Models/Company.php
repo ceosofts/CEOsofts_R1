@@ -10,8 +10,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Company extends Model
 {
     use HasUlid, SoftDeletes;
-    
+
     protected $fillable = [
+        'code',
         'name',
         'tax_id',
         'address',
@@ -20,14 +21,18 @@ class Company extends Model
         'website',
         'logo',
         'is_active',
-        'settings'
+        'status',
+        'settings',
+        'metadata',
+        'uuid'
     ];
-    
+
     protected $casts = [
         'is_active' => 'boolean',
         'settings' => 'array',
+        'metadata' => 'array',
     ];
-    
+
     /**
      * แผนกในบริษัท
      */
@@ -35,7 +40,7 @@ class Company extends Model
     {
         return $this->hasMany(Department::class);
     }
-    
+
     /**
      * พนักงานในบริษัท
      */
@@ -43,7 +48,7 @@ class Company extends Model
     {
         return $this->hasMany(\App\Domain\HumanResources\Models\Employee::class);
     }
-    
+
     /**
      * สาขาของบริษัท
      */

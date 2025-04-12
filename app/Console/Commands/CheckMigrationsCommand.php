@@ -4,7 +4,15 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\File;
+use function base_path;
+use function database_path;
+use function app_path;
 
+/**
+ * Class CheckMigrationsCommand
+ * @package App\Console\Commands
+ */
 class CheckMigrationsCommand extends Command
 {
     /**
@@ -23,8 +31,9 @@ class CheckMigrationsCommand extends Command
 
     /**
      * Execute the console command.
+     * @return int
      */
-    public function handle()
+    public function handle(): int
     {
         $this->info("กำลังตรวจสอบไฟล์ migrations...");
         
@@ -104,6 +113,9 @@ class CheckMigrationsCommand extends Command
     
     /**
      * แก้ไขไฟล์ migration ที่มีปัญหา
+     * @param string $path
+     * @param array $problems
+     * @return void
      */
     private function fixMigration(string $path, array $problems): void
     {

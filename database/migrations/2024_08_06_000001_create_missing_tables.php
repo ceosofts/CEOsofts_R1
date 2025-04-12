@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // ตรวจสอบว่าตาราง cache มีอยู่แล้วหรือไม่
+        // สร้างตาราง cache ที่ขาดหายไป
         if (!Schema::hasTable('cache')) {
             Schema::create('cache', function (Blueprint $table) {
                 $table->string('key')->primary();
@@ -20,12 +20,24 @@ return new class extends Migration
             });
         }
 
-        // ตรวจสอบว่าตาราง cache_locks มีอยู่แล้วหรือไม่
+        // สร้างตาราง cache_locks ที่ขาดหายไป
         if (!Schema::hasTable('cache_locks')) {
             Schema::create('cache_locks', function (Blueprint $table) {
                 $table->string('key')->primary();
                 $table->string('owner');
                 $table->integer('expiration');
+            });
+        }
+
+        // สร้างตาราง translations ทดแทน
+        if (!Schema::hasTable('translations')) {
+            Schema::create('translations', function (Blueprint $table) {
+                $table->id();
+                $table->string('locale')->notNullable();
+                $table->string('group')->notNullable();
+                $table->string('key')->notNullable();
+                $table->text('value')->nullable();
+                $table->timestamps();
             });
         }
     }
@@ -35,6 +47,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('translations');
         Schema::dropIfExists('cache_locks');
         Schema::dropIfExists('cache');
     }

@@ -13,7 +13,6 @@ return new class extends Migration
     {
         // สร้างตาราง translations ถ้ายังไม่มี
         if (!Schema::hasTable('translations')) {
-            if (!Schema::hasTable('translations')) {
             Schema::create('translations', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('company_id')->constrained()->onDelete('cascade');
@@ -27,23 +26,20 @@ return new class extends Migration
                 $table->json('metadata')->nullable();
                 $table->timestamps();
                 $table->softDeletes();
-                
+
                 // สร้าง indices
                 $table->index('company_id');
                 $table->index(['translatable_type', 'translatable_id']);
                 $table->index('locale');
                 $table->index('field');
-                
+
                 // สร้าง unique constraint
                 $table->unique(['company_id', 'locale', 'group', 'key'], 'translations_company_locale_group_key_unique');
             });
-        } else {
-            echo "ตาราง translations มีอยู่แล้ว\n";
         }
 
         // สร้างตาราง file_attachments ถ้ายังไม่มี
         if (!Schema::hasTable('file_attachments')) {
-            if (!Schema::hasTable('file_attachments')) {
             Schema::create('file_attachments', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('company_id')->constrained()->onDelete('cascade');
@@ -59,33 +55,14 @@ return new class extends Migration
                 $table->json('metadata')->nullable();
                 $table->timestamps();
                 $table->softDeletes();
-                
+
                 // สร้าง indices
                 $table->index(['attachable_type', 'attachable_id']);
                 $table->index('company_id');
-                
+
                 // สร้าง foreign key
                 $table->foreign('created_by')->references('id')->on('users')->nullOnDelete();
             });
-        } else {
-            echo "ตาราง file_attachments มีอยู่แล้ว\n";
-        }
-
-        // เพิ่ม indices ที่จำเป็นเพิ่มเติม
-        if (Schema::hasTable('translations')) {
-            // เพิ่ม index สำหรับ company_id + locale
-            if (!Schema::hasIndex('translations', 'translations_company_locale_index')) {
-                Schema::table('translations', function (Blueprint $table) {
-                    $table->index(['company_id', 'locale'], 'translations_company_locale_index');
-                });
-            }
-            
-            // เพิ่ม index สำหรับ company_id + group
-            if (!Schema::hasIndex('translations', 'translations_company_group_index')) {
-                Schema::table('translations', function (Blueprint $table) {
-                    $table->index(['company_id', 'group'], 'translations_company_group_index');
-                });
-            }
         }
     }
 
@@ -94,26 +71,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // มีจัดการ index เพิ่มเติมในกรณีที่มีการเพิ่ม index ในตารางที่มีอยู่แล้ว
-        try {
-            if (Schema::hasTable('translations')) {
-                if (Schema::hasIndex('translations', 'translations_company_locale_index')) {
-                    Schema::table('translations', function (Blueprint $table) {
-                        $table->dropIndex('translations_company_locale_index');
-                    });
-                }
-                
-                if (Schema::hasIndex('translations', 'translations_company_group_index')) {
-                    Schema::table('translations', function (Blueprint $table) {
-                        $table->dropIndex('translations_company_group_index');
-                    });
-                }
-            }
-        } catch (\Exception $e) {
-            // ทำการจัดการข้อผิดพลาดถ้าจำเป็น
-        }
-
-        Schema::dropIfExists('file_attachments');
+        // ลบตาราง translations ถ้ามีอยู่
         Schema::dropIfExists('translations');
+
+        // ลบตาราง file_attachments ถ้ามีอยู่
+        Schema::dropIfExists('file_attachments');
     }
 };
