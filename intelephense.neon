@@ -1,0 +1,9 @@
+parameters:
+  autoload:
+    - %rootDir%/vendor/autoload.php
+  excludePaths:
+    - vendor
+    - node_modules
+    - storage/framework
+  earlyTermination:
+    enabled: true

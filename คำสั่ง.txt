@@ -9,6 +9,7 @@ php artisan serve                   # เริ่มเซิร์ฟเวอ
 npm run dev                         # คอมไพล์ Assets (Development Mode)
 npm run build                       # Build Production Mode
 php artisan migrate:fresh --seed      # รีเซ็ตฐานข้อมูลและ Seed ข้อมูลใหม่
+php artisan migrate:status
 php artisan test                      # รัน Unit Tests
 
 admin@example.com

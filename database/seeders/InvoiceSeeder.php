@@ -8,13 +8,14 @@ use App\Domain\Sales\Models\Order;
 use App\Domain\Sales\Models\Customer;
 use App\Domain\Organization\Models\Company;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log; // เพิ่ม import นี้
 
 class InvoiceSeeder extends Seeder
 {
     public function run(): void
     {
         $companies = Company::all();
-        
+
         foreach ($companies as $company) {
             $this->createInvoicesForCompany($company);
         }
@@ -24,9 +25,9 @@ class InvoiceSeeder extends Seeder
     {
         // หาออเดอร์ที่ออกใบแจ้งหนี้ได้
         $orders = Order::where('company_id', $company->id)
-                      ->where('status', 'approved')
-                      ->orWhere('status', 'delivered')
-                      ->get();
+            ->where('status', 'approved')
+            ->orWhere('status', 'delivered')
+            ->get();
 
         if ($orders->isEmpty()) {
             return;
@@ -73,14 +74,14 @@ class InvoiceSeeder extends Seeder
                     // สร้างเลขที่ใหม่ที่มั่นใจว่าไม่ซ้ำ
                     $uniqueID = uniqid('', true);
                     $invoice['invoice_number'] = 'INV' . date('Ym') . substr(md5($uniqueID . $index), 0, 6);
-                    
+
                     try {
                         Invoice::create($invoice);
                     } catch (\Exception $innerEx) {
-                        \Log::error("Failed to create invoice after retry: " . $innerEx->getMessage());
+                        Log::error("Failed to create invoice after retry: " . $innerEx->getMessage());
                     }
                 } else {
-                    \Log::error("Error creating invoice: " . $e->getMessage());
+                    Log::error("Error creating invoice: " . $e->getMessage());
                 }
             }
         }
