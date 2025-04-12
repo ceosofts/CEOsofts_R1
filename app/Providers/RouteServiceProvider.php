@@ -7,6 +7,7 @@ use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvi
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Log; // เพิ่มการ import Log facade
 
 class RouteServiceProvider extends ServiceProvider
 {
@@ -35,6 +36,38 @@ class RouteServiceProvider extends ServiceProvider
 
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
+
+            // โหลด Domain Routes
+            $this->mapDomainRoutes();
         });
+    }
+
+    /**
+     * ทำการโหลด routes จากโฟลเดอร์ domains
+     */
+    protected function mapDomainRoutes(): void
+    {
+        $domainRoutesPath = base_path('routes/domains');
+        $domainRoutes = glob("{$domainRoutesPath}/*.php");
+
+        Log::debug("Attempting to load domain routes from: {$domainRoutesPath}");
+        Log::debug("Found domain route files: " . json_encode(array_map('basename', $domainRoutes)));
+
+        if (empty($domainRoutes)) {
+            Log::warning("No domain route files found at {$domainRoutesPath}");
+        }
+
+        foreach ($domainRoutes as $file) {
+            Log::debug("Loading domain route file: {$file}");
+
+            try {
+                Route::middleware('web')
+                    ->group($file);
+
+                Log::debug("Successfully loaded route file: {$file}");
+            } catch (\Throwable $e) {
+                Log::error("Error loading route file {$file}: " . $e->getMessage());
+            }
+        }
     }
 }

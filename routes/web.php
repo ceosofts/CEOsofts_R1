@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Organization\CompanyController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,10 +16,17 @@ use App\Http\Controllers\HomeController;
 |
 */
 
+// หน้าหลักใช้ HomeController แทน Closure
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/about', [HomeController::class, 'about'])->name('about');
 
-// ถ้ามี dashboard จะอยู่ที่นี่
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->name('dashboard');
+// Dashboard route
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+// Route สำหรับบริษัท
+Route::resource('companies', CompanyController::class);
+
+// ทดสอบเส้นทาง
+Route::get('/test-companies', function () {
+    return "Companies test route is working!";
+});
