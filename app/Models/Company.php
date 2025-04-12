@@ -7,42 +7,38 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
 
 class Company extends Model
 {
     use HasFactory, SoftDeletes;
 
     /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
+     * ชื่อตาราง
+     */
+    protected $table = 'companies';
+
+    /**
+     * คอลัมน์ที่สามารถกำหนดค่าได้
      */
     protected $fillable = [
         'name',
         'code',
-        'address',
-        'phone',
         'email',
+        'phone',
         'tax_id',
-        'website',
+        'address',
         'logo',
-        'status',
-        'uuid',
-        'ulid',
         'is_active',
-        'settings',
-        'metadata',
     ];
 
     /**
-     * The attributes that should be cast.
-     *
-     * @var array
+     * คอลัมน์ที่ควรแปลงเป็นชนิดข้อมูลที่ไม่ใช่สตริง
      */
     protected $casts = [
-        'metadata' => 'array',
-        'settings' => 'array',
         'is_active' => 'boolean',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -51,6 +47,9 @@ class Company extends Model
     protected static function boot()
     {
         parent::boot();
+
+        // เพิ่ม Log เพื่อดูว่า boot method ทำงานอย่างไร
+        Log::info('Company model booted');
 
         static::creating(function ($company) {
             // ตรวจสอบว่ามีคอลัมน์ uuid หรือ ulid
@@ -72,6 +71,27 @@ class Company extends Model
                 $company->status = $company->is_active ? 'active' : 'inactive';
             }
         });
+
+        // ถ้ามี Global Scope ที่กรองข้อมูลออก อาจจะอยู่ตรงนี้
+        // ลองปิด scope เพื่อดูว่าช่วยแก้ปัญหาหรือไม่
+        /*
+        static::addGlobalScope('active', function($query) {
+            // ปิด scope นี้ชั่วคราวเพื่อดูว่าเป็นสาเหตุของปัญหาหรือไม่
+            // $query->where('is_active', true);
+            Log::info('Company global scope applied');
+        });
+        */
+    }
+
+    /**
+     * Debug: เพิ่ม accessor สำหรับการแสดงโลโก้
+     */
+    public function getLogoUrlAttribute()
+    {
+        if ($this->logo) {
+            return asset('storage/' . $this->logo);
+        }
+        return null;
     }
 
     /**
@@ -117,5 +137,13 @@ class Company extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    /**
+     * Debug function to list all used traits
+     */
+    public static function listTraits()
+    {
+        return class_uses_recursive(static::class);
     }
 }
