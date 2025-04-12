@@ -7,6 +7,7 @@ use App\Models\Company;
 use App\Domain\Organization\Models\Company as DomainCompany;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class CompanyController extends Controller
 {
@@ -17,12 +18,29 @@ class CompanyController extends Controller
      */
     public function index()
     {
-        // ตรวจสอบว่ามีทั้ง model ทั้งใน App\Models และใน Domain
-        $companyModel = class_exists(DomainCompany::class) ? DomainCompany::class : Company::class;
+        try {
+            // ใช้แค่ App\Models\Company โดยตรง ไม่ต้องตรวจสอบ DomainCompany
+            $companies = Company::orderBy('name')->paginate(10);
 
-        $companies = $companyModel::orderBy('name')->paginate(10);
+            // เพิ่ม debug log ให้ชัดเจนมากขึ้น
+            Log::debug('CompanyController@index: Found ' . $companies->count() . ' companies');
 
-        return view('organization.companies.index', compact('companies'));
+            // Debug ข้อมูล แสดงข้อมูลแต่ละบริษัทเพื่อตรวจสอบ
+            foreach ($companies as $index => $company) {
+                Log::debug("Company #{$index}: {$company->name}, active: " .
+                    ($company->is_active ? 'yes' : 'no') . ", status: {$company->status}");
+            }
+
+            return view('organization.companies.index', compact('companies'));
+        } catch (\Exception $e) {
+            Log::error('Error in CompanyController@index: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+
+            return view('organization.companies.index', [
+                'companies' => collect([]),
+                'error' => 'เกิดข้อผิดพลาดในการดึงข้อมูล: ' . $e->getMessage()
+            ]);
+        }
     }
 
     /**

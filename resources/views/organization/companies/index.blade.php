@@ -20,9 +20,18 @@
                     </div>
                     @endif
 
-                    @if(session('error'))
+                    @if(session('error') || isset($error))
                     <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                        <span class="block sm:inline">{{ session('error') }}</span>
+                        <span class="block sm:inline">{{ session('error') ?? $error }}</span>
+                    </div>
+                    @endif
+
+                    <!-- Debug Information - เพิ่มส่วนนี้เพื่อดีบั๊ก -->
+                    @if(app()->environment('local'))
+                    <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative mb-4">
+                        <p class="font-bold">Debug Information:</p>
+                        <p>จำนวนบริษัททั้งหมด: {{ $companies->count() }}</p>
+                        <p>หน้าปัจจุบัน: {{ $companies->currentPage() }}</p>
                     </div>
                     @endif
 
@@ -43,7 +52,7 @@
                                 @forelse($companies as $company)
                                 <tr class="hover:bg-gray-100 dark:hover:bg-gray-650 border-b border-gray-200 dark:border-gray-700">
                                     <td class="py-2 px-4">
-                                        @if($company->logo)
+                                        @if(isset($company->logo) && $company->logo)
                                         <img src="{{ Storage::url($company->logo) }}" alt="{{ $company->name }}" class="h-8 w-auto">
                                         @else
                                         <div class="h-8 w-8 bg-gray-200 dark:bg-gray-600 flex items-center justify-center rounded-full">
@@ -51,13 +60,16 @@
                                         </div>
                                         @endif
                                     </td>
-                                    <td class="py-2 px-4">{{ $company->code }}</td>
+                                    <td class="py-2 px-4">{{ $company->code ?? 'ไม่ระบุ' }}</td>
                                     <td class="py-2 px-4">{{ $company->name }}</td>
                                     <td class="py-2 px-4">{{ $company->phone ?? '-' }}</td>
                                     <td class="py-2 px-4">{{ $company->email ?? '-' }}</td>
                                     <td class="py-2 px-4">
-                                        <span class="inline-flex px-2 py-1 text-xs font-semibold leading-5 rounded-full {{ $company->status == 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                            {{ $company->status == 'active' ? 'ใช้งาน' : 'ไม่ใช้งาน' }}
+                                        <span class="inline-flex px-2 py-1 text-xs font-semibold leading-5 rounded-full 
+                                                {{ isset($company->status) && $company->status == 'active' || $company->is_active ? 
+                                                   'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                            {{ isset($company->status) ? ($company->status == 'active' ? 'ใช้งาน' : 'ไม่ใช้งาน') : 
+                                                   ($company->is_active ? 'ใช้งาน' : 'ไม่ใช้งาน') }}
                                         </span>
                                     </td>
                                     <td class="py-2 px-4 text-center">

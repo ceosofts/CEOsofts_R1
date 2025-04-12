@@ -15,7 +15,7 @@ class GeneratedDocumentSeeder extends Seeder
     public function run(): void
     {
         $companies = Company::all();
-        
+
         foreach ($companies as $company) {
             $this->createGeneratedDocumentsForCompany($company);
         }
@@ -24,7 +24,7 @@ class GeneratedDocumentSeeder extends Seeder
     private function createGeneratedDocumentsForCompany($company)
     {
         $templates = DocumentTemplate::where('company_id', $company->id)->get();
-        
+
         if ($templates->isEmpty()) {
             return;
         }
@@ -33,16 +33,15 @@ class GeneratedDocumentSeeder extends Seeder
             $documents = [
                 [
                     'company_id' => $company->id,
-                    'template_id' => $template->id,
-                    'document_type' => $template->type,
-                    'document_id' => rand(1000, 9999),
+                    'document_template_id' => $template->id,
+                    'template_id' => $template->id, // ยังคงใส่ค่า template_id สำหรับความเข้ากันได้
+                    'documentable_type' => 'App\\Domain\\' . ucfirst($template->type) . '\\Models\\' . ucfirst($template->type),
+                    'documentable_id' => rand(1000, 9999),
                     'filename' => strtoupper($template->type) . '-' . date('Ymd') . '-' . rand(100, 999) . '.pdf',
-                    'disk' => 'local',
-                    'path' => 'documents/' . $company->id . '/' . date('Y/m'),
-                    'mime_type' => 'application/pdf',
-                    'file_size' => rand(100000, 500000),
-                    'is_signed' => false,
-                    'is_sent' => false,
+                    'display_name' => 'เอกสาร ' . ucfirst($template->type) . ' #' . rand(1000, 9999),
+                    'file_path' => 'documents/' . $company->id . '/' . date('Y/m'),
+                    'file_type' => 'pdf',
+                    'status' => 'generated',
                     'created_by' => 1,
                     'metadata' => json_encode([
                         'generated_at' => now()->toIso8601String(),
@@ -52,27 +51,21 @@ class GeneratedDocumentSeeder extends Seeder
                 ],
                 [
                     'company_id' => $company->id,
-                    'template_id' => $template->id,
-                    'document_type' => $template->type,
-                    'document_id' => rand(1000, 9999),
+                    'document_template_id' => $template->id,
+                    'template_id' => $template->id, // ยังคงใส่ค่า template_id สำหรับความเข้ากันได้
+                    'documentable_type' => 'App\\Domain\\' . ucfirst($template->type) . '\\Models\\' . ucfirst($template->type),
+                    'documentable_id' => rand(1000, 9999),
                     'filename' => strtoupper($template->type) . '-' . date('Ymd') . '-' . rand(100, 999) . '.pdf',
-                    'disk' => 'local',
-                    'path' => 'documents/' . $company->id . '/' . date('Y/m'),
-                    'mime_type' => 'application/pdf',
-                    'file_size' => rand(100000, 500000),
-                    'is_signed' => true,
-                    'signature_data' => json_encode([
-                        'signed_by' => 'John Doe',
-                        'signed_at' => now()->subHours(2)->toIso8601String(),
-                        'signature_type' => 'digital'
-                    ]),
-                    'is_sent' => true,
-                    'sent_at' => now()->subHour(),
-                    'sent_to' => 'customer@example.com',
-                    'sent_by' => 1,
+                    'display_name' => 'เอกสาร ' . ucfirst($template->type) . ' #' . rand(1000, 9999),
+                    'file_path' => 'documents/' . $company->id . '/' . date('Y/m'),
+                    'file_type' => 'pdf',
+                    'status' => 'sent',
                     'created_by' => 1,
                     'metadata' => json_encode([
                         'generated_at' => now()->subHours(3)->toIso8601String(),
+                        'sent_at' => now()->subHour()->toIso8601String(),
+                        'sent_to' => 'customer@example.com',
+                        'sent_by' => 'User Admin',
                         'language' => 'th',
                         'version' => '1.0'
                     ])

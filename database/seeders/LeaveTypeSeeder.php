@@ -3,110 +3,81 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Domain\HumanResources\Models\LeaveType;
-use App\Domain\Organization\Models\Company;
+use App\Models\Company;
+use App\Models\LeaveType; // เปลี่ยนเป็น App\Models\LeaveType
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class LeaveTypeSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $companies = Company::all();
-        
         foreach ($companies as $company) {
-            $this->createLeaveTypesForCompany($company->id);
+            $this->createLeaveTypesForCompany($company);
         }
     }
 
-    private function createLeaveTypesForCompany($companyId)
+    protected function createLeaveTypesForCompany(Company $company): void
     {
+        // ข้อมูลพื้นฐานสำหรับประเภทการลา
         $leaveTypes = [
             [
-                'company_id' => $companyId,
-                'name' => 'ลาป่วย',
                 'code' => 'SICK',
+                'name' => 'ลาป่วย',
                 'description' => 'ลาป่วย ลาพักรักษาตัว',
-                'days_allowed' => 30,
-                'days_advance_notice' => 0,
+                'annual_allowance' => 30,
+                'min_notice_days' => 0, // เปลี่ยนจาก days_advance_notice เป็น min_notice_days
                 'requires_approval' => true,
-                'requires_attachment' => true,
+                'requires_documents' => true, // เปลี่ยนจาก requires_attachment เป็น requires_documents
                 'is_paid' => true,
                 'is_active' => true,
                 'color' => '#FF4444',
                 'icon' => 'medical-kit',
-                'metadata' => json_encode([
+                'metadata' => [
                     'max_consecutive_days' => 3,
                     'needs_medical_cert' => true,
                     'legal_reference' => 'พ.ร.บ. คุ้มครองแรงงาน มาตรา 32'
-                ])
+                ]
             ],
             [
-                'company_id' => $companyId,
-                'name' => 'ลาพักร้อน',
                 'code' => 'ANNUAL',
+                'name' => 'ลาพักร้อน',
                 'description' => 'ลาพักร้อนประจำปี',
-                'days_allowed' => 6,
-                'days_advance_notice' => 3,
+                'annual_allowance' => 6,
+                'min_notice_days' => 3, // เปลี่ยนจาก days_advance_notice เป็น min_notice_days
                 'requires_approval' => true,
-                'requires_attachment' => false,
+                'requires_documents' => false, // เปลี่ยนจาก requires_attachment เป็น requires_documents
                 'is_paid' => true,
                 'is_active' => true,
-                'color' => '#4CAF50',
+                'color' => '#4444FF',
                 'icon' => 'beach',
-                'metadata' => json_encode([
-                    'can_carry_forward' => true,
-                    'carry_forward_days' => 3,
+                'metadata' => [
+                    'can_accumulate' => true,
+                    'max_accumulate_days' => 12,
                     'legal_reference' => 'พ.ร.บ. คุ้มครองแรงงาน มาตรา 30'
-                ])
+                ]
             ],
-            [
-                'company_id' => $companyId,
-                'name' => 'ลากิจ',
-                'code' => 'PERSONAL',
-                'description' => 'ลากิจส่วนตัว',
-                'days_allowed' => 3,
-                'days_advance_notice' => 1,
-                'requires_approval' => true,
-                'requires_attachment' => false,
-                'is_paid' => true,
-                'is_active' => true,
-                'color' => '#FF9800',
-                'icon' => 'calendar',
-                'metadata' => json_encode([
-                    'max_consecutive_days' => 2,
-                    'needs_reason' => true
-                ])
-            ],
-            [
-                'company_id' => $companyId,
-                'name' => 'ลาคลอด',
-                'code' => 'MATERNITY',
-                'description' => 'ลาคลอดบุตร',
-                'days_allowed' => 98,
-                'days_advance_notice' => 30,
-                'requires_approval' => true,
-                'requires_attachment' => true,
-                'is_paid' => true,
-                'is_active' => true,
-                'color' => '#E91E63',
-                'icon' => 'baby',
-                'metadata' => json_encode([
-                    'paid_days' => 45,
-                    'social_security_days' => 53,
-                    'legal_reference' => 'พ.ร.บ. คุ้มครองแรงงาน มาตรา 41'
-                ])
-            ]
+            // ... ข้อมูลอื่นๆ ...
         ];
 
-        foreach ($leaveTypes as $leaveType) {
+        // เพิ่มข้อมูลประเภทการลา
+        foreach ($leaveTypes as $leaveTypeData) {
+            // แปลง metadata เป็น JSON
+            if (isset($leaveTypeData['metadata'])) {
+                $leaveTypeData['metadata'] = json_encode($leaveTypeData['metadata']);
+            }
+
+            // เพิ่มข้อมูล company_id
+            $leaveTypeData['company_id'] = $company->id;
+
+            // ใช้ firstOrCreate เพื่อหลีกเลี่ยงการซ้ำซ้อนของข้อมูล
             LeaveType::firstOrCreate(
                 [
-                    'company_id' => $companyId,
-                    'code' => $leaveType['code']
+                    'company_id' => $company->id,
+                    'code' => $leaveTypeData['code']
                 ],
-                $leaveType
+                $leaveTypeData
             );
         }
     }

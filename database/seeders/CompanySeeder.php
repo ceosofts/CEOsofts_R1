@@ -14,7 +14,6 @@ class CompanySeeder extends Seeder
      */
     public function run(): void
     {
-        // ข้อมูลบริษัท
         $companies = [
             [
                 'name' => 'บริษัท ซีอีโอซอฟต์ จำกัด',
@@ -24,7 +23,7 @@ class CompanySeeder extends Seeder
                 'email' => 'info@ceosofts.com',
                 'tax_id' => '0105564123456',
                 'website' => 'https://www.ceosofts.com',
-                'logo' => null, // ต้องเป็น null จริงๆ
+                'logo' => null,
                 'is_active' => true,
                 'status' => 'active',
                 'settings' => json_encode([
@@ -35,8 +34,6 @@ class CompanySeeder extends Seeder
                     'founded_year' => 2015,
                     'industry' => 'Software Development',
                 ]),
-                'uuid' => (string) Str::uuid(),
-                'ulid' => (string) Str::ulid(), // เพิ่ม ulid ที่จำเป็น
             ],
             [
                 'name' => 'บริษัท ไทยซอฟต์ เทคโนโลยี จำกัด',
@@ -57,8 +54,6 @@ class CompanySeeder extends Seeder
                     'founded_year' => 2010,
                     'industry' => 'IT Solutions',
                 ]),
-                'uuid' => (string) Str::uuid(),
-                'ulid' => (string) Str::ulid(),
             ],
             [
                 'name' => 'บริษัท ดิจิทัล โซลูชันส์ จำกัด',
@@ -79,37 +74,38 @@ class CompanySeeder extends Seeder
                     'founded_year' => 2018,
                     'industry' => 'Digital Transformation',
                 ]),
-                'uuid' => (string) Str::uuid(),
-                'ulid' => (string) Str::ulid(),
             ],
         ];
 
-        // แก้ไขบริษัทอื่นๆ ให้มี ulid ด้วย
-        foreach ($companies as $key => $company) {
-            if (!isset($company['ulid'])) {
-                $companies[$key]['ulid'] = (string) Str::ulid();
-            }
-        }
-
-        // ใช้ DB facade แทน Model เนื่องจาก PHP PDO มีการจัดการ null ที่ดีกว่า
         foreach ($companies as $company) {
-            // ตรวจสอบว่ามีบริษัทนี้อยู่แล้วหรือไม่
-            $exists = DB::table('companies')->where('code', $company['code'])->exists();
+            try {
+                // ใช้ Direct DB Query เพื่อหลีกเลี่ยงการกำหนดค่า ID โดย Eloquent
+                $exists = DB::table('companies')->where('code', $company['code'])->exists();
 
-            if (!$exists) {
-                // ถ้ายังไม่มี ให้เพิ่มใหม่
-                DB::table('companies')->insert($company);
-                $this->command->info("เพิ่มบริษัท: {$company['name']} ({$company['code']})");
-            } else {
-                // ถ้ามีแล้ว ให้อัปเดต (ยกเว้น code)
-                $code = $company['code'];
-                unset($company['code']);  // ไม่อัปเดต code
+                if ($exists) {
+                    // อัปเดตข้อมูลบริษัทที่มีอยู่แล้ว
+                    DB::table('companies')
+                        ->where('code', $company['code'])
+                        ->update(array_merge($company, [
+                            'uuid' => Str::uuid()->toString(),
+                            'updated_at' => now()
+                        ]));
 
-                DB::table('companies')
-                    ->where('code', $code)
-                    ->update($company);
+                    $this->command->info("Updated company: {$company['name']}");
+                } else {
+                    // เพิ่มบริษัทใหม่
+                    DB::table('companies')->insert(array_merge($company, [
+                        'uuid' => Str::uuid()->toString(),
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]));
 
-                $this->command->info("อัปเดตบริษัท: {$company['name']} ($code)");
+                    $this->command->info("Created company: {$company['name']}");
+                }
+            } catch (\Exception $e) {
+                $this->command->error("Error processing company {$company['code']}: {$e->getMessage()}");
+                // แสดงข้อมูลเพิ่มเติมเกี่ยวกับ error
+                $this->command->line("Error details: " . $e->getTraceAsString());
             }
         }
     }

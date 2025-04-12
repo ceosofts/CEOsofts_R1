@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use App\Domain\HumanResources\Models\EmployeeWorkShift;
 use App\Domain\HumanResources\Models\Employee;
 use App\Domain\HumanResources\Models\WorkShift;
+use Carbon\Carbon;
 
 class EmployeeWorkShiftSeeder extends Seeder
 {
@@ -24,19 +25,19 @@ class EmployeeWorkShiftSeeder extends Seeder
     {
         // ดึงกะงานของบริษัทที่พนักงานสังกัด
         $workShifts = WorkShift::where('company_id', $employee->company_id)
-                              ->where('is_active', true)
-                              ->get();
+            ->where('is_active', true)
+            ->get();
 
         if ($workShifts->isEmpty()) {
             return;
         }
 
         // สร้างตารางกะงานของพนักงานสำหรับเดือนปัจจุบันและเดือนถัดไป
-        $startDate = now()->startOfMonth();
-        $endDate = now()->addMonth()->endOfMonth();
+        $startDate = Carbon::now()->startOfMonth();
+        $endDate = Carbon::now()->addMonth()->endOfMonth();
 
         // สุ่มเลือกกะงานหลักสำหรับพนักงาน
-        $primaryShift = $workShifts->where('code', 'REG')->first() 
+        $primaryShift = $workShifts->where('code', 'REG')->first()
             ?? $workShifts->first();
 
         $currentDate = clone $startDate;
@@ -50,7 +51,7 @@ class EmployeeWorkShiftSeeder extends Seeder
             EmployeeWorkShift::firstOrCreate([
                 'employee_id' => $employee->id,
                 'work_shift_id' => $primaryShift->id,
-                'work_date' => $currentDate->format('Y-m-d'),
+                'effective_date' => $currentDate->format('Y-m-d'),
             ], [
                 'status' => 'scheduled',
                 'notes' => null,

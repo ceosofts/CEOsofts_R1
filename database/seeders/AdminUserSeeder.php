@@ -27,9 +27,9 @@ class AdminUserSeeder extends Seeder
 
         // กำหนดบทบาท superadmin
         $superadminRole = Role::where('name', 'superadmin')
-                             ->where('guard_name', 'web')
-                             ->first();
-                             
+            ->where('guard_name', 'web')
+            ->first();
+
         if ($superadminRole) {
             $superadmin->syncRoles([$superadminRole]);
         }
@@ -50,9 +50,9 @@ class AdminUserSeeder extends Seeder
 
         // กำหนดบทบาท admin
         $adminRole = Role::where('name', 'admin')
-                        ->where('guard_name', 'web')
-                        ->first();
-                        
+            ->where('guard_name', 'web')
+            ->first();
+
         if ($adminRole) {
             $admin->syncRoles([$adminRole]);
         }

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Schema;
 
 class Company extends Model
 {
@@ -18,15 +19,19 @@ class Company extends Model
      */
     protected $fillable = [
         'name',
-        'name_en',
-        'tax_id',
+        'code',
         'address',
         'phone',
         'email',
+        'tax_id',
         'website',
         'logo',
+        'status',
+        'uuid',
+        'ulid',
         'is_active',
         'settings',
+        'metadata',
     ];
 
     /**
@@ -35,8 +40,9 @@ class Company extends Model
      * @var array
      */
     protected $casts = [
-        'is_active' => 'boolean',
+        'metadata' => 'array',
         'settings' => 'array',
+        'is_active' => 'boolean',
     ];
 
     /**
@@ -47,8 +53,23 @@ class Company extends Model
         parent::boot();
 
         static::creating(function ($company) {
-            if (!$company->uuid) {
+            // ตรวจสอบว่ามีคอลัมน์ uuid หรือ ulid
+            $hasUuid = Schema::hasColumn('companies', 'uuid');
+            $hasUlid = Schema::hasColumn('companies', 'ulid');
+
+            // เพิ่มค่า UUID หรือ ULID ถ้ายังไม่มี
+            if ($hasUuid && empty($company->uuid)) {
                 $company->uuid = (string) Str::uuid();
+            }
+            if ($hasUlid && empty($company->ulid)) {
+                $company->ulid = (string) Str::ulid();
+            }
+
+            // ทำให้ status และ is_active สอดคล้องกัน
+            if (isset($company->status) && !isset($company->is_active)) {
+                $company->is_active = $company->status === 'active';
+            } elseif (isset($company->is_active) && !isset($company->status)) {
+                $company->status = $company->is_active ? 'active' : 'inactive';
             }
         });
     }

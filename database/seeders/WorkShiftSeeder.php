@@ -42,7 +42,7 @@ class WorkShiftSeeder extends Seeder
                 'end_time' => Carbon::parse('17:30:00'),
                 'break_start' => Carbon::parse('12:00:00'),
                 'break_end' => Carbon::parse('13:00:00'),
-                'working_hours' => 8,
+                // 'working_hours' => 8, // ลบหรือคอมเมนต์บรรทัดนี้ออก - คอลัมน์นี้ไม่มีในตาราง
                 'is_night_shift' => false,
                 'is_active' => true,
                 'color' => '#4CAF50',
@@ -67,7 +67,7 @@ class WorkShiftSeeder extends Seeder
                 'end_time' => Carbon::parse('15:00:00'),
                 'break_start' => Carbon::parse('10:00:00'),
                 'break_end' => Carbon::parse('11:00:00'),
-                'working_hours' => 8,
+                // 'working_hours' => 8, // ลบหรือคอมเมนต์บรรทัดนี้ออก - คอลัมน์นี้ไม่มีในตาราง
                 'is_night_shift' => false,
                 'is_active' => true,
                 'color' => '#2196F3',
@@ -92,7 +92,7 @@ class WorkShiftSeeder extends Seeder
                 'end_time' => Carbon::parse('00:00:00'),
                 'break_start' => Carbon::parse('19:00:00'),
                 'break_end' => Carbon::parse('20:00:00'),
-                'working_hours' => 8,
+                // 'working_hours' => 8, // ลบหรือคอมเมนต์บรรทัดนี้ออก - คอลัมน์นี้ไม่มีในตาราง
                 'is_night_shift' => true,
                 'is_active' => true,
                 'color' => '#FF9800',
@@ -117,7 +117,7 @@ class WorkShiftSeeder extends Seeder
                 'end_time' => Carbon::parse('09:00:00'),
                 'break_start' => Carbon::parse('04:00:00'),
                 'break_end' => Carbon::parse('05:00:00'),
-                'working_hours' => 8,
+                // 'working_hours' => 8, // ลบหรือคอมเมนต์บรรทัดนี้ออก - คอลัมน์นี้ไม่มีในตาราง
                 'is_night_shift' => true,
                 'is_active' => true,
                 'color' => '#9C27B0',

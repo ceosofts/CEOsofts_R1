@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Domain\Inventory\Models\Unit;
-use App\Domain\Organization\Models\Company;
+use App\Models\Company;
+use App\Domain\Inventory\Models\Unit; // แก้ไขเป็น namespace ที่ถูกต้อง
 
 class UnitSeeder extends Seeder
 {
@@ -12,69 +12,107 @@ class UnitSeeder extends Seeder
     {
         $companies = Company::all();
         foreach ($companies as $company) {
-            $this->createUnitsForCompany($company->id);
+            $this->createUnitsForCompany($company);
         }
     }
 
-    private function createUnitsForCompany($companyId)
+    private function createUnitsForCompany($company): void
     {
-        $units = [
+        // หน่วยชิ้น (เป็นหน่วยพื้นฐาน)
+        $pcsUnit = Unit::firstOrCreate(
             [
-                'company_id' => $companyId,
+                'company_id' => $company->id,
+                'code' => 'PCS'
+            ],
+            [
                 'name' => 'ชิ้น',
-                'code' => 'PCS',
                 'symbol' => 'ชิ้น',
-                'base_unit_id' => null,
-                'conversion_factor' => 1.0,
-                'is_base_unit' => true,
+                'base_unit_id' => null, // ไม่มี base unit เพราะเป็นหน่วยพื้นฐานเอง
+                'conversion_factor' => 1,
+                // 'is_base_unit' => true, // ลบออกหรือแทนที่ด้วย field ที่มีอยู่จริง
+                'is_default' => true, // ใช้ is_default แทน
                 'is_active' => true,
+                'type' => 'standard', // เพิ่ม type ที่มีในตาราง
+                'category' => 'quantity' // เพิ่ม category ที่มีในตาราง
+            ]
+        );
+
+        // หน่วยโหล (12 ชิ้น)
+        Unit::firstOrCreate(
+            [
+                'company_id' => $company->id,
+                'code' => 'DOZ'
             ],
             [
-                'company_id' => $companyId,
-                'name' => 'กล่อง',
-                'code' => 'BOX',
-                'symbol' => 'กล่อง',
-                'conversion_factor' => 12.0,
-                'is_base_unit' => false,
+                'name' => 'โหล',
+                'symbol' => 'โหล',
+                'base_unit_id' => $pcsUnit->id, // อ้างอิงถึงหน่วยชิ้น
+                'conversion_factor' => 12, // 1 โหล = 12 ชิ้น
+                // 'is_base_unit' => false, // ลบออก
+                'is_default' => false,
                 'is_active' => true,
+                'type' => 'derived',
+                'category' => 'quantity'
+            ]
+        );
+
+        // หน่วยแพ็ค (6 ชิ้น)
+        Unit::firstOrCreate(
+            [
+                'company_id' => $company->id,
+                'code' => 'PAC'
             ],
             [
-                'company_id' => $companyId,
+                'name' => 'แพ็ค',
+                'symbol' => 'แพ็ค',
+                'base_unit_id' => $pcsUnit->id,
+                'conversion_factor' => 6, // 1 แพ็ค = 6 ชิ้น
+                // 'is_base_unit' => false, // ลบออก
+                'is_default' => false,
+                'is_active' => true,
+                'type' => 'derived',
+                'category' => 'quantity'
+            ]
+        );
+
+        // หน่วยกิโลกรัม
+        $kgUnit = Unit::firstOrCreate(
+            [
+                'company_id' => $company->id,
+                'code' => 'KG'
+            ],
+            [
                 'name' => 'กิโลกรัม',
-                'code' => 'KG',
                 'symbol' => 'กก.',
                 'base_unit_id' => null,
-                'conversion_factor' => 1.0,
-                'is_base_unit' => true,
+                'conversion_factor' => 1,
+                // 'is_base_unit' => true, // ลบออก
+                'is_default' => false,
                 'is_active' => true,
+                'type' => 'standard',
+                'category' => 'weight'
+            ]
+        );
+
+        // หน่วยกรัม
+        Unit::firstOrCreate(
+            [
+                'company_id' => $company->id,
+                'code' => 'G'
             ],
             [
-                'company_id' => $companyId,
                 'name' => 'กรัม',
-                'code' => 'G',
                 'symbol' => 'ก.',
-                'conversion_factor' => 0.001,
-                'is_base_unit' => false,
+                'base_unit_id' => $kgUnit->id,
+                'conversion_factor' => 0.001, // 1 กรัม = 0.001 กิโลกรัม
+                // 'is_base_unit' => false, // ลบออก
+                'is_default' => false,
                 'is_active' => true,
-            ],
-        ];
+                'type' => 'derived',
+                'category' => 'weight'
+            ]
+        );
 
-        foreach ($units as $unit) {
-            $createdUnit = Unit::firstOrCreate(
-                ['company_id' => $companyId, 'code' => $unit['code']],
-                $unit
-            );
-
-            // Set base_unit_id for non-base units
-            if (!$unit['is_base_unit']) {
-                $baseUnit = Unit::where('company_id', $companyId)
-                    ->where('is_base_unit', true)
-                    ->first();
-                if ($baseUnit) {
-                    $createdUnit->base_unit_id = $baseUnit->id;
-                    $createdUnit->save();
-                }
-            }
-        }
+        // เพิ่มหน่วยเพิ่มเติมตามต้องการ
     }
 }
