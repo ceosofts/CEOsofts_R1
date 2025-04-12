@@ -3,41 +3,107 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 return new class extends Migration
 {
     /**
      * Run the migrations.
+     * รวมการทำงานและการปรับปรุงจากไฟล์ต่อไปนี้:
+     * - 2024_08_02_000003_add_deleted_at_to_file_attachments_table.php
+     * - 2024_08_02_000005_add_required_columns_to_file_attachments_table.php
+     * - 2024_08_02_000006_recreate_file_attachments_table.php
      */
     public function up(): void
     {
-        if (!Schema::hasTable('file_attachments')) {
-            Schema::create('file_attachments', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('company_id')->constrained()->onDelete('cascade');
-                $table->string('attachable_type')->nullable();
-                $table->unsignedBigInteger('attachable_id')->nullable();
-                $table->string('name');
-                $table->string('original_name');
-                $table->string('disk')->default('local');
-                $table->string('path');
-                $table->string('mime_type')->nullable();
-                $table->unsignedBigInteger('size')->default(0);
-                $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
-                $table->json('metadata')->nullable();
-                $table->timestamps();
-                $table->softDeletes();
-                
-                $table->index(['attachable_type', 'attachable_id']);
-            });
-            
-            echo "สร้างตาราง file_attachments เรียบร้อยแล้ว\n";
-        } else {
-            echo "ตาราง file_attachments มีอยู่แล้ว\n";
-            
-            // อาจเพิ่มคำสั่งเพื่อเพิ่มหรือแก้ไขคอลัมน์ที่จำเป็น
-            $this->ensureRequiredColumns();
+        // ตรวจสอบว่ามีตาราง file_attachments อยู่แล้วหรือไม่
+        $hasTable = Schema::hasTable('file_attachments');
+        $attachmentsData = [];
+
+        // ถ้ามีตารางอยู่แล้ว ให้สำรองข้อมูลก่อนสร้างใหม่
+        if ($hasTable) {
+            try {
+                Log::info('สำรองข้อมูล file_attachments ก่อนสร้างตารางใหม่');
+                $attachmentsData = DB::table('file_attachments')->get()->toArray();
+                Schema::dropIfExists('file_attachments');
+                Log::info('สำรองข้อมูล file_attachments จำนวน ' . count($attachmentsData) . ' รายการเรียบร้อย');
+            } catch (\Exception $e) {
+                Log::warning('ไม่สามารถสำรองข้อมูล file_attachments: ' . $e->getMessage());
+            }
         }
+
+        // สร้างตาราง file_attachments ใหม่ที่มีโครงสร้างสมบูรณ์
+        Schema::create('file_attachments', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->string('attachable_type'); // รองรับ polymorphic relation
+            $table->unsignedBigInteger('attachable_id');
+            $table->string('filename');
+            $table->string('original_filename');
+            $table->string('filepath');
+            $table->string('mime_type')->nullable();
+            $table->unsignedBigInteger('file_size')->nullable();
+            $table->string('disk')->default('local');
+            $table->string('extension', 20)->nullable();
+            $table->string('title')->nullable();
+            $table->text('description')->nullable();
+            $table->boolean('is_public')->default(false);
+            $table->string('access_key', 64)->nullable(); // ใช้สำหรับแชร์ไฟล์
+            $table->json('metadata')->nullable();
+
+            // คอลัมน์จาก add_required_columns_to_file_attachments_table.php
+            $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
+
+            $table->timestamps();
+            $table->softDeletes(); // จาก add_deleted_at_to_file_attachments_table.php
+
+            // Indexes
+            $table->index('company_id');
+            $table->index(['attachable_type', 'attachable_id']);
+            $table->index('filename');
+            $table->index('mime_type');
+            $table->index('is_public');
+            $table->index('created_by');
+            $table->index('deleted_at');
+        });
+
+        // นำข้อมูลเดิมกลับมาใส่ในตารางใหม่ (ถ้ามี)
+        if (!empty($attachmentsData)) {
+            try {
+                foreach ($attachmentsData as $attachment) {
+                    // แปลง stdClass object เป็น array
+                    $attachment = (array) $attachment;
+
+                    // ตรวจสอบคอลัมน์ที่จำเป็น และกำหนดค่าเริ่มต้นถ้าไม่มี
+                    if (!isset($attachment['mime_type'])) {
+                        $attachment['mime_type'] = $this->guessMimeTypeFromFilename($attachment['filename'] ?? '');
+                    }
+
+                    if (!isset($attachment['file_size'])) {
+                        $attachment['file_size'] = 0;
+                    }
+
+                    if (!isset($attachment['extension'])) {
+                        $attachment['extension'] = pathinfo($attachment['filename'] ?? '', PATHINFO_EXTENSION);
+                    }
+
+                    if (!isset($attachment['is_public'])) {
+                        $attachment['is_public'] = false;
+                    }
+
+                    DB::table('file_attachments')->insert($attachment);
+                }
+
+                Log::info('คืนข้อมูลเข้าตาราง file_attachments จำนวน ' . count($attachmentsData) . ' รายการ');
+            } catch (\Exception $e) {
+                Log::error('ไม่สามารถคืนข้อมูล file_attachments: ' . $e->getMessage());
+            }
+        }
+
+        Log::info('สร้างตาราง file_attachments ใหม่เรียบร้อยแล้ว');
     }
 
     /**
@@ -45,29 +111,36 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // ไม่ลบตารางในกรณีที่เป็น migration อัปเดต
-        // Schema::dropIfExists('file_attachments');
+        Schema::dropIfExists('file_attachments');
     }
-    
+
     /**
-     * ตรวจสอบและเพิ่มคอลัมน์ที่จำเป็น
+     * ทายประเภท MIME จากชื่อไฟล์
+     *
+     * @param string $filename
+     * @return string
      */
-    private function ensureRequiredColumns()
+    private function guessMimeTypeFromFilename(string $filename): string
     {
-        $columns = Schema::getColumnListing('file_attachments');
-        
-        if (!in_array('deleted_at', $columns)) {
-            Schema::table('file_attachments', function (Blueprint $table) {
-                $table->softDeletes();
-            });
-            echo "เพิ่มคอลัมน์ deleted_at แล้ว\n";
-        }
-        
-        if (!in_array('metadata', $columns)) {
-            Schema::table('file_attachments', function (Blueprint $table) {
-                $table->json('metadata')->nullable()->after('created_by');
-            });
-            echo "เพิ่มคอลัมน์ metadata แล้ว\n";
-        }
+        $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+        $mimeTypes = [
+            'pdf' => 'application/pdf',
+            'doc' => 'application/msword',
+            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'xls' => 'application/vnd.ms-excel',
+            'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'ppt' => 'application/vnd.ms-powerpoint',
+            'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'gif' => 'image/gif',
+            'txt' => 'text/plain',
+            'zip' => 'application/zip',
+            'rar' => 'application/x-rar-compressed',
+        ];
+
+        return $mimeTypes[$extension] ?? 'application/octet-stream';
     }
 };

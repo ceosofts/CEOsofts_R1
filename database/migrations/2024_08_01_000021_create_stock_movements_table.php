@@ -3,124 +3,148 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
     /**
-     * Run the migration.
+     * Run the migrations.
+     * สร้างตาราง stock_movements และรวมการเพิ่มคอลัมน์จากไฟล์ต่อไปนี้:
+     *
+     * - 2024_08_01_000042_add_missing_columns_to_stock_movements_table.php
+     * - 2024_08_01_000043_add_processed_by_to_stock_movements_table.php
+     * - 2024_08_01_000044_add_processed_at_to_stock_movements_table.php
+     * - 2024_08_01_000045_add_metadata_to_stock_movements_table.php
      */
     public function up(): void
     {
-        // สร้างตารางการเคลื่อนไหวสินค้า (stock_movements) เฉพาะเมื่อยังไม่มีตารางนี้
-        if (!Schema::hasTable('stock_movements')) {
-            Schema::create('stock_movements', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('company_id')->constrained()->onDelete('cascade');
-                $table->foreignId('product_id')->constrained()->onDelete('cascade');
-                $table->string('reference_type', 50); // order, invoice, adjustment, etc
-                $table->unsignedBigInteger('reference_id');
-                $table->decimal('quantity', 15, 2); // จำนวนที่เปลี่ยนแปลง (+ เข้า, - ออก)
-                $table->decimal('before_quantity', 15, 2); // จำนวนก่อนเปลี่ยนแปลง
-                $table->decimal('after_quantity', 15, 2); // จำนวนหลังเปลี่ยนแปลง
-                $table->foreignId('unit_id')->nullable()->constrained()->onDelete('set null');
-                $table->decimal('unit_cost', 15, 2)->nullable(); // ต้นทุนต่อหน่วย
-                $table->text('note')->nullable(); // บันทึกเพิ่มเติม
-                $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
-                $table->timestamps();
-                
-                // Indexes
-                $table->index('company_id');
-                $table->index('product_id');
-                $table->index(['reference_type', 'reference_id']);
-                $table->index('created_at');
-                $table->index('created_by');
-            });
-        } else {
-            // ตรวจสอบว่า indexes มีอยู่แล้วหรือไม่ และเพิ่มถ้ายังไม่มี
-            Schema::table('stock_movements', function (Blueprint $table) {
-                // ตรวจสอบและเพิ่ม indexes ที่จำเป็น (ตัวอย่าง - ต้องปรับแต่งตามที่เหมาะสม)
-                if (!Schema::hasIndex('stock_movements', 'stock_movements_reference_type_reference_id_index')) {
-                    $table->index(['reference_type', 'reference_id']);
-                }
-            });
+        // ตรวจสอบว่าตาราง stock_movements มีอยู่หรือไม่
+        $hasTable = Schema::hasTable('stock_movements');
+        $stockMovementsData = [];
+
+        // สำรองข้อมูลถ้าตารางมีอยู่แล้ว
+        if ($hasTable) {
+            try {
+                Log::info('พบตาราง stock_movements อยู่แล้ว จะสำรองข้อมูลก่อนสร้างใหม่');
+                $stockMovementsData = DB::table('stock_movements')->get()->toArray();
+                Schema::dropIfExists('stock_movements');
+            } catch (\Exception $e) {
+                Log::warning('ไม่สามารถสำรองข้อมูล stock_movements: ' . $e->getMessage());
+            }
         }
-        
-        // ปรับปรุงตาราง products เพิ่มฟิลด์ที่จำเป็น (ถ้ายังไม่มี)
-        if (Schema::hasTable('products')) {
-            Schema::table('products', function (Blueprint $table) {
-                // แก้ไขจุดนี้ โดยไม่ระบุ after คอลัมน์ที่อาจไม่มีอยู่
-                if (!Schema::hasColumn('products', 'is_inventory')) {
-                    $table->boolean('is_inventory')->default(true);
-                }
-                if (!Schema::hasColumn('products', 'is_service')) {
-                    $table->boolean('is_service')->default(false);
-                }
-                if (!Schema::hasColumn('products', 'weight')) {
-                    $table->decimal('weight', 10, 3)->nullable();
-                }
-                if (!Schema::hasColumn('products', 'length')) {
-                    $table->decimal('length', 10, 2)->nullable();
-                }
-                if (!Schema::hasColumn('products', 'width')) {
-                    $table->decimal('width', 10, 2)->nullable();
-                }
-                if (!Schema::hasColumn('products', 'height')) {
-                    $table->decimal('height', 10, 2)->nullable();
-                }
-                if (!Schema::hasColumn('products', 'is_featured')) {
-                    $table->boolean('is_featured')->default(false);
-                }
-                if (!Schema::hasColumn('products', 'tags')) {
-                    $table->json('tags')->nullable();
-                }
-                if (!Schema::hasColumn('products', 'attributes')) {
-                    $table->json('attributes')->nullable();
-                }
-                if (!Schema::hasColumn('products', 'created_by')) {
-                    $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
-                }
-                if (!Schema::hasColumn('products', 'updated_by')) {
-                    $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('set null');
-                }
-                
-                // Indexes
-                try {
-                    if (!Schema::hasIndex('products', 'products_is_inventory_index')) {
-                        $table->index('is_inventory');
+
+        // สร้างตาราง stock_movements
+        Schema::create('stock_movements', function (Blueprint $table) {
+            // คอลัมน์หลักจากไฟล์เดิม
+            $table->id();
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
+            $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
+            $table->string('movement_type'); // IN, OUT
+            $table->integer('quantity');
+            $table->string('reference_type')->nullable(); // e.g. PurchaseOrder, SalesOrder
+            $table->unsignedBigInteger('reference_id')->nullable();
+            $table->text('notes')->nullable();
+            $table->decimal('unit_price', 15, 4)->nullable();
+            $table->string('location')->nullable();
+            $table->string('batch_number')->nullable();
+            $table->date('expiry_date')->nullable();
+            $table->foreignId('user_id')->nullable()->constrained('users');
+
+            // จาก 2024_08_01_000042_add_missing_columns_to_stock_movements_table.php
+            $table->string('status')->default('pending'); // pending, completed, cancelled
+            $table->string('transaction_id')->nullable()->unique(); // รหัสธุรกรรม
+            $table->string('source_location')->nullable(); // ตำแหน่งต้นทาง
+            $table->string('destination_location')->nullable(); // ตำแหน่งปลายทาง
+            $table->decimal('total_price', 15, 4)->nullable(); // ราคารวม
+            $table->string('currency', 10)->default('THB'); // สกุลเงิน
+            $table->decimal('cost_price', 15, 4)->nullable(); // ต้นทุน
+            $table->date('transaction_date')->nullable(); // วันที่ทำธุรกรรม
+            $table->string('reason_code', 50)->nullable(); // รหัสเหตุผล
+            $table->text('reason_notes')->nullable(); // รายละเอียดเหตุผล
+
+            // จาก 2024_08_01_000043_add_processed_by_to_stock_movements_table.php
+            $table->foreignId('processed_by')->nullable()->constrained('users');
+
+            // จาก 2024_08_01_000044_add_processed_at_to_stock_movements_table.php
+            $table->timestamp('processed_at')->nullable();
+
+            // จาก 2024_08_01_000045_add_metadata_to_stock_movements_table.php
+            $table->json('metadata')->nullable();
+
+            // คอลัมน์ระบบ
+            $table->timestamps();
+            $table->softDeletes();
+
+            // สร้าง indexes
+            $table->index(['product_id', 'movement_type', 'created_at']);
+            $table->index(['reference_type', 'reference_id']);
+            $table->index(['company_id', 'product_id']);
+            $table->index(['transaction_date']);
+            $table->index(['status']);
+        });
+
+        // นำข้อมูลเดิมกลับเข้าระบบ ถ้ามี
+        if (!empty($stockMovementsData)) {
+            try {
+                foreach ($stockMovementsData as $movement) {
+                    // แปลงข้อมูลเป็น array
+                    $data = (array) $movement;
+
+                    // ใส่ค่าเริ่มต้นสำหรับคอลัมน์ใหม่ที่อาจไม่มีในข้อมูลเดิม
+                    if (!isset($data['status'])) {
+                        $data['status'] = 'completed'; // ถือว่าข้อมูลเดิมเป็นข้อมูลที่เสร็จสมบูรณ์แล้ว
                     }
-                    if (!Schema::hasIndex('products', 'products_is_service_index')) {
-                        $table->index('is_service');
+
+                    if (!isset($data['transaction_date']) && isset($data['created_at'])) {
+                        $data['transaction_date'] = $data['created_at'];
                     }
-                    if (!Schema::hasIndex('products', 'products_is_featured_index')) {
-                        $table->index('is_featured');
+
+                    if (!isset($data['metadata'])) {
+                        $data['metadata'] = json_encode([
+                            'imported' => true,
+                            'imported_at' => now()->toDateTimeString(),
+                            'note' => 'Imported from previous database structure'
+                        ]);
                     }
-                } catch (\Exception $e) {
-                    // ถ้าเกิดข้อผิดพลาดเกี่ยวกับ index ให้บันทึกเป็น log แทนการล้มเหลวทั้ง migration
-                    \Log::warning("ไม่สามารถเพิ่ม index ในตาราง products: " . $e->getMessage());
+
+                    // เพิ่มข้อมูลกลับเข้าไป
+                    DB::table('stock_movements')->insert($data);
                 }
-            });
+
+                Log::info('นำเข้าข้อมูล stock_movements กลับเข้าระบบเรียบร้อยแล้ว จำนวน ' . count($stockMovementsData) . ' รายการ');
+            } catch (\Exception $e) {
+                Log::error('ไม่สามารถนำเข้าข้อมูล stock_movements: ' . $e->getMessage());
+            }
         }
+
+        Log::info('สร้างตาราง stock_movements เรียบร้อยแล้วพร้อมคอลัมน์ทั้งหมด');
     }
 
     /**
-     * Reverse the migration.
+     * Reverse the migrations.
      */
     public function down(): void
     {
-        // ให้ลบตารางเฉพาะเมื่อมีตารางอยู่จริง
-        if (Schema::hasTable('stock_movements')) {
-            Schema::dropIfExists('stock_movements');
-        }
-        
+        Schema::dropIfExists('stock_movements');
+
         // ถอนการปรับปรุงตาราง products
         if (Schema::hasTable('products')) {
             Schema::table('products', function (Blueprint $table) {
                 $columns = [
-                    'is_inventory', 'is_service', 'weight', 'length',
-                    'width', 'height', 'is_featured', 'tags', 'attributes',
-                    'created_by', 'updated_by'
+                    'is_inventory',
+                    'is_service',
+                    'weight',
+                    'length',
+                    'width',
+                    'height',
+                    'is_featured',
+                    'tags',
+                    'attributes',
+                    'created_by',
+                    'updated_by'
                 ];
-                
+
                 foreach ($columns as $column) {
                     if (Schema::hasColumn('products', $column)) {
                         try {
@@ -138,7 +162,7 @@ return new class extends Migration
                             }
                             $table->dropColumn($column);
                         } catch (\Exception $e) {
-                            \Log::warning("ไม่สามารถลบคอลัมน์ {$column} ในตาราง products: " . $e->getMessage());
+                            Log::warning("ไม่สามารถลบคอลัมน์ {$column} ในตาราง products: " . $e->getMessage());
                         }
                     }
                 }
