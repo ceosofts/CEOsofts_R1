@@ -3,35 +3,43 @@
 namespace App\Domain\Shared\Traits;
 
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Auth;
 
 trait HasCompanyScope
 {
     /**
-     * The "booted" method of the model.
-     *
-     * @return void
+     * Boot the trait.
+     * ใช้สำหรับกำหนด scope ของ model ให้อยู่ในขอบเขตของบริษัทเดียวกัน
      */
     protected static function bootHasCompanyScope()
     {
+        // จัดการ global scope เมื่อมีการสร้างหรือดึงข้อมูล
         static::addGlobalScope('company', function (Builder $builder) {
-            // กรองตามบริษัทของผู้ใช้ที่ล็อกอินอยู่ ยกเว้นกรณีผู้ดูแลระบบ
-            if (Auth::check() && !Auth::user()->is_admin && Auth::user()->company_id) {
-                $builder->where('company_id', Auth::user()->company_id);
+            // ตรวจสอบว่ามี user ที่ login อยู่และมี company_id หรือไม่
+            if (auth()->check() && auth()->user()->company_id) {
+                $builder->where('company_id', auth()->user()->company_id);
+            }
+        });
+
+        // เมื่อมีการสร้าง record ใหม่
+        static::creating(function ($model) {
+            // ถ้าไม่มีการกำหนด company_id และผู้ใช้ login อยู่
+            if (!$model->company_id && auth()->check() && auth()->user()->company_id) {
+                $model->company_id = auth()->user()->company_id;
             }
         });
     }
 
     /**
-     * Scope a query to only include records from the current user's company.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
+     * ขอบเขตแบบ local สำหรับกำหนดเงื่อนไขดึงข้อมูลเฉพาะบริษัท
      */
-    public function scopeCompany($query)
+    public function scopeOfCompany($query, $companyId = null)
     {
-        if (Auth::check() && Auth::user()->company_id) {
-            return $query->where('company_id', Auth::user()->company_id);
+        if ($companyId) {
+            return $query->where('company_id', $companyId);
+        }
+
+        if (auth()->check() && auth()->user()->company_id) {
+            return $query->where('company_id', auth()->user()->company_id);
         }
 
         return $query;

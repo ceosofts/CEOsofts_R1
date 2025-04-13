@@ -1,12 +1,14 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                {{ __('จัดการบริษัท') }}
+            <h2 class="font-extrabold text-4xl text-blue-800">
+                {{ __('รายการบริษัท') }}
             </h2>
-            <a href="{{ route('companies.create') }}" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition">
-                {{ __('เพิ่มบริษัทใหม่') }}
-            </a>
+            <div>
+                <a href="{{ route('companies.create') }}" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition">
+                    {{ __('เพิ่มบริษัทใหม่') }}
+                </a>
+            </div>
         </div>
     </x-slot>
 
@@ -26,15 +28,6 @@
                     </div>
                     @endif
 
-                    <!-- Debug Information - เพิ่มส่วนนี้เพื่อดีบั๊ก -->
-                    @if(app()->environment('local'))
-                    <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative mb-4">
-                        <p class="font-bold">Debug Information:</p>
-                        <p>จำนวนบริษัททั้งหมด: {{ $companies->count() }}</p>
-                        <p>หน้าปัจจุบัน: {{ $companies->currentPage() }}</p>
-                    </div>
-                    @endif
-
                     <div class="overflow-x-auto">
                         <table class="min-w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
                             <thead>
@@ -50,7 +43,7 @@
                             </thead>
                             <tbody>
                                 @forelse($companies as $company)
-                                <tr class="hover:bg-gray-100 dark:hover:bg-gray-650 border-b border-gray-200 dark:border-gray-700">
+                                <tr class="hover:bg-gray-200 dark:hover:bg-gray-600 border-b border-gray-200 dark:border-gray-700">
                                     <td class="py-2 px-4">
                                         @if(isset($company->logo) && $company->logo)
                                         <img src="{{ Storage::url($company->logo) }}" alt="{{ $company->name }}" class="h-8 w-auto">

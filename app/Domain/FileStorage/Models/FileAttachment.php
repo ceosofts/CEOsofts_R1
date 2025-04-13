@@ -2,21 +2,23 @@
 
 namespace App\Domain\FileStorage\Models;
 
+use App\Domain\Organization\Models\Company;
+use App\Domain\Shared\Traits\HasCompanyScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Domain\Organization\Models\Company;
-use App\Domain\Settings\Models\User;
-use App\Domain\Shared\Traits\HasCompanyScope;
 
 class FileAttachment extends Model
 {
     use HasFactory, SoftDeletes, HasCompanyScope;
 
     /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<string, mixed>
+     * ชื่อตารางในฐานข้อมูล
+     */
+    protected $table = 'file_attachments';
+
+    /**
+     * คุณสมบัติที่สามารถกำหนดค่าได้
      */
     protected $fillable = [
         'company_id',
@@ -33,17 +35,18 @@ class FileAttachment extends Model
     ];
 
     /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, mixed>
+     * คุณสมบัติที่ควรแปลงเป็นชนิดข้อมูลต่างๆ
      */
     protected $casts = [
         'metadata' => 'json',
         'file_size' => 'integer',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     /**
-     * Get the company that owns the file attachment.
+     * ความสัมพันธ์กับ Company
      */
     public function company()
     {
@@ -51,15 +54,7 @@ class FileAttachment extends Model
     }
 
     /**
-     * Get the user that created the file attachment.
-     */
-    public function creator()
-    {
-        return $this->belongsTo(User::class, 'created_by');
-    }
-
-    /**
-     * Get the parent attachable model.
+     * ความสัมพันธ์กับ model ที่แนบไฟล์นี้
      */
     public function attachable()
     {
@@ -67,48 +62,28 @@ class FileAttachment extends Model
     }
 
     /**
-     * Get the full URL for the file.
-     *
-     * @return string
+     * ความสัมพันธ์กับผู้ใช้ที่สร้างไฟล์นี้
      */
-    public function getUrlAttribute()
+    public function createdBy()
     {
-        return url(\Storage::disk($this->disk)->url($this->file_path));
+        return $this->belongsTo(\App\Domain\Settings\Models\User::class, 'created_by');
     }
 
     /**
-     * Get the formatted file size.
-     *
-     * @return string
+     * สร้าง directory สำหรับโฟลเดอร์ที่จะจัดเก็บไฟล์
      */
-    public function getFormattedSizeAttribute()
+    public static function ensureDirectoryExists($path)
     {
-        $bytes = $this->file_size;
-
-        if ($bytes >= 1073741824) {
-            return number_format($bytes / 1073741824, 2) . ' GB';
-        } elseif ($bytes >= 1048576) {
-            return number_format($bytes / 1048576, 2) . ' MB';
-        } elseif ($bytes >= 1024) {
-            return number_format($bytes / 1024, 2) . ' KB';
-        } else {
-            return $bytes . ' bytes';
+        if (!file_exists($path)) {
+            mkdir($path, 0755, true);
         }
     }
 
     /**
-     * Scope query to files of a specific mime type.
+     * ดึงข้อมูล URL ของไฟล์
      */
-    public function scopeOfMimeType($query, $type)
+    public function getUrlAttribute()
     {
-        return $query->where('mime_type', 'like', $type . '%');
-    }
-
-    /**
-     * Scope query to files of specific attachable type.
-     */
-    public function scopeOfAttachableType($query, $type)
-    {
-        return $query->where('attachable_type', $type);
+        return \Storage::disk($this->disk)->url($this->file_path);
     }
 }

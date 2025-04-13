@@ -1,25 +1,18 @@
-@props([
-    'type' => 'primary',
-    'href' => null,
-])
+@props(['type' => 'button', 'color' => 'gray'])
 
 @php
-    $classes = match ($type) {
-        'primary' => 'btn btn-primary',
-        'secondary' => 'btn btn-secondary',
-        'accent' => 'btn btn-accent',
-        'outline' => 'btn border border-gray-300 bg-white text-gray-700 hover:bg-gray-50',
-        'danger' => 'btn bg-red-600 text-white hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2',
-        default => 'btn btn-primary',
-    };
+// กำหนดสีต่างๆ ตาม color prop
+$colorClasses = [
+'gray' => 'bg-gray-500 hover:bg-gray-600 focus:bg-gray-600 active:bg-gray-700 border-gray-500',
+'blue' => 'bg-blue-500 hover:bg-blue-600 focus:bg-blue-600 active:bg-blue-700 border-blue-500',
+'red' => 'bg-red-500 hover:bg-red-600 focus:bg-red-600 active:bg-red-700 border-red-500',
+'green' => 'bg-green-500 hover:bg-green-600 focus:bg-green-600 active:bg-green-700 border-green-500',
+'yellow' => 'bg-yellow-500 hover:bg-yellow-600 focus:bg-yellow-600 active:bg-yellow-700 border-yellow-500',
+][$color] ?? 'bg-gray-500 hover:bg-gray-600 focus:bg-gray-600 active:bg-gray-700 border-gray-500';
 @endphp
 
-@if ($href)
-    <a href="{{ $href }}" {{ $attributes->merge(['class' => $classes]) }}>
-        {{ $slot }}
-    </a>
-@else
-    <button {{ $attributes->merge(['class' => $classes, 'type' => 'button']) }}>
-        {{ $slot }}
-    </button>
-@endif
+<button
+    type="{{ $type }}"
+    {{ $attributes->merge(['class' => 'inline-flex items-center px-4 py-2 ' . $colorClasses . ' border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150']) }}>
+    {{ $slot }}
+</button>
