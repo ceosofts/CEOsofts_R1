@@ -6,6 +6,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DebugController;
 use App\Http\Controllers\CompaniesController;
+use App\Http\Controllers\DepartmentController; // เพิ่มบรรทัดนี้
 use App\Models\Company;
 use App\Http\Controllers\Auth\PasswordResetController;
 
@@ -185,6 +186,11 @@ Route::get('/reset-password/{token}', [PasswordResetController::class, 'showRese
 Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])
     ->middleware('guest')
     ->name('password.update');
+
+// เส้นทางสำหรับระบบจัดการแผนก
+Route::middleware(['auth'])->group(function () {
+    Route::resource('departments', DepartmentController::class);
+});
 
 // นำเข้าเส้นทาง Authentication จากไฟล์ auth.php
 require __DIR__ . '/auth.php';

@@ -3,45 +3,61 @@
 namespace App\Domain\Shared\Traits;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 trait HasCompanyScope
 {
     /**
      * Boot the trait.
-     * ใช้สำหรับกำหนด scope ของ model ให้อยู่ในขอบเขตของบริษัทเดียวกัน
+     *
+     * @return void
      */
     protected static function bootHasCompanyScope()
     {
-        // จัดการ global scope เมื่อมีการสร้างหรือดึงข้อมูล
-        static::addGlobalScope('company', function (Builder $builder) {
-            // ตรวจสอบว่ามี user ที่ login อยู่และมี company_id หรือไม่
-            if (auth()->check() && auth()->user()->company_id) {
-                $builder->where('company_id', auth()->user()->company_id);
-            }
-        });
+        // Apply scope only when authenticated
+        if (Auth::check()) {
+            // Get company ID safely - either from current_company_id or default to empty array
+            $companyIds = [Auth::user()->current_company_id ?? 0];
 
-        // เมื่อมีการสร้าง record ใหม่
-        static::creating(function ($model) {
-            // ถ้าไม่มีการกำหนด company_id และผู้ใช้ login อยู่
-            if (!$model->company_id && auth()->check() && auth()->user()->company_id) {
-                $model->company_id = auth()->user()->company_id;
-            }
-        });
+            static::addGlobalScope('company', function (Builder $builder) use ($companyIds) {
+                // Add company_id condition only if table has company_id column
+                if (in_array('company_id', $builder->getModel()->getFillable())) {
+                    $builder->whereIn('company_id', $companyIds);
+                }
+            });
+        }
     }
 
     /**
-     * ขอบเขตแบบ local สำหรับกำหนดเงื่อนไขดึงข้อมูลเฉพาะบริษัท
+     * Without company scope.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopeOfCompany($query, $companyId = null)
+    public function scopeWithoutCompanyScope($query)
     {
-        if ($companyId) {
-            return $query->where('company_id', $companyId);
-        }
+        return $query->withoutGlobalScope('company');
+    }
 
-        if (auth()->check() && auth()->user()->company_id) {
-            return $query->where('company_id', auth()->user()->company_id);
-        }
+    /**
+     * ความสัมพันธ์กับบริษัท
+     */
+    public function company()
+    {
+        return $this->belongsTo(\App\Domain\Organization\Models\Company::class);
+    }
 
-        return $query;
+    /**
+     * กำหนดค่า company_id โดยอัตโนมัติจากผู้ใช้ปัจจุบัน
+     */
+    public static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (Auth::check() && !$model->company_id) {
+                $model->company_id = Auth::user()->current_company_id;
+            }
+        });
     }
 }
