@@ -107,7 +107,7 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                     <div>
-                        <img src="https://placehold.co/600x400/312e81/ffffff?text=เกี่ยวกับเรา" alt="About CEOsofts" class="rounded-xl shadow-lg w-full">
+                        <img src="https://placehold.co/600x400/312e81/ffffff?text=CEOsofts R1" alt="About CEOsofts" class="rounded-xl shadow-lg w-full">
                     </div>
                     <div>
                         <h2 class="text-3xl md:text-4xl font-heading font-bold text-gray-900 mb-6">เกี่ยวกับเรา</h2>

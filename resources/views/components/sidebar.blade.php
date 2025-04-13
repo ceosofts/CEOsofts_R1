@@ -2,8 +2,7 @@
     class="bg-secondary-800 text-white w-64 flex-shrink-0 overflow-y-auto fixed h-full md:sticky md:top-0 transition-transform duration-300 transform"
     x-data="{ open: true }"
     x-on:toggle-sidebar.window="open = !open"
-    :class="{'translate-x-0': open, '-translate-x-full': !open, 'md:translate-x-0': true}"
->
+    :class="{'translate-x-0': open, '-translate-x-full': !open, 'md:translate-x-0': true}">
     <div class="flex flex-col h-full">
         <!-- Logo -->
         <div class="flex items-center justify-center h-16 bg-secondary-900">
@@ -12,26 +11,26 @@
                 <span class="ml-2 text-lg font-semibold">CEOsofts R1</span>
             </a>
         </div>
-        
+
         <!-- Company Info -->
         @if(auth()->check() && session('current_company_id'))
-            <div class="bg-secondary-900/50 px-4 py-3">
-                <p class="text-xs text-secondary-400 uppercase">บริษัท</p>
-                <p class="font-medium truncate">{{ \App\Models\Company::find(session('current_company_id'))->name }}</p>
-            </div>
+        <div class="bg-secondary-900/50 px-4 py-3">
+            <p class="text-xs text-secondary-400 uppercase">บริษัท</p>
+            <p class="font-medium truncate">{{ \App\Models\Company::find(session('current_company_id'))->name }}</p>
+        </div>
         @endif
 
         <!-- Navigation -->
         <nav class="flex-1 px-2 py-4 space-y-1">
             <!-- Dashboard -->
-            <a href="{{ route('dashboard') }}" 
-               class="{{ request()->routeIs('dashboard') ? 'bg-secondary-900 text-white' : 'text-secondary-300 hover:bg-secondary-700' }} flex items-center px-4 py-2 text-sm rounded-md">
+            <a href="{{ route('dashboard') }}"
+                class="{{ request()->routeIs('dashboard') ? 'bg-secondary-900 text-white' : 'text-secondary-300 hover:bg-secondary-700' }} flex items-center px-4 py-2 text-sm rounded-md">
                 <svg class="mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
                 แดชบอร์ด
             </a>
-            
+
             <!-- Organization Management -->
             <div x-data="{ open: {{ request()->routeIs('companies.*') || request()->routeIs('departments.*') || request()->routeIs('positions.*') ? 'true' : 'false' }} }">
                 <button @click="open = !open" class="flex items-center justify-between w-full px-4 py-2 text-sm text-secondary-300 hover:bg-secondary-700 rounded-md">
@@ -52,15 +51,15 @@
                     <a href="{{ route('companies.index') }}" class="{{ request()->routeIs('companies.*') ? 'bg-secondary-900 text-white' : 'text-secondary-300 hover:bg-secondary-700' }} flex items-center px-4 py-2 text-sm rounded-md">
                         บริษัท
                     </a>
-                    <a href="{{ route('departments.index') }}" class="{{ request()->routeIs('departments.*') ? 'bg-secondary-900 text-white' : 'text-secondary-300 hover:bg-secondary-700' }} flex items-center px-4 py-2 text-sm rounded-md">
+                    <a href="#" class="{{ request()->routeIs('departments.*') ? 'bg-secondary-900 text-white' : 'text-secondary-300 hover:bg-secondary-700' }} flex items-center px-4 py-2 text-sm rounded-md">
                         แผนก
                     </a>
-                    <a href="{{ route('positions.index') }}" class="{{ request()->routeIs('positions.*') ? 'bg-secondary-900 text-white' : 'text-secondary-300 hover:bg-secondary-700' }} flex items-center px-4 py-2 text-sm rounded-md">
+                    <a href="#" class="{{ request()->routeIs('positions.*') ? 'bg-secondary-900 text-white' : 'text-secondary-300 hover:bg-secondary-700' }} flex items-center px-4 py-2 text-sm rounded-md">
                         ตำแหน่ง
                     </a>
                 </div>
             </div>
-            
+
             <!-- Human Resources -->
             <div x-data="{ open: {{ request()->routeIs('employees.*') || request()->routeIs('work-shifts.*') ? 'true' : 'false' }} }">
                 <button @click="open = !open" class="flex items-center justify-between w-full px-4 py-2 text-sm text-secondary-300 hover:bg-secondary-700 rounded-md">
@@ -78,15 +77,15 @@
                     </svg>
                 </button>
                 <div x-show="open" class="pl-6 mt-1 space-y-1">
-                    <a href="{{ route('employees.index') }}" class="{{ request()->routeIs('employees.*') ? 'bg-secondary-900 text-white' : 'text-secondary-300 hover:bg-secondary-700' }} flex items-center px-4 py-2 text-sm rounded-md">
+                    <a href="#" class="{{ request()->routeIs('employees.*') ? 'bg-secondary-900 text-white' : 'text-secondary-300 hover:bg-secondary-700' }} flex items-center px-4 py-2 text-sm rounded-md">
                         พนักงาน
                     </a>
-                    <a href="{{ route('work-shifts.index') }}" class="{{ request()->routeIs('work-shifts.*') ? 'bg-secondary-900 text-white' : 'text-secondary-300 hover:bg-secondary-700' }} flex items-center px-4 py-2 text-sm rounded-md">
+                    <a href="#" class="{{ request()->routeIs('work-shifts.*') ? 'bg-secondary-900 text-white' : 'text-secondary-300 hover:bg-secondary-700' }} flex items-center px-4 py-2 text-sm rounded-md">
                         กะการทำงาน
                     </a>
                 </div>
             </div>
-            
+
             <!-- Sales -->
             <div x-data="{ open: {{ request()->routeIs('customers.*') || request()->routeIs('quotations.*') || request()->routeIs('orders.*') ? 'true' : 'false' }} }">
                 <button @click="open = !open" class="flex items-center justify-between w-full px-4 py-2 text-sm text-secondary-300 hover:bg-secondary-700 rounded-md">
@@ -116,7 +115,7 @@
                 </div>
             </div>
         </nav>
-        
+
         <!-- Help Link -->
         <div class="border-t border-secondary-700 p-4">
             <a href="#" class="flex items-center text-sm text-secondary-400 hover:text-white transition-colors duration-150">

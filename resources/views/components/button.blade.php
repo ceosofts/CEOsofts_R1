@@ -11,8 +11,6 @@ $colorClasses = [
 ][$color] ?? 'bg-gray-500 hover:bg-gray-600 focus:bg-gray-600 active:bg-gray-700 border-gray-500';
 @endphp
 
-<button
-    type="{{ $type }}"
-    {{ $attributes->merge(['class' => 'inline-flex items-center px-4 py-2 ' . $colorClasses . ' border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150']) }}>
+<button {{ $attributes->merge(['type' => 'submit', 'class' => 'inline-flex items-center px-4 py-2 bg-gradient-to-r from-accent-500 to-accent-600 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:from-accent-600 hover:to-accent-700 active:from-accent-700 active:to-accent-800 focus:outline-none focus:border-accent-700 focus:ring focus:ring-accent-200 disabled:opacity-25 transition transform hover:-translate-y-0.5']) }}>
     {{ $slot }}
 </button>

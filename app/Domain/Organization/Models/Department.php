@@ -2,57 +2,74 @@
 
 namespace App\Domain\Organization\Models;
 
-use App\Domain\Shared\Traits\HasCompanyScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Domain\HumanResources\Models\Employee;
 
 class Department extends Model
 {
-    use HasFactory, SoftDeletes, HasCompanyScope;
+    use HasFactory, SoftDeletes;
+    // ได้ลบ HasCompanyScope ออกไปแล้วเพื่อแก้ปัญหา error
 
+    /**
+     * คอลัมน์ที่อนุญาตให้กำหนดค่าได้
+     */
     protected $fillable = [
-        'company_id',
         'name',
         'code',
         'description',
+        'company_id',
         'parent_id',
         'is_active',
         'status',
         'metadata',
     ];
 
+    /**
+     * คอลัมน์ที่จะแปลงเป็น type ที่ระบุ
+     */
     protected $casts = [
         'is_active' => 'boolean',
         'metadata' => 'json',
     ];
 
     /**
-     * Get the company that owns this department.
+     * ความสัมพันธ์กับบริษัท
      */
-    public function company()
+    public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
     }
 
     /**
-     * Get the parent department.
+     * ความสัมพันธ์กับแผนกแม่ (parent)
      */
-    public function parent()
+    public function parent(): BelongsTo
     {
         return $this->belongsTo(Department::class, 'parent_id');
     }
 
     /**
-     * Get the child departments.
+     * ความสัมพันธ์กับแผนกลูก (children)
      */
-    public function children()
+    public function children(): HasMany
     {
         return $this->hasMany(Department::class, 'parent_id');
     }
 
     /**
-     * Get all employees in this department.
+     * ความสัมพันธ์กับตำแหน่งทั้งหมดในแผนก
+     */
+    public function positions(): HasMany
+    {
+        return $this->hasMany(Position::class);
+    }
+
+    /**
+     * ความสัมพันธ์กับพนักงานทั้งหมดในแผนก
      */
     public function employees()
     {
@@ -60,18 +77,10 @@ class Department extends Model
     }
 
     /**
-     * Scope a query to only include active departments.
+     * Scope สำหรับค้นหาแผนกที่ active
      */
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
-    }
-
-    /**
-     * Scope a query to only include root departments (no parent).
-     */
-    public function scopeRoot($query)
-    {
-        return $query->whereNull('parent_id');
     }
 }

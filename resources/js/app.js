@@ -1,5 +1,7 @@
+// ตรวจสอบว่ามีการนำเข้า Alpine.js หรือไม่
 import Alpine from 'alpinejs';
 import './bootstrap';
+import './auth'; // เพิ่มไฟล์ auth.js
 
 // Initialize Alpine.js
 window.Alpine = Alpine;

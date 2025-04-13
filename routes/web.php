@@ -6,7 +6,9 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DebugController;
 use App\Http\Controllers\CompaniesController;
+use App\Http\Controllers\DepartmentController; // เพิ่มบรรทัดนี้
 use App\Models\Company;
+use App\Http\Controllers\Auth\PasswordResetController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,10 +26,27 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/about', [HomeController::class, 'about'])->name('about');
 
 // Dashboard route
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth'])
+    ->name('dashboard');
+
+// เพิ่ม Route สำหรับการเลือกบริษัท
+Route::get('/dashboard/switch-company/{company}', function (\App\Models\Company $company) {
+    session(['current_company_id' => $company->id]);
+    return redirect()->route('dashboard');
+})->middleware(['auth'])->name('dashboard.switch-company');
 
 // ลบ route ซ้ำซ้อนและใช้เพียง controller เดียว
 Route::resource('companies', CompaniesController::class);
+
+// เพิ่มเส้นทางสำหรับลูกค้า
+Route::resource('customers', App\Http\Controllers\CustomerController::class);
+
+// เพิ่มเส้นทางสำหรับใบเสนอราคา
+Route::resource('quotations', App\Http\Controllers\QuotationController::class);
+
+// เพิ่มเส้นทางสำหรับใบสั่งขาย
+Route::resource('orders', App\Http\Controllers\OrderController::class);
 
 // ทดสอบเส้นทางเพื่อ debug
 Route::get('/test-companies', function () {
@@ -150,3 +169,28 @@ Route::get('/basic-company/{id}', function ($id) {
         return "เกิดข้อผิดพลาด: " . $e->getMessage();
     }
 });
+
+// Password Reset Routes
+Route::get('/forgot-password', [PasswordResetController::class, 'showForgotPasswordForm'])
+    ->middleware('guest')
+    ->name('password.request');
+
+Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])
+    ->middleware('guest')
+    ->name('password.email');
+
+Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetPasswordForm'])
+    ->middleware('guest')
+    ->name('password.reset');
+
+Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])
+    ->middleware('guest')
+    ->name('password.update');
+
+// เส้นทางสำหรับระบบจัดการแผนก
+Route::middleware(['auth'])->group(function () {
+    Route::resource('departments', DepartmentController::class);
+});
+
+// นำเข้าเส้นทาง Authentication จากไฟล์ auth.php
+require __DIR__ . '/auth.php';
