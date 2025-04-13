@@ -1,92 +1,90 @@
-<header class="bg-white shadow-sm z-10">
-    <div class="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4">
-        <!-- Mobile menu button-->
-        <button 
-            type="button" 
-            class="md:hidden text-secondary-500 hover:text-secondary-900 focus:outline-none"
-            x-data="{}"
-            x-on:click="$dispatch('toggle-sidebar')"
-        >
-            <span class="sr-only">เปิดเมนู</span>
-            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-        </button>
-        
-        <!-- Logo for mobile view -->
-        <div class="flex md:hidden items-center">
-            <a href="{{ route('dashboard') }}" class="flex items-center">
-                <img src="/img/logo-sm.svg" alt="CEOsofts logo" class="h-8 w-auto">
-            </a>
-        </div>
-
-        <!-- Search -->
-        <div class="flex-1 max-w-md hidden md:block">
-            <form class="w-full">
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <svg class="w-4 h-4 text-secondary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </div>
-                    <input type="text" class="bg-secondary-50 border border-secondary-300 text-secondary-900 text-sm rounded-md block w-full pl-10 p-2 focus:ring-primary-500 focus:border-primary-500" placeholder="ค้นหา...">
+<nav class="bg-white shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+            <div class="flex">
+                <div class="flex-shrink-0 flex items-center">
+                    <!-- Logo -->
+                    <a href="{{ route('dashboard') }}" class="text-xl font-bold text-gray-800">
+                        CEOsofts R1
+                    </a>
                 </div>
-            </form>
-        </div>
 
-        <!-- Right side nav items -->
-        <div class="flex items-center">
-            <!-- Company selector dropdown -->
-            <div class="mr-4">
-                @if(auth()->check() && session('current_company_id'))
-                    <x-dropdown>
-                        <x-slot name="trigger">
-                            <button class="flex items-center text-sm font-medium text-secondary-700 hover:text-secondary-900">
-                                <span>{{ \App\Models\Company::find(session('current_company_id'))->name }}</span>
-                                <svg class="ml-1 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-                        </x-slot>
+                <!-- Navigation Links -->
+                <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+                    <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'border-indigo-500 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                        แผงควบคุม
+                    </a>
 
-                        <x-slot name="content">
-                            @foreach(auth()->user()->companies as $company)
-                                <a href="{{ route('dashboard.switch-company', $company) }}" 
-                                   class="block px-4 py-2 text-sm text-secondary-700 hover:bg-secondary-100 {{ session('current_company_id') == $company->id ? 'bg-primary-50 text-primary-700' : '' }}">
-                                    {{ $company->name }}
-                                </a>
-                            @endforeach
-                        </x-slot>
-                    </x-dropdown>
-                @endif
+                    <a href="{{ route('companies.index') }}" class="{{ request()->routeIs('companies.*') ? 'border-indigo-500 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                        บริษัท
+                    </a>
+
+                    <a href="{{ route('customers.index') }}" class="{{ request()->routeIs('customers.*') ? 'border-indigo-500 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                        ลูกค้า
+                    </a>
+
+                    <a href="{{ route('quotations.index') }}" class="{{ request()->routeIs('quotations.*') ? 'border-indigo-500 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                        ใบเสนอราคา
+                    </a>
+
+                    <a href="{{ route('orders.index') }}" class="{{ request()->routeIs('orders.*') ? 'border-indigo-500 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                        ใบสั่งขาย
+                    </a>
+                </div>
             </div>
 
-            <!-- User dropdown -->
-            <div>
-                <x-dropdown>
-                    <x-slot name="trigger">
-                        <button class="flex items-center text-sm font-medium text-secondary-700 hover:text-secondary-900">
-                            <img class="h-8 w-8 rounded-full object-cover" src="{{ auth()->user()->profile_photo_url ?? '/img/undraw_profile.svg' }}" alt="{{ auth()->user()->name }}">
-                            <span class="ml-2 hidden md:block">{{ auth()->user()->name }}</span>
-                            <svg class="ml-1 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                            </svg>
+            <!-- Profile dropdown and mobile menu button -->
+            <div class="flex items-center">
+                <!-- User information dropdown -->
+                <div class="ml-3 relative">
+                    <div>
+                        <button type="button" class="max-w-xs bg-white flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500" id="user-menu-button" aria-expanded="false" aria-haspopup="true">
+                            <span class="sr-only">เปิดเมนูผู้ใช้</span>
+                            <span class="inline-block h-8 w-8 overflow-hidden rounded-full bg-gray-100">
+                                <svg class="h-full w-full text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path>
+                                </svg>
+                            </span>
                         </button>
-                    </x-slot>
+                    </div>
+                </div>
 
-                    <x-slot name="content">
-                        <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-secondary-700 hover:bg-secondary-100">
-                            โปรไฟล์
-                        </a>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-secondary-700 hover:bg-secondary-100">
-                                ออกจากระบบ
-                            </button>
-                        </form>
-                    </x-slot>
-                </x-dropdown>
+                <!-- Mobile menu button -->
+                <div class="-mr-2 flex items-center sm:hidden">
+                    <button type="button" class="bg-white p-2 inline-flex items-center justify-center rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500" aria-controls="mobile-menu" aria-expanded="false">
+                        <span class="sr-only">เปิดเมนูหลัก</span>
+                        <!-- Icon when menu is closed -->
+                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-</header>
+
+    <!-- Mobile menu -->
+    <div class="sm:hidden" id="mobile-menu">
+        <div class="pt-2 pb-3 space-y-1">
+            <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'bg-indigo-50 border-indigo-500 text-indigo-700' : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800' }} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                แผงควบคุม
+            </a>
+
+            <a href="{{ route('companies.index') }}" class="{{ request()->routeIs('companies.*') ? 'bg-indigo-50 border-indigo-500 text-indigo-700' : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800' }} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                บริษัท
+            </a>
+
+            <a href="{{ route('customers.index') }}" class="{{ request()->routeIs('customers.*') ? 'bg-indigo-50 border-indigo-500 text-indigo-700' : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800' }} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                ลูกค้า
+            </a>
+
+            <a href="{{ route('quotations.index') }}" class="{{ request()->routeIs('quotations.*') ? 'bg-indigo-50 border-indigo-500 text-indigo-700' : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800' }} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                ใบเสนอราคา
+            </a>
+
+            <a href="{{ route('orders.index') }}" class="{{ request()->routeIs('orders.*') ? 'bg-indigo-50 border-indigo-500 text-indigo-700' : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800' }} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                ใบสั่งขาย
+            </a>
+        </div>
+    </div>
+</nav>
