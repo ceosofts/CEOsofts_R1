@@ -114,37 +114,45 @@
                             @enderror
                         </div>
 
-                        <!-- ข้อมูลเพิ่มเติม (JSON Metadata) -->
+                        <!-- ข้อมูลเพิ่มเติม (JSON Metadata) - แบบ Collapsible -->
                         <div class="mt-6">
-                            <label for="metadata" class="block text-sm font-medium text-gray-700 dark:text-gray-300">ข้อมูลเพิ่มเติม (JSON)</label>
-                            <div class="mt-1">
-                                <!-- Add tabs for "Edit" and "View" modes -->
-                                <div class="border-b border-gray-200">
-                                    <nav class="-mb-px flex space-x-4">
-                                        <button type="button" id="edit-tab" class="px-3 py-2 text-sm font-medium text-blue-600 border-b-2 border-blue-600">
-                                            แก้ไข
-                                        </button>
-                                        <button type="button" id="view-tab" class="px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent">
-                                            ดูข้อมูล
-                                        </button>
-                                    </nav>
-                                </div>
+                            <button type="button" id="metadata-toggle" class="flex items-center justify-between w-full px-4 py-2 text-sm font-medium text-left text-blue-600 bg-blue-100 rounded-lg hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <span>ข้อมูลเพิ่มเติม (JSON)</span>
+                                <svg id="metadata-arrow" class="w-5 h-5 transform transition-transform duration-200" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 111.414 1.414l-4 4a1 1 01-1.414 0l-4-4a1 1 010-1.414z" clip-rule="evenodd"></path>
+                                </svg>
+                            </button>
+                            <div id="metadata-content" class="mt-2 hidden">
+                                <div class="border border-gray-200 rounded-md p-4 bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
+                                    <div class="mb-3">
+                                        <div class="border-b border-gray-200">
+                                            <nav class="-mb-px flex space-x-4">
+                                                <button type="button" id="edit-tab" class="px-3 py-2 text-sm font-medium text-blue-600 border-b-2 border-blue-600">
+                                                    แก้ไข
+                                                </button>
+                                                <button type="button" id="view-tab" class="px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent">
+                                                    ดูข้อมูล
+                                                </button>
+                                            </nav>
+                                        </div>
+                                    </div>
 
-                                <!-- Edit mode -->
-                                <div id="edit-mode">
-                                    <textarea name="metadata" id="metadata" rows="5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm font-mono dark:bg-gray-700 dark:border-gray-600 dark:text-white">{{ old('metadata', '{"en_name": "", "reports_to": "", "grade": ""}') }}</textarea>
-                                </div>
+                                    <!-- Edit mode -->
+                                    <div id="edit-mode">
+                                        <textarea name="metadata" id="metadata" rows="5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm font-mono dark:bg-gray-700 dark:border-gray-600 dark:text-white">{{ old('metadata', '{"en_name": "", "reports_to": "", "grade": ""}') }}</textarea>
+                                    </div>
 
-                                <!-- View mode (formatted JSON) -->
-                                <div id="view-mode" class="hidden">
-                                    <pre id="json-viewer" class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 p-3 h-[120px] overflow-auto text-sm font-mono dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200"></pre>
-                                </div>
+                                    <!-- View mode (formatted JSON) -->
+                                    <div id="view-mode" class="hidden">
+                                        <pre id="json-viewer" class="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 p-3 h-[120px] overflow-auto text-sm font-mono dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200"></pre>
+                                    </div>
 
-                                <p class="text-sm text-gray-500 mt-1">ใส่ข้อมูลในรูปแบบ JSON เช่น {"en_name": "Manager", "reports_to": "CEO", "grade": "M1"}</p>
+                                    <p class="text-sm text-gray-500 mt-1">ใส่ข้อมูลในรูปแบบ JSON เช่น {"en_name": "Manager", "reports_to": "CEO", "grade": "M1"}</p>
+                                    @error('metadata')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
                             </div>
-                            @error('metadata')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                            @enderror
                         </div>
 
                         <div class="mt-8 flex items-center justify-between">
@@ -184,6 +192,16 @@
             const metadataField = document.getElementById('metadata');
             const jsonViewer = document.getElementById('json-viewer');
 
+            // Toggle collapsible metadata section
+            const metadataToggle = document.getElementById('metadata-toggle');
+            const metadataContent = document.getElementById('metadata-content');
+            const metadataArrow = document.getElementById('metadata-arrow');
+            
+            metadataToggle.addEventListener('click', function() {
+                metadataContent.classList.toggle('hidden');
+                metadataArrow.classList.toggle('rotate-180');
+            });
+
             // Function to update the JSON viewer
             function updateJsonViewer() {
                 try {
@@ -195,7 +213,7 @@
                         jsonViewer.textContent = '';
                     }
                 } catch (e) {
-                    jsonViewer.textContent = 'Invalid JSON';
+                    jsonViewer.textContent = 'ข้อมูล JSON ไม่ถูกต้อง';
                 }
             }
 
