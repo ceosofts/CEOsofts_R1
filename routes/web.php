@@ -9,6 +9,7 @@ use App\Http\Controllers\CompaniesController;
 use App\Http\Controllers\DepartmentController; // เพิ่มบรรทัดนี้
 use App\Models\Company;
 use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\PositionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -190,6 +191,11 @@ Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']
 // เส้นทางสำหรับระบบจัดการแผนก
 Route::middleware(['auth'])->group(function () {
     Route::resource('departments', DepartmentController::class);
+});
+
+// การจัดการตำแหน่ง
+Route::middleware(['auth'])->group(function () {
+    Route::resource('positions', PositionController::class);
 });
 
 // นำเข้าเส้นทาง Authentication จากไฟล์ auth.php

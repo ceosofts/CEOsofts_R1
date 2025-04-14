@@ -1,54 +1,49 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./resources/**/*.blade.php",
-    "./resources/**/*.js",
-    "./resources/**/*.vue",
-    "./resources/**/*.css",
-    "./app/**/*.php",
-    "./config/**/*.php",
+    // จำกัดการสแกนเฉพาะไฟล์ที่จำเป็น
+    "./resources/views/**/*.blade.php",
+    "./resources/js/**/*.js",
+    // ไม่รวม tests, documentation และไฟล์ที่ไม่จำเป็น
+    // "./resources/**/*.vue", // ตัดออกเพราะดูเหมือนไม่ได้ใช้ Vue
+    // "./resources/**/*.css", // CSS จะถูกสร้างจาก Tailwind อยู่แล้ว ไม่จำเป็นต้องสแกน
+    "./app/View/**/*.php",     // เฉพาะ View components แทนการสแกน app ทั้งหมด
+    // "./config/**/*.php",    // ตัดออกเพราะมีโอกาสน้อยที่ config จะมี CSS classes
   ],
+  
+  // เพิ่ม safelist สำหรับคลาสที่ใช้บ่อยแต่อาจไม่ถูกตรวจพบในไฟล์
+  safelist: [
+    'bg-primary-500',
+    'text-primary-500',
+    'bg-secondary-500',
+    'text-secondary-500',
+  ],
+
   theme: {
     extend: {
       colors: {
         primary: {
+          // ลดจำนวนเฉดสี ใช้เฉพาะที่จำเป็น
           50: '#eef2ff',
           100: '#e0e7ff',
-          200: '#c7d2fe',
-          300: '#a5b4fc',
-          400: '#818cf8',
           500: '#6366f1',
           600: '#4f46e5',
           700: '#4338ca',
-          800: '#3730a3',
           900: '#312e81',
-          950: '#1e1b4b',
         },
         secondary: {
           50: '#f0fdfa',
           100: '#ccfbf1',
-          200: '#99f6e4',
-          300: '#5eead4',
-          400: '#2dd4bf',
           500: '#14b8a6',
           600: '#0d9488',
           700: '#0f766e',
-          800: '#115e59',
           900: '#134e4a',
-          950: '#042f2e',
         },
         accent: {
-          50: '#fff9eb',
           100: '#ffefc2',
-          200: '#ffe095',
-          300: '#ffca58',
-          400: '#ffb01c',
           500: '#fe9c03',
           600: '#ef7c00',
-          700: '#c05b03',
-          800: '#9a480c',
           900: '#7e3c0f',
-          950: '#461e05',
         }
       },
       fontFamily: {
@@ -85,9 +80,25 @@ module.exports = {
       },
     },
   },
+  
+  // ลดจำนวน plugins ลงและเพิ่มการตั้งค่าประสิทธิภาพ
   plugins: [
     require('@tailwindcss/forms'),
     require('@tailwindcss/typography'),
-    // require('@tailwindcss/aspect-ratio'),
   ],
+  
+  // เพิ่มการตั้งค่าเพื่อปรับปรุงประสิทธิภาพ
+  future: {
+    hoverOnlyWhenSupported: true, // ลดจำนวน CSS ที่สร้าง
+  },
+  
+  // ลด variants เพื่อลดขนาด CSS
+  variants: {
+    extend: {
+      // เก็บเฉพาะ variants ที่จำเป็น
+      opacity: ['hover', 'focus'],
+      backgroundColor: ['hover', 'focus'],
+      textColor: ['hover', 'focus'],
+    }
+  }
 }
