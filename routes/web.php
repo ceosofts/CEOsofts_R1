@@ -16,6 +16,8 @@ use App\Http\Controllers\DebugCompanyController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\OrganizationStructureController; // เพิ่มบรรทัดนี้
+use App\Http\Controllers\ComingSoonController; // เพิ่มบรรทัดนี้
 
 /*
 |--------------------------------------------------------------------------
@@ -229,7 +231,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    
+    // Routes สำหรับระบบโครงสร้างองค์กรdex'])->name('index');
+    Route::middleware([\App\Http\Middleware\SetDefaultCompany::class])->prefix('organization/structure')->name('organization.structure.')->group(function () {
+        Route::get('/', [OrganizationStructureController::class, 'index'])->name('index');
+        Route::get('/{company}', [OrganizationStructureController::class, 'show'])->name('show');
+        Route::get('/{company}/edit', [OrganizationStructureController::class, 'edit'])->name('edit');
+        Route::put('/{company}', [OrganizationStructureController::class, 'update'])->name('update');
+        Route::get('/{company}/tree', [OrganizationStructureController::class, 'treeView'])->name('tree');
+    });
 });
+
+// API Route สำหรับแผนผังองค์กร
+Route::get('/api/organization/{company}/data', [OrganizationStructureController::class, 'getOrganizationData'])
+    ->name('api.organization.data');
 
 // เพิ่ม route สำหรับการทดสอบ
 Route::get('/test/employees', [App\Http\Controllers\TestController::class, 'testEmployees']);

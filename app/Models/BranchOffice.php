@@ -69,6 +69,14 @@ class BranchOffice extends Model
     }
 
     /**
+     * Get the departments for the branch office.
+     */
+    public function departments(): HasMany
+    {
+        return $this->hasMany(Department::class);
+    }
+
+    /**
      * Get the name attribute
      * 
      * @return string
