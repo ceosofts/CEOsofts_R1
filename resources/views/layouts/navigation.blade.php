@@ -1,7 +1,7 @@
 @php
 use Illuminate\Support\Facades\Auth;
 @endphp
-<nav class="bg-blue-800 border-b border-blue-700">
+<nav x-data="{ open: false }" class="bg-blue-800 border-b border-blue-700">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex items-center">
@@ -48,6 +48,10 @@ use Illuminate\Support\Facades\Auth;
                                 </x-dropdown-link>
                                 <x-dropdown-link :href="route('positions.index')">
                                     ตำแหน่ง
+                                </x-dropdown-link>
+                                <!-- เพิ่มลิงก์โครงสร้างองค์กรตรงนี้ -->
+                                <x-dropdown-link :href="route('organization.structure.index')">
+                                    โครงสร้างองค์กร
                                 </x-dropdown-link>
                             </x-slot>
                         </x-dropdown>
