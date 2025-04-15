@@ -73,7 +73,7 @@ class Company extends Model
         });
 
         // ถ้ามี Global Scope ที่กรองข้อมูลออก อาจจะอยู่ตรงนี้
-        // ลองปิด scope เพื่อดูว่าช่วยแก้ปัญหาหรือไม่
+        // ลองปิด scope เพื่อดูว่าเป็นสาเหตุของปัญหาหรือไม่
         /*
         static::addGlobalScope('active', function($query) {
             // ปิด scope นี้ชั่วคราวเพื่อดูว่าเป็นสาเหตุของปัญหาหรือไม่
@@ -126,6 +126,14 @@ class Company extends Model
         return $this->belongsToMany(User::class)
             ->withPivot('is_default')
             ->withTimestamps();
+    }
+
+    /**
+     * Get the branch offices for the company.
+     */
+    public function branchOffices()
+    {
+        return $this->hasMany(BranchOffice::class);
     }
 
     /**

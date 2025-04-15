@@ -3,13 +3,37 @@
 🔹 1. คำสั่งที่ใช้บ่อยที่สุดในการพัฒนา
 ใช้ทุกวัน หรือใช้บ่อยในการทำงานกับโปรเจกต์ CEOsofts R1
 
+php artisan cache:all-clear
+bash tools/clear-all-cache.sh
+
 cd /Users/iwasbornforthis/MyProject/CEOsofts_R1     # เข้าตำแหน่งโปรเจกต์
 php artisan serve                                   # เริ่มเซิร์ฟเวอร์ท้องถิ่น
 php artisan serve --port=8001                       # เริ่มเซิร์ฟเวอร์ท้องถิ่นบนพอร์ต 8001
 npm run dev                                         # คอมไพล์ Assets แบบ Development Mode
+npm run dev
+# หรือใช้ watch mode
+npm run watch
 npm run build                                       # Build Production Mode
 php artisan migrate:fresh --seed                    # รีเซ็ตฐานข้อมูลและ Seed ข้อมูลใหม่
 php artisan db:seed --class=UserSeeder              # Seed ข้อมูลผู้ใช้ทดสอบ
+
+# ดูรายการ site ทั้งหมดที่ link ไว้กับ Valet
+valet links
+
+# รีสตาร์ท Valet (หากมีปัญหา)
+valet restart
+
+# หยุดการทำงานของ Valet ชั่วคราว
+valet stop
+
+# เริ่มการทำงานของ Valet
+valet start
+
+# เปิดใช้งาน SSL สำหรับโปรเจคนี้ (https)
+valet secure ceosofts
+
+# ยกเลิก SSL
+valet unsecure ceosofts
 
 http://127.0.0.1:8001/db-explorer.php ดูฐานข้อมูล
 
@@ -22,6 +46,8 @@ testuser@ceosofts.com / password
 php artisan project:structure --output=project_structure_$(date +%Y_%m_%d).txt
 
 # URL สำคัญ
+http://127.0.0.1:8000
+
 http://127.0.0.1:8001/login       # URL สำหรับเข้าสู่ระบบ
 http://127.0.0.1:8001/register    # URL สำหรับลงทะเบียนผู้ใช้
 http://127.0.0.1:8001/dashboard   # หน้าแดชบอร์ด
@@ -167,3 +193,73 @@ git diff                                       # ดูความแตกต�
 npm run dev                                    # พัฒนาแบบ Development
 npm run build                                  # Build แบบ Production
 npm run preview                                # Preview ก่อน Deploy
+
+# คำสั่งสำหรับการใช้งาน CEOsofts R1
+
+## คำสั่งการติดตั้ง
+```bash
+# คลอนโปรเจคลงเครื่อง
+git clone https://github.com/yourusername/CEOsofts_R1.git
+
+# เข้าไปในโฟลเดอร์โปรเจค
+cd CEOsofts_R1
+
+# ติดตั้ง PHP Dependencies
+composer install
+
+# ติดตั้ง JavaScript Dependencies
+npm install
+
+# สร้างไฟล์ .env จากแม่แบบ
+cp .env.example .env
+
+# สร้าง Application Key
+php artisan key:generate
+
+# สร้างฐานข้อมูล (ในที่นี้ใช้ SQLite)
+touch database/ceosofts_db_R1.sqlite
+
+# รันการ Migration เพื่อสร้างตาราง
+php artisan migrate
+
+# รัน Seeder เพื่อเติมข้อมูลตัวอย่าง
+php artisan db:seed
+
+# สร้าง Symbolic Link สำหรับ Storage
+php artisan storage:link
+
+# คอมไพล์ Assets
+npm run dev
+
+# รันเซิร์ฟเวอร์
+php artisan serve
+```
+
+## คำสั่งที่ใช้บ่อยในการพัฒนา
+```bash
+# รันเซิร์ฟเวอร์
+php artisan serve
+
+# คอมไพล์ Assets แบบ Watch (ทำงานเมื่อไฟล์มีการเปลี่ยนแปลง)
+npm run watch
+
+# สร้าง Migration ใหม่
+php artisan make:migration create_[table_name]_table
+
+# สร้าง Model
+php artisan make:model [ModelName]
+
+# สร้าง Controller
+php artisan make:controller [ControllerName]
+
+# สร้าง Resource Controller
+php artisan make:controller [ControllerName] --resource
+
+# สร้าง Request Validation
+php artisan make:request [RequestName]
+
+# ล้าง Cache ทุกประเภท
+php artisan optimize:clear
+
+# ล้าง Cache เฉพาะ Route
+php artisan route:clear

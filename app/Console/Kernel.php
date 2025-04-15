@@ -13,6 +13,20 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         // $schedule->command('inspire')->hourly();
+        
+        // ล้าง debugbar ทุกวันตอนเที่ยงคืน
+        $schedule->command('debugbar:clear')->daily();
+        
+        // ล้างแคช view ทุกวันอาทิตย์หรือเมื่อขนาดเกิน threshold
+        $schedule->call(function () {
+            $viewsPath = storage_path('framework/views');
+            $sizeInMB = $this->getDirectorySizeInMB($viewsPath);
+            
+            // ล้างเมื่อขนาดเกิน 50MB หรือเป็นวันอาทิตย์
+            if ($sizeInMB > 50 || date('w') == 0) {
+                \Artisan::call('views:clear');
+            }
+        })->dailyAt('01:00');
     }
 
     /**
@@ -31,6 +45,25 @@ class Kernel extends ConsoleKernel
     }
 
     /**
+     * คำนวณขนาดของไดเร็กทอรีเป็น MB
+     */
+    private function getDirectorySizeInMB($path)
+    {
+        if (!file_exists($path)) {
+            return 0;
+        }
+        
+        $size = 0;
+        foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($path)) as $file) {
+            if ($file->isFile()) {
+                $size += $file->getSize();
+            }
+        }
+        
+        return round($size / 1048576, 2); // แปลงเป็น MB
+    }
+
+    /**
      * The Artisan commands provided by your application.
      *
      * @var array
@@ -38,5 +71,8 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         \App\Console\Commands\OptimizeDatabaseCommand::class,
         \App\Console\Commands\ProjectStructureCommand::class,
+        \App\Console\Commands\ClearDebugbarCommand::class, 
+        \App\Console\Commands\ClearViewCacheCommand::class,
+        \App\Console\Commands\CheckDatabaseTables::class,
     ];
 }

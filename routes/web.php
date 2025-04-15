@@ -6,9 +6,18 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DebugController;
 use App\Http\Controllers\CompaniesController;
-use App\Http\Controllers\DepartmentController; // เพิ่มบรรทัดนี้
+use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\EmployeeController;
 use App\Models\Company;
 use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\PositionController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\DebugCompanyController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\QuotationController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\OrganizationStructureController; // เพิ่มบรรทัดนี้
+use App\Http\Controllers\ComingSoonController; // เพิ่มบรรทัดนี้
 
 /*
 |--------------------------------------------------------------------------
@@ -36,17 +45,27 @@ Route::get('/dashboard/switch-company/{company}', function (\App\Models\Company 
     return redirect()->route('dashboard');
 })->middleware(['auth'])->name('dashboard.switch-company');
 
+// แก้ไขเส้นทางสำหรับการเปลี่ยนบริษัท
+Route::get('/switch-company/{company}', [App\Http\Controllers\CompanyController::class, 'switchCompany'])
+    ->middleware(['auth'])
+    ->name('switch.company');
+
+// เพิ่มเส้นทางสำหรับทดสอบการเลือกบริษัท
+Route::get('/test-company-switch', function () {
+    return view('company-switch-test');
+})->middleware(['auth'])->name('test.company.switch');
+
 // ลบ route ซ้ำซ้อนและใช้เพียง controller เดียว
 Route::resource('companies', CompaniesController::class);
 
 // เพิ่มเส้นทางสำหรับลูกค้า
-Route::resource('customers', App\Http\Controllers\CustomerController::class);
+Route::resource('customers', CustomerController::class);
 
 // เพิ่มเส้นทางสำหรับใบเสนอราคา
-Route::resource('quotations', App\Http\Controllers\QuotationController::class);
+Route::resource('quotations', QuotationController::class);
 
 // เพิ่มเส้นทางสำหรับใบสั่งขาย
-Route::resource('orders', App\Http\Controllers\OrderController::class);
+Route::resource('orders', OrderController::class);
 
 // ทดสอบเส้นทางเพื่อ debug
 Route::get('/test-companies', function () {
@@ -152,9 +171,9 @@ Route::get('/debug/company/{id}', function ($id) {
 });
 
 // เพิ่ม Debug Routes
-Route::get('/debug/company/list', [App\Http\Controllers\DebugCompanyController::class, 'list']);
-Route::get('/debug/company/show/{id}', [App\Http\Controllers\DebugCompanyController::class, 'show']);
-Route::get('/debug/company/relationships/{id}', [App\Http\Controllers\DebugCompanyController::class, 'testRelationships']);
+Route::get('/debug/company/list', [DebugCompanyController::class, 'list']);
+Route::get('/debug/company/show/{id}', [DebugCompanyController::class, 'show']);
+Route::get('/debug/company/relationships/{id}', [DebugCompanyController::class, 'testRelationships']);
 
 // เพิ่ม Route ตรวจสอบข้อมูลบริษัทแบบง่าย
 Route::get('/basic-company/{id}', function ($id) {
@@ -187,10 +206,65 @@ Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']
     ->middleware('guest')
     ->name('password.update');
 
-// เส้นทางสำหรับระบบจัดการแผนก
-Route::middleware(['auth'])->group(function () {
+// Organization Routes - ตัดส่วนที่ซ้ำซ้อนออกแล้วเก็บไว้เฉพาะอันนี้
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // Companies
+    Route::resource('companies', CompaniesController::class);
+    
+    // Departments
     Route::resource('departments', DepartmentController::class);
+    
+    // Positions
+    Route::resource('positions', PositionController::class);
+    
+    // Employees
+    Route::resource('employees', EmployeeController::class);
+    
+    // Test Employee Controller
+    Route::get('/test-employee-controller', [EmployeeController::class, 'testConnection'])
+        ->name('test.employee.controller');
+    
+    // Profile
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    
+    // Routes สำหรับระบบโครงสร้างองค์กรdex'])->name('index');
+    Route::middleware([\App\Http\Middleware\SetDefaultCompany::class])->prefix('organization/structure')->name('organization.structure.')->group(function () {
+        Route::get('/', [OrganizationStructureController::class, 'index'])->name('index');
+        Route::get('/{company}', [OrganizationStructureController::class, 'show'])->name('show');
+        Route::get('/{company}/edit', [OrganizationStructureController::class, 'edit'])->name('edit');
+        Route::put('/{company}', [OrganizationStructureController::class, 'update'])->name('update');
+        Route::get('/{company}/tree', [OrganizationStructureController::class, 'treeView'])->name('tree');
+    });
 });
+
+// API Route สำหรับแผนผังองค์กร
+Route::get('/api/organization/{company}/data', [OrganizationStructureController::class, 'getOrganizationData'])
+    ->name('api.organization.data');
+
+// เพิ่ม route สำหรับการทดสอบ
+Route::get('/test/employees', [App\Http\Controllers\TestController::class, 'testEmployees']);
+
+// เพิ่มเส้นทางทดสอบ
+Route::get('/test-employee-view', function() {
+    return view('test-employee-view');
+})->name('test.employee.view');
+
+// เพิ่ม Debug Route ไว้ด้านล่าง middleware
+Route::get('/debug/employees', function() {
+    return view('debug.employee-status');
+})->name('debug.employees');
+
+// เพิ่ม route สำหรับตรวจสอบระบบ
+Route::get('/system-check', [App\Http\Controllers\SystemCheckController::class, 'checkSystem'])->name('system.check');
+
+// เพิ่ม route สำหรับหน้าฟีเจอร์ที่กำลังพัฒนา
+Route::get('/coming-soon/{feature?}', [App\Http\Controllers\ComingSoonController::class, 'index'])
+    ->name('coming-soon');
 
 // นำเข้าเส้นทาง Authentication จากไฟล์ auth.php
 require __DIR__ . '/auth.php';

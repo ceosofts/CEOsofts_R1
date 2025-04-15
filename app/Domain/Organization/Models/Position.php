@@ -2,60 +2,71 @@
 
 namespace App\Domain\Organization\Models;
 
-use App\Domain\Shared\Traits\HasCompanyScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Domain\HumanResources\Models\Employee;
 
 class Position extends Model
 {
-    use HasFactory, SoftDeletes, HasCompanyScope;
+    use HasFactory, SoftDeletes;
 
+    /**
+     * คอลัมน์ที่อนุญาตให้กำหนดค่าได้
+     */
     protected $fillable = [
-        'company_id',
-        'department_id',
         'name',
         'code',
-        'level',
+        'description',
+        'company_id',
+        'department_id',
         'is_active',
+        'status',
+        'level',
         'min_salary',
         'max_salary',
         'metadata',
     ];
 
+    /**
+     * คอลัมน์ที่จะแปลงเป็น type ที่ระบุ
+     */
     protected $casts = [
         'is_active' => 'boolean',
-        'min_salary' => 'decimal:2',
-        'max_salary' => 'decimal:2',
+        'level' => 'integer',
+        'min_salary' => 'float',
+        'max_salary' => 'float',
         'metadata' => 'json',
     ];
 
     /**
-     * Get the company that owns this position.
+     * ความสัมพันธ์กับบริษัท
      */
-    public function company()
+    public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
     }
 
     /**
-     * Get the department this position belongs to.
+     * ความสัมพันธ์กับแผนก
      */
-    public function department()
+    public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class);
     }
 
     /**
-     * Get the employees in this position.
+     * ความสัมพันธ์กับพนักงานทั้งหมดในตำแหน่งนี้
      */
-    public function employees()
+    public function employees(): HasMany
     {
         return $this->hasMany(Employee::class);
     }
 
     /**
-     * Scope a query to only include active positions.
+     * Scope สำหรับค้นหาตำแหน่งที่ active
      */
     public function scopeActive($query)
     {
@@ -63,10 +74,22 @@ class Position extends Model
     }
 
     /**
-     * Scope a query to only include positions of a specific level.
+     * Boot the model.
      */
-    public function scopeOfLevel($query, $level)
+    protected static function boot()
     {
-        return $query->where('level', $level);
+        parent::boot();
+
+        // When a position is being restored, check for unique constraints
+        static::restoring(function ($position) {
+            // Check if another non-deleted position exists with the same code and company_id
+            $exists = static::where('company_id', $position->company_id)
+                ->where('code', $position->code)
+                ->whereNull('deleted_at')
+                ->where('id', '!=', $position->id)
+                ->exists();
+
+            return !$exists; // If one exists, prevent restoring
+        });
     }
 }

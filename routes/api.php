@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\OrganizationStructureController;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,3 +18,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+// ย้าย API endpoint มาที่นี่แทนเพื่อใช้ middleware api
+Route::get('/organization/{company}/data', [OrganizationStructureController::class, 'getOrganizationData'])
+    ->name('api.organization.data');

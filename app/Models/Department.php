@@ -24,6 +24,11 @@ class Department extends Model
         'is_active',
         'parent_id',
         'company_id',
+        'branch_office_id',
+        'level',
+        'department_code',
+        'manager_id',
+        'status'
     ];
 
     /**
@@ -68,14 +73,6 @@ class Department extends Model
     }
 
     /**
-     * Get the positions for the department.
-     */
-    public function positions()
-    {
-        return $this->hasMany(Position::class);
-    }
-
-    /**
      * Get the employees for the department.
      */
     public function employees()
@@ -103,5 +100,53 @@ class Department extends Model
     public function scopeRoot($query)
     {
         return $query->whereNull('parent_id');
+    }
+
+    /**
+     * Get the branch office that owns the department.
+     */
+    public function branchOffice()
+    {
+        return $this->belongsTo(BranchOffice::class);
+    }
+
+    /**
+     * Get the positions for the department.
+     */
+    public function positions()
+    {
+        return $this->belongsToMany(Position::class, 'department_position');
+    }
+
+    /**
+     * Get the parent department.
+     */
+    public function parentDepartment()
+    {
+        return $this->belongsTo(Department::class, 'parent_id');
+    }
+
+    /**
+     * Get the child departments (recursive).
+     */
+    public function childDepartments()
+    {
+        return $this->hasMany(Department::class, 'parent_id')->with('childDepartments');
+    }
+
+    /**
+     * Get the manager of the department.
+     */
+    public function manager()
+    {
+        return $this->belongsTo(Employee::class, 'manager_id');
+    }
+
+    /**
+     * Determine if the department is a leaf department (no child departments).
+     */
+    public function isLeafDepartment()
+    {
+        return $this->childDepartments->isEmpty();
     }
 }

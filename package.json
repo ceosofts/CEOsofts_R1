@@ -21,5 +21,8 @@
     "dependencies": {
         "alpinejs": "^3.13.3",
         "apexcharts": "^3.44.0"
+    },
+    "optionalDependencies": {
+        "fsevents": "^2.3.3"
     }
 }
