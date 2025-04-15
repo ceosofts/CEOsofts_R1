@@ -247,5 +247,9 @@ Route::get('/debug/employees', function() {
 // เพิ่ม route สำหรับตรวจสอบระบบ
 Route::get('/system-check', [App\Http\Controllers\SystemCheckController::class, 'checkSystem'])->name('system.check');
 
+// เพิ่ม route สำหรับหน้าฟีเจอร์ที่กำลังพัฒนา
+Route::get('/coming-soon/{feature?}', [App\Http\Controllers\ComingSoonController::class, 'index'])
+    ->name('coming-soon');
+
 // นำเข้าเส้นทาง Authentication จากไฟล์ auth.php
 require __DIR__ . '/auth.php';
