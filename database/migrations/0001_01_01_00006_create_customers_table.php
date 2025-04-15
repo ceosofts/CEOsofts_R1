@@ -31,15 +31,38 @@ return new class extends Migration
         Schema::create('customers', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
+            $table->string('code')->nullable();
             $table->string('name');
-            // เปลี่ยนจากการใช้ unique() เป็น compound unique constraint
-            // เพื่อให้ email ซ้ำได้ต่างบริษัทกัน (จาก modify_customers_email_unique_constraint.php)
             $table->string('email')->nullable();
             $table->string('phone', 20)->nullable();
             $table->text('address')->nullable();
             $table->string('tax_id', 50)->nullable();
-            $table->string('status', 20)->default('active');
+            $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->string('website')->nullable();
+            $table->string('contact_person')->nullable();
             $table->json('metadata')->nullable();
+            $table->text('note')->nullable();
+            $table->string('type')->default('company'); // company, individual
+            $table->decimal('credit_limit', 15, 2)->nullable();
+            
+            // เพิ่มฟิลด์ใหม่
+            $table->string('contact_person_position')->nullable()->comment('ตำแหน่งของผู้ติดต่อ');
+            $table->string('contact_person_email')->nullable()->comment('อีเมลของผู้ติดต่อ');
+            $table->string('contact_person_phone')->nullable()->comment('เบอร์โทรศัพท์ของผู้ติดต่อ');
+            $table->string('contact_person_line_id')->nullable()->comment('LINE ID ของผู้ติดต่อ');
+            $table->enum('payment_term_type', ['cash', 'credit', 'cheque', 'transfer'])->default('credit')->comment('ประเภทการชำระเงิน');
+            $table->decimal('discount_rate', 5, 2)->nullable()->comment('อัตราส่วนลดพิเศษ (%)');
+            $table->string('reference_id')->nullable()->comment('รหัสอ้างอิงภายนอก');
+            $table->json('social_media')->nullable()->comment('ข้อมูลโซเชียลมีเดีย');
+            $table->string('customer_group')->nullable()->comment('กลุ่มลูกค้า');
+            $table->tinyInteger('customer_rating')->nullable()->comment('การจัดอันดับลูกค้า (1-5)');
+            $table->string('bank_account_name')->nullable()->comment('ชื่อบัญชีธนาคาร');
+            $table->string('bank_account_number')->nullable()->comment('เลขที่บัญชีธนาคาร');
+            $table->string('bank_name')->nullable()->comment('ชื่อธนาคาร');
+            $table->string('bank_branch')->nullable()->comment('สาขาธนาคาร');
+            $table->boolean('is_supplier')->default(false)->comment('เป็นซัพพลายเออร์ด้วยหรือไม่');
+            $table->date('last_contacted_date')->nullable()->comment('วันที่ติดต่อล่าสุด');
+            
             $table->timestamps();
             $table->softDeletes();
 

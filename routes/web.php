@@ -241,6 +241,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/{company}', [OrganizationStructureController::class, 'update'])->name('update');
         Route::get('/{company}/tree', [OrganizationStructureController::class, 'treeView'])->name('tree');
     });
+    
+    // Products
+    Route::resource('products', ProductController::class);
+    Route::get('/products/{product}/stock', [ProductController::class, 'stockHistory'])->name('products.stock');
+    
+    // Product Categories
+    Route::resource('product-categories', ProductCategoryController::class);
+    
+    // Units
+    Route::resource('units', UnitController::class);
+    
+    // Stock Movements
+    Route::resource('stock-movements', StockMovementController::class);
+    Route::get('/stock/report', [StockMovementController::class, 'report'])->name('stock.report');
+    Route::get('/stock/low-stock', [StockMovementController::class, 'lowStock'])->name('stock.low');
+    
+    // Customers
+    Route::resource('customers', CustomerController::class);
+    Route::get('/customers/export', [CustomerController::class, 'export'])->name('customers.export');
+    Route::get('/customers/{customer}/purchase-history', [CustomerController::class, 'purchaseHistory'])->name('customers.purchase-history');
 });
 
 // Executive Dashboard Routes

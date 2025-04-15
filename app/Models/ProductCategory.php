@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Unit extends Model
+class ProductCategory extends Model
 {
     use HasFactory, SoftDeletes;
 
@@ -18,8 +18,8 @@ class Unit extends Model
     protected $fillable = [
         'company_id',
         'name',
-        'abbreviation',
         'description',
+        'parent_id',
         'is_active',
     ];
 
@@ -35,7 +35,7 @@ class Unit extends Model
     ];
 
     /**
-     * Get the company that owns the unit.
+     * Get the company that owns the product category.
      */
     public function company()
     {
@@ -43,7 +43,23 @@ class Unit extends Model
     }
 
     /**
-     * Get the products for the unit.
+     * Get the parent product category.
+     */
+    public function parent()
+    {
+        return $this->belongsTo(ProductCategory::class, 'parent_id');
+    }
+
+    /**
+     * Get the child product categories.
+     */
+    public function children()
+    {
+        return $this->hasMany(ProductCategory::class, 'parent_id');
+    }
+
+    /**
+     * Get the products for the category.
      */
     public function products()
     {

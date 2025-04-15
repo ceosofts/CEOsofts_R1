@@ -48,10 +48,10 @@ CEOsofts R1 มุ่งสู่การเป็นระบบบริห�
 - ✅ การจัดการตำแหน่ง (Position Management) 
 - ✅ การจัดการพนักงาน (Employee Management) 
 - ✅ การกำหนดโครงสร้างองค์กร (Organization Structure) 
-- 📝 Dashboard สำหรับผู้บริหาร (Executive Dashboard) - กำลังดำเนินการ
+- ✅ Dashboard สำหรับผู้บริหาร (Executive Dashboard) 
 
 ### เฟส 3: ระบบการขาย (มิถุนายน-กรกฎาคม 2025) - ความคืบหน้า 5%
-- 🔄 การจัดการลูกค้า (Customer Management) - เริ่มต้นการพัฒนา
+- ✅ การจัดการลูกค้า (Customer Management) - กำลังดำเนินการ
 - 📝 การจัดการสินค้าและบริการ (Product/Service Management)
 - 📝 ระบบใบเสนอราคา (Quotation System)
 - 📝 ระบบใบสั่งขาย (Sales Order)
@@ -237,6 +237,7 @@ database/ceosofts_db_R1.sqlite220μsselect count(*) as aggregate from "positions
 
 ## Dfile structure
 php artisan project:structure --output=project_structure_$(date +%Y_%m_%d).txt
+หรือ file ที่ export
 update 2025-04-15
 
 ├── CONTRIBUTING.md (4.06 KB)

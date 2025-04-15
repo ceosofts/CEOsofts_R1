@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Unit extends Model
+class StockMovement extends Model
 {
     use HasFactory, SoftDeletes;
 
@@ -17,10 +17,14 @@ class Unit extends Model
      */
     protected $fillable = [
         'company_id',
-        'name',
-        'abbreviation',
-        'description',
-        'is_active',
+        'product_id',
+        'quantity',
+        'type', // in, out
+        'reference_type', // purchase, sale, adjustment
+        'reference_id',
+        'unit_cost',
+        'date',
+        'notes',
     ];
 
     /**
@@ -29,13 +33,15 @@ class Unit extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'is_active' => 'boolean',
+        'quantity' => 'float',
+        'unit_cost' => 'float',
+        'date' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
 
     /**
-     * Get the company that owns the unit.
+     * Get the company that owns the stock movement.
      */
     public function company()
     {
@@ -43,10 +49,10 @@ class Unit extends Model
     }
 
     /**
-     * Get the products for the unit.
+     * Get the product that owns the stock movement.
      */
-    public function products()
+    public function product()
     {
-        return $this->hasMany(Product::class);
+        return $this->belongsTo(Product::class);
     }
 }

@@ -17,18 +17,36 @@ class Customer extends Model
      */
     protected $fillable = [
         'company_id',
-        'code',
         'name',
-        'contact_person',
-        'phone',
         'email',
+        'phone',
         'address',
         'tax_id',
-        'type',
         'status',
+        'metadata',
+        'contact_person',
+        'website',
+        'note',
+        'type', // individual, company
+        'code',
         'credit_limit',
-        'credit_term',
-        'notes',
+        // เพิ่มฟิลด์ใหม่
+        'contact_person_position',
+        'contact_person_email',
+        'contact_person_phone',
+        'contact_person_line_id',
+        'payment_term_type',
+        'discount_rate',
+        'reference_id',
+        'social_media',
+        'customer_group',
+        'customer_rating',
+        'bank_account_name',
+        'bank_account_number',
+        'bank_name',
+        'bank_branch',
+        'is_supplier',
+        'last_contacted_date',
     ];
 
     /**
@@ -37,10 +55,15 @@ class Customer extends Model
      * @var array
      */
     protected $casts = [
-        'credit_limit' => 'float',
-        'credit_term' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
+        'metadata' => 'json',
+        'social_media' => 'json',
+        'credit_limit' => 'float',
+        'discount_rate' => 'float',
+        'is_supplier' => 'boolean',
+        'last_contacted_date' => 'date',
     ];
 
     /**
@@ -65,5 +88,133 @@ class Customer extends Model
     public function orders()
     {
         return $this->hasMany(Order::class);
+    }
+
+    /**
+     * Get the credit term from metadata.
+     */
+    public function getCreditTermAttribute()
+    {
+        if (is_string($this->metadata)) {
+            $metadata = json_decode($this->metadata, true);
+            return $metadata['credit_term'] ?? null;
+        }
+        
+        return $this->metadata['credit_term'] ?? null;
+    }
+
+    /**
+     * Get the industry from metadata.
+     */
+    public function getIndustryAttribute()
+    {
+        if (is_string($this->metadata)) {
+            $metadata = json_decode($this->metadata, true);
+            return $metadata['industry'] ?? null;
+        }
+        
+        return $this->metadata['industry'] ?? null;
+    }
+
+    /**
+     * Get the sales region from metadata.
+     */
+    public function getSalesRegionAttribute()
+    {
+        if (is_string($this->metadata)) {
+            $metadata = json_decode($this->metadata, true);
+            return $metadata['sales_region'] ?? null;
+        }
+        
+        return $this->metadata['sales_region'] ?? null;
+    }
+
+    /**
+     * Scope a query to only include active customers.
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
+
+    /**
+     * Scope a query to only include inactive customers.
+     */
+    public function scopeInactive($query)
+    {
+        return $query->where('status', 'inactive');
+    }
+    
+    /**
+     * Get total purchase amount.
+     */
+    public function getTotalPurchasesAttribute()
+    {
+        return $this->orders()->sum('total_amount');
+    }
+    
+    /**
+     * Get last order date.
+     */
+    public function getLastOrderDateAttribute()
+    {
+        $lastOrder = $this->orders()->latest('order_date')->first();
+        return $lastOrder ? $lastOrder->order_date : null;
+    }
+
+    /**
+     * Get the full contact information.
+     */
+    public function getFullContactInfoAttribute()
+    {
+        $info = [];
+        
+        if ($this->contact_person) {
+            $info[] = $this->contact_person;
+            
+            if ($this->contact_person_position) {
+                $info[0] .= " ({$this->contact_person_position})";
+            }
+        }
+        
+        if ($this->contact_person_phone) {
+            $info[] = "Tel: {$this->contact_person_phone}";
+        }
+        
+        if ($this->contact_person_email) {
+            $info[] = "Email: {$this->contact_person_email}";
+        }
+        
+        if ($this->contact_person_line_id) {
+            $info[] = "LINE: {$this->contact_person_line_id}";
+        }
+        
+        return !empty($info) ? implode(' | ', $info) : null;
+    }
+
+    /**
+     * Get formatted payment term info.
+     */
+    public function getPaymentTermInfoAttribute()
+    {
+        $info = ucfirst($this->payment_term_type ?: 'credit');
+        
+        if ($this->payment_term_type == 'credit' && $this->credit_term) {
+            $info .= " ({$this->credit_term} วัน)";
+        }
+        
+        return $info;
+    }
+
+    /**
+     * Get social media as decoded array.
+     */
+    public function getSocialMediaArrayAttribute()
+    {
+        if (is_string($this->social_media)) {
+            return json_decode($this->social_media, true) ?: [];
+        }
+        
+        return $this->social_media ?: [];
     }
 }
