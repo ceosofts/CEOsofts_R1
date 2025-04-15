@@ -2,94 +2,103 @@
 
 namespace App\Models;
 
-use App\Shared\Traits\HasCompanyScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo; // เปลี่ยนจากการ import App\Models\BelongsTo
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
+use App\Traits\CompanyScope;
 
 class Employee extends Model
 {
-    use HasFactory, SoftDeletes, HasCompanyScope;
+    use HasFactory, SoftDeletes, CompanyScope;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
+        'uuid',
         'company_id',
+        'email',
+        'company_email',
+        'has_company_email',
         'department_id',
         'position_id',
+        'branch_office_id',
         'employee_code',
-        'title',
         'first_name',
-        'last_name', 
-        'nickname',
-        'email',
+        'last_name',
         'phone',
-        'birth_date',
+        'address',
+        'id_card_number',
         'hire_date',
         'termination_date',
-        'id_card_no',
-        'address',
-        'emergency_contact',
-        'emergency_phone',
-        'salary',
-        'bank_account_no',
+        'status',
+        'profile_image',
+        'manager_id',
+        
+        // ข้อมูลส่วนตัว
+        'title',
+        'nickname',
+        'gender',
+        'birthdate',
+        'nationality',
+        'religion',
+        'blood_type',
+        'height',
+        'weight',
+        'marital_status',
+        'medical_conditions',
+        
+        // ข้อมูลการศึกษาและประสบการณ์
+        'education_level',
+        'education_institute',
+        'education_major',
+        'years_experience',
+        'skills',
+        'certificates',
+        'previous_employment',
+        
+        // ข้อมูลติดต่อฉุกเฉิน
+        'emergency_contact_name',
+        'emergency_contact_phone',
+        
+        // ข้อมูลธนาคารและภาษี
         'bank_name',
-        'profile_photo',
-        'is_active',
-        'uuid',
-        'metadata'
+        'bank_account',
+        'tax_id',
+        'tax_filing_status',
+        'social_security_number',
+        
+        // ข้อมูลการทำงาน
+        'employee_type',
+        'probation_end_date',
+        
+        // ข้อมูลเอกสาร
+        'passport_number',
+        'passport_expiry',
+        'work_permit_number',
+        'work_permit_expiry',
+        'visa_type',
+        'visa_expiry',
+        
+        // ข้อมูล metadata
+        'metadata',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array
-     */
     protected $casts = [
-        'is_active' => 'boolean',
-        'birth_date' => 'date',
-        'hire_date' => 'date',
-        'termination_date' => 'date',
-        'salary' => 'decimal:2',
-        'metadata' => 'array'
+        'hire_date' => 'datetime',
+        'termination_date' => 'datetime',
+        'birthdate' => 'datetime',
+        'probation_end_date' => 'datetime',
+        'passport_expiry' => 'datetime',
+        'work_permit_expiry' => 'datetime',
+        'visa_expiry' => 'datetime',
+        'has_company_email' => 'boolean',
+        'metadata' => 'array',
     ];
-
-    /**
-     * Boot the model.
-     */
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($employee) {
-            if (!$employee->uuid) {
-                $employee->uuid = (string) Str::uuid();
-            }
-            
-            // ถ้ายังไม่มีรหัสพนักงาน ให้สร้างรหัสพนักงานอัตโนมัติ
-            if (!$employee->employee_code) {
-                $company = Company::find($employee->company_id);
-                $prefix = $company ? substr($company->name, 0, 3) : 'EMP';
-                $prefix = strtoupper(Str::ascii($prefix));
-                
-                $latestEmployee = self::where('company_id', $employee->company_id)
-                    ->orderBy('id', 'desc')
-                    ->first();
-                
-                $nextId = $latestEmployee ? $latestEmployee->id + 1 : 1;
-                $employee->employee_code = $prefix . str_pad($nextId, 5, '0', STR_PAD_LEFT);
-            }
-        });
-    }
 
     /**
      * Get the company that owns the employee.
      */
-    public function company()
+    public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
     }
@@ -97,7 +106,7 @@ class Employee extends Model
     /**
      * Get the department that owns the employee.
      */
-    public function department()
+    public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class);
     }
@@ -105,41 +114,37 @@ class Employee extends Model
     /**
      * Get the position that owns the employee.
      */
-    public function position()
+    public function position(): BelongsTo
     {
         return $this->belongsTo(Position::class);
     }
 
     /**
-     * Get the work shifts for the employee.
+     * Get the branch office that owns the employee.
      */
-    public function workShifts()
+    public function branchOffice(): BelongsTo
     {
-        return $this->belongsToMany(WorkShift::class, 'employee_work_shifts')
-            ->withPivot('effective_date', 'end_date', 'is_active')
-            ->withTimestamps();
+        return $this->belongsTo(BranchOffice::class, 'branch_office_id');
     }
 
     /**
-     * Get the current work shift of the employee.
+     * Get the employee that manages this employee.
      */
-    public function currentWorkShift()
+    public function manager(): BelongsTo
     {
-        return $this->workShifts()
-            ->wherePivot('is_active', true)
-            ->wherePivot('effective_date', '<=', now())
-            ->wherePivot(function ($query) {
-                $query->whereNull('end_date')
-                    ->orWhere('end_date', '>=', now());
-            })
-            ->orderByPivot('effective_date', 'desc')
-            ->first();
+        return $this->belongsTo(Employee::class, 'manager_id');
     }
 
+    /**
+     * Get the subordinates for the employee.
+     */
+    public function subordinates()
+    {
+        return $this->hasMany(Employee::class, 'manager_id');
+    }
+    
     /**
      * Get the employee's full name.
-     *
-     * @return string
      */
     public function getFullNameAttribute()
     {
@@ -147,13 +152,41 @@ class Employee extends Model
     }
 
     /**
-     * Scope a query to only include active employees.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
+     * Set the employee's metadata.
      */
-    public function scopeActive($query)
+    public function setMetadataAttribute($value)
     {
-        return $query->where('is_active', true);
+        if (is_string($value) && !empty($value)) {
+            try {
+                $decoded = json_decode($value, true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $this->attributes['metadata'] = json_encode($decoded);
+                    return;
+                }
+            } catch (\Exception $e) {
+                Log::error('Error decoding employee metadata: ' . $e->getMessage());
+            }
+        }
+        
+        $this->attributes['metadata'] = is_array($value) ? json_encode($value) : $value;
+    }
+
+    /**
+     * Get the employee's metadata.
+     */
+    public function getMetadataAttribute($value)
+    {
+        if (empty($value)) return [];
+        
+        try {
+            $decoded = json_decode($value, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                return $decoded;
+            }
+        } catch (\Exception $e) {
+            Log::error('Error decoding employee metadata: ' . $e->getMessage());
+        }
+        
+        return [];
     }
 }

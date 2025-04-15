@@ -73,5 +73,6 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\ProjectStructureCommand::class,
         \App\Console\Commands\ClearDebugbarCommand::class, 
         \App\Console\Commands\ClearViewCacheCommand::class,
+        \App\Console\Commands\CheckDatabaseTables::class,
     ];
 }
