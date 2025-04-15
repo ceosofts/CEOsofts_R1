@@ -18,6 +18,7 @@ use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrganizationStructureController; // เพิ่มบรรทัดนี้
 use App\Http\Controllers\ComingSoonController; // เพิ่มบรรทัดนี้
+use App\Http\Controllers\ExecutiveDashboardController; // เพิ่มบรรทัดนี้
 
 /*
 |--------------------------------------------------------------------------
@@ -240,6 +241,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/{company}', [OrganizationStructureController::class, 'update'])->name('update');
         Route::get('/{company}/tree', [OrganizationStructureController::class, 'treeView'])->name('tree');
     });
+});
+
+// Executive Dashboard Routes
+Route::middleware(['auth', 'verified'])->prefix('executive')->name('executive.')->group(function () {
+    Route::get('/dashboard', [ExecutiveDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/summary', [ExecutiveDashboardController::class, 'executiveSummary'])->name('summary');
 });
 
 // API Route สำหรับแผนผังองค์กร

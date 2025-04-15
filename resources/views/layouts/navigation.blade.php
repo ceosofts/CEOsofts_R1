@@ -24,6 +24,11 @@ use Illuminate\Support\Facades\Auth;
                         แผงควบคุม
                     </a>
 
+                    <!-- เพิ่มเมนู Executive Dashboard ตรงนี้ -->
+                    <a href="{{ route('executive.dashboard') }}" class="inline-flex items-center px-3 py-2 border-b-2 {{ request()->routeIs('executive.*') ? 'border-accent-400' : 'border-transparent' }} text-sm font-medium leading-5 text-white hover:text-gray-200 hover:border-accent-300 focus:outline-none focus:text-gray-200 focus:border-accent-400 transition duration-150 ease-in-out">
+                        แผงควบคุมผู้บริหาร
+                    </a>
+
                     <!-- องค์กร (Organization) Dropdown -->
                     <div class="relative inline-flex items-center">
                         <x-dropdown align="left" width="48">
@@ -256,6 +261,11 @@ use Illuminate\Support\Facades\Auth;
             @auth
             <a href="{{ route('dashboard') }}" class="block pl-3 pr-4 py-2 border-l-4 {{ request()->routeIs('dashboard') ? 'border-accent-400 text-accent-400 bg-blue-900' : 'border-transparent text-gray-200 hover:text-white hover:bg-blue-700 hover:border-accent-300' }} text-base font-medium focus:outline-none transition duration-150 ease-in-out">
                 แผงควบคุม
+            </a>
+
+            <!-- เพิ่มเมนู Executive Dashboard ตรงนี้ -->
+            <a href="{{ route('executive.dashboard') }}" class="block pl-3 pr-4 py-2 border-l-4 {{ request()->routeIs('executive.*') ? 'border-accent-400 text-accent-400 bg-blue-900' : 'border-transparent text-gray-200 hover:text-white hover:bg-blue-700 hover:border-accent-300' }} text-base font-medium focus:outline-none transition duration-150 ease-in-out">
+                แผงควบคุมผู้บริหาร
             </a>
 
             <div class="px-4 py-2 text-white font-medium border-l-4 border-transparent">องค์กร</div>
