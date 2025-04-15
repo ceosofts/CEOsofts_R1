@@ -19,6 +19,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrganizationStructureController; // เพิ่มบรรทัดนี้
 use App\Http\Controllers\ComingSoonController; // เพิ่มบรรทัดนี้
 use App\Http\Controllers\ExecutiveDashboardController; // เพิ่มบรรทัดนี้
+use App\Http\Controllers\ProductController; // เพิ่มการ import นี้
 
 /*
 |--------------------------------------------------------------------------
@@ -261,6 +262,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('customers', CustomerController::class);
     Route::get('/customers/export', [CustomerController::class, 'export'])->name('customers.export');
     Route::get('/customers/{customer}/purchase-history', [CustomerController::class, 'purchaseHistory'])->name('customers.purchase-history');
+    
+    // Product routes
+    Route::resource('products', ProductController::class);
+    Route::get('/product-categories', [ProductController::class, 'categories'])->name('products.categories');
+    Route::post('/product-categories', [ProductController::class, 'storeCategory'])->name('products.categories.store');
 });
 
 // Executive Dashboard Routes
@@ -292,6 +298,21 @@ Route::get('/system-check', [App\Http\Controllers\SystemCheckController::class, 
 // เพิ่ม route สำหรับหน้าฟีเจอร์ที่กำลังพัฒนา
 Route::get('/coming-soon/{feature?}', [App\Http\Controllers\ComingSoonController::class, 'index'])
     ->name('coming-soon');
+
+// เพิ่ม route สำหรับตรวจสอบข้อมูลสินค้า
+Route::get('/debug/products', function () {
+    $products = \App\Models\Product::all();
+    $categories = \App\Models\ProductCategory::all();
+    $units = \App\Models\Unit::all();
+    
+    return response()->json([
+        'products_count' => $products->count(),
+        'categories_count' => $categories->count(),
+        'units_count' => $units->count(),
+        'products' => $products->take(5)->toArray(), // แสดงเฉพาะ 5 รายการแรกเพื่อไม่ให้ข้อมูลเยอะเกินไป
+        'user' => auth()->check() ? auth()->user()->only(['id', 'name', 'email', 'company_id']) : 'ยังไม่ได้เข้าสู่ระบบ'
+    ]);
+})->middleware(['auth'])->name('debug.products');
 
 // นำเข้าเส้นทาง Authentication จากไฟล์ auth.php
 require __DIR__ . '/auth.php';

@@ -142,8 +142,8 @@ use Illuminate\Support\Facades\Auth;
                             </x-slot>
 
                             <x-slot name="content">
-                                <x-dropdown-link href="{{ route('coming-soon', ['feature' => 'products']) }}">
-                                    สินค้า
+                                <x-dropdown-link :href="route('products.index')">
+                                    สินค้าและบริการ
                                 </x-dropdown-link>
                                 <x-dropdown-link href="{{ route('coming-soon', ['feature' => 'product-categories']) }}">
                                     หมวดหมู่สินค้า
@@ -293,6 +293,10 @@ use Illuminate\Support\Facades\Auth;
             </a>
             <a href="{{ route('orders.index') }}" class="block pl-6 pr-4 py-2 border-l-4 {{ request()->routeIs('orders.*') ? 'border-accent-400 text-accent-400 bg-blue-900' : 'border-transparent text-gray-200 hover:text-white hover:bg-blue-700 hover:border-accent-300' }} text-base font-medium focus:outline-none transition duration-150 ease-in-out">
                 ใบสั่งขาย
+            </a>
+            <div class="px-4 py-2 text-white font-medium border-l-4 border-transparent">สินค้า</div>
+            <a href="{{ route('products.index') }}" class="block pl-6 pr-4 py-2 border-l-4 {{ request()->routeIs('products.*') ? 'border-accent-400 text-accent-400 bg-blue-900' : 'border-transparent text-gray-200 hover:text-white hover:bg-blue-700 hover:border-accent-300' }} text-base font-medium focus:outline-none transition duration-150 ease-in-out">
+                สินค้าและบริการ
             </a>
             @else
             <a href="{{ route('about') }}" class="block pl-3 pr-4 py-2 border-l-4 {{ request()->routeIs('about') ? 'border-accent-400 text-accent-400 bg-blue-900' : 'border-transparent text-gray-200 hover:text-white hover:bg-blue-700 hover:border-accent-300' }} text-base font-medium focus:outline-none transition duration-150 ease-in-out">
