@@ -47,8 +47,8 @@ CEOsofts R1 มุ่งสู่การเป็นระบบบริห�
 - ✅ การจัดการแผนก (Department Management)
 - ✅ การจัดการตำแหน่ง (Position Management) 
 - ✅ การจัดการพนักงาน (Employee Management) 
-- 📝 การกำหนดโครงสร้างองค์กร (Organization Structure) - กำลังดำเนินการ
-- 📝 Dashboard สำหรับผู้บริหาร (Executive Dashboard) - วางแผนแล้ว
+- ✅ การกำหนดโครงสร้างองค์กร (Organization Structure) 
+- 📝 Dashboard สำหรับผู้บริหาร (Executive Dashboard) - กำลังดำเนินการ
 
 ### เฟส 3: ระบบการขาย (มิถุนายน-กรกฎาคม 2025) - ความคืบหน้า 5%
 - 🔄 การจัดการลูกค้า (Customer Management) - เริ่มต้นการพัฒนา
