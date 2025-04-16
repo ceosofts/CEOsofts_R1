@@ -55,10 +55,9 @@
                             <div class="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-4">
                                 <div class="grid grid-cols-1 gap-4">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">รหัสลูกค้า</label>
-                                        <div class="mt-1 p-2 bg-gray-100 dark:bg-gray-700 rounded-md text-gray-600 dark:text-gray-300 text-sm">
-                                            ระบบจะสร้างรหัสลูกค้าให้อัตโนมัติหลังจากบันทึก
-                                        </div>
+                                        <label for="code" class="block text-sm font-medium text-gray-700 dark:text-gray-300">รหัสลูกค้า</label>
+                                        <input type="text" name="code" id="code" value="{{ old('code') }}" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
+                                        <p class="mt-1 text-xs text-gray-500">หากไม่ระบุ ระบบจะสร้างรหัสให้อัตโนมัติ</p>
                                     </div>
                                     <div>
                                         <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">ชื่อลูกค้า <span class="text-red-600">*</span></label>
@@ -302,7 +301,7 @@
                             <div class="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-4">
                                 <div class="grid grid-cols-1 gap-4" id="additional-fields">
                                     <!-- สำหรับฟิลด์ใหม่ -->
-                                    <div class="grid grid-cols-12 gap-2 additional-field-row hidden" id="additional-field-template">
+                                    <div class="grid-cols-12 gap-2 additional-field-row hidden" id="additional-field-template">
                                         <div class="col-span-5">
                                             <input type="text" name="metadata_keys[]" placeholder="ชื่อฟิลด์" class="focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
                                         </div>
@@ -355,6 +354,7 @@
                 const template = document.getElementById('additional-field-template');
                 const newField = template.cloneNode(true);
                 newField.classList.remove('hidden');
+                newField.classList.add('grid'); // เพิ่มคลาส grid เมื่อแสดงแถวใหม่
                 newField.removeAttribute('id');
                 
                 const additionalFields = document.getElementById('additional-fields');

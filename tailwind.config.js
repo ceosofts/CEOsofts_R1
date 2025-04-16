@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+export default {
   content: [
     // จำกัดการสแกนเฉพาะไฟล์ที่จำเป็น
     "./resources/views/**/*.blade.php",
@@ -90,6 +90,7 @@ module.exports = {
   // เพิ่มการตั้งค่าเพื่อปรับปรุงประสิทธิภาพ
   future: {
     hoverOnlyWhenSupported: true, // ลดจำนวน CSS ที่สร้าง
+    disableCSSConflicts: true, // ปิดการแจ้งเตือน CSS conflicts
   },
   
   // ลด variants เพื่อลดขนาด CSS

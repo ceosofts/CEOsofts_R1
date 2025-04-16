@@ -283,13 +283,19 @@
                                 <div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
                                     <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">ประเภทการชำระเงิน</dt>
                                     <dd class="mt-1 text-sm text-gray-900 dark:text-gray-200 sm:mt-0 sm:col-span-2">
-                                        <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                            {{ $customer->payment_term_type == 'credit' ? 'bg-blue-50 text-blue-700' : 
-                                              ($customer->payment_term_type == 'cash' ? 'bg-green-50 text-green-700' : 
-                                              ($customer->payment_term_type == 'cheque' ? 'bg-yellow-50 text-yellow-700' : 'bg-purple-50 text-purple-700')) }}">
+                                        <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold border-2 shadow-sm text-white"
+                                            style="background-color: {{ 
+                                                $customer->payment_term_type == 'credit' ? '#4338ca' : 
+                                                ($customer->payment_term_type == 'cash' ? '#059669' : 
+                                                ($customer->payment_term_type == 'cheque' ? '#b45309' : '#a21caf')) 
+                                            }}; border-color: {{ 
+                                                $customer->payment_term_type == 'credit' ? '#3730a3' : 
+                                                ($customer->payment_term_type == 'cash' ? '#047857' : 
+                                                ($customer->payment_term_type == 'cheque' ? '#92400e' : '#86198f')) 
+                                            }};">
                                             {{ $customer->payment_term_type == 'credit' ? 'เครดิต' :
-                                              ($customer->payment_term_type == 'cash' ? 'เงินสด' : 
-                                              ($customer->payment_term_type == 'cheque' ? 'เช็ค' : 'โอนเงิน')) }}
+                                                ($customer->payment_term_type == 'cash' ? 'เงินสด' : 
+                                                ($customer->payment_term_type == 'cheque' ? 'เช็ค' : 'โอนเงิน')) }}
                                         </span>
                                     </dd>
                                 </div>
@@ -406,52 +412,61 @@
                     </div>
                     
                     @if(isset($recentOrders) && $recentOrders->isEmpty())
-                        <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                        <div class="text-center py-8 text-sm text-gray-500 dark:text-gray-400">
                             ยังไม่มีประวัติการสั่งซื้อ
                         </div>
                     @elseif(isset($recentOrders))
                         <div class="overflow-x-auto">
-                            <table class="min-w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
+                            <table class="min-w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 table-fixed">
                                 <thead>
                                     <tr class="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-200">
-                                        <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-left">เลขที่</th>
-                                        <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-left">วันที่</th>
-                                        <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-left">อ้างอิง</th>
-                                        <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-left">สถานะ</th>
-                                        <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-right">มูลค่ารวม</th>
+                                        <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-600 text-left font-semibold text-sm w-1/6">เลขที่</th>
+                                        <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-600 text-left font-semibold text-sm w-1/6">วันที่</th>
+                                        <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-600 text-left font-semibold text-sm w-1/4">อ้างอิง</th>
+                                        <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-600 text-left font-semibold text-sm w-1/6">สถานะ</th>
+                                        <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-600 text-right font-semibold text-sm w-1/6">มูลค่ารวม</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($recentOrders as $order)
-                                        <tr class="hover:bg-gray-200 dark:hover:bg-gray-600 border-b border-gray-200 dark:border-gray-700">
-                                            <td class="py-2 px-4">
+                                        <tr class="hover:bg-gray-100 dark:hover:bg-gray-600 border-b border-gray-200 dark:border-gray-700">
+                                            <td class="py-3 px-4 text-sm truncate">
                                                 <a href="#" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">{{ $order->order_number }}</a>
                                             </td>
-                                            <td class="py-2 px-4">{{ $order->order_date->format('d/m/Y') }}</td>
-                                            <td class="py-2 px-4">
+                                            <td class="py-3 px-4 text-sm">{{ $order->order_date->format('d/m/Y') }}</td>
+                                            <td class="py-3 px-4 text-sm truncate">
                                                 @if($order->quotation)
                                                     <a href="#" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">{{ $order->quotation->quotation_number }}</a>
                                                 @else
                                                     -
                                                 @endif
                                             </td>
-                                            <td class="py-2 px-4">
-                                                <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                                    @if($order->status == 'completed') bg-green-50 text-green-700
-                                                    @elseif($order->status == 'pending') bg-yellow-50 text-yellow-700
-                                                    @elseif($order->status == 'cancelled') bg-red-50 text-red-700
-                                                    @else bg-gray-200 text-gray-700 @endif">
+                                            <td class="py-3 px-4 text-sm">
+                                                <span class="inline-flex px-2.5 py-1 rounded-full text-sm font-semibold border-2 shadow-sm text-white"
+                                                    style="background-color: {{ 
+                                                        $order->status == 'completed' ? '#15803d' : 
+                                                        ($order->status == 'pending' ? '#b45309' : 
+                                                        ($order->status == 'cancelled' ? '#be123c' : 
+                                                        ($order->status == 'confirm' ? '#1d4ed8' : 
+                                                        ($order->status == 'delivery' ? '#4338ca' : '#475569')))) 
+                                                    }}; border-color: {{ 
+                                                        $order->status == 'completed' ? '#166534' : 
+                                                        ($order->status == 'pending' ? '#92400e' : 
+                                                        ($order->status == 'cancelled' ? '#9f1239' : 
+                                                        ($order->status == 'confirm' ? '#1e40af' : 
+                                                        ($order->status == 'delivery' ? '#3730a3' : '#334155')))) 
+                                                    }};">
                                                     {{ $order->status }}
                                                 </span>
                                             </td>
-                                            <td class="py-2 px-4 text-right">{{ number_format($order->total_amount, 2) }} บาท</td>
+                                            <td class="py-3 px-4 text-sm text-right">{{ number_format($order->total_amount, 2) }} บาท</td>
                                         </tr>
                                     @endforeach
                                 </tbody>
                             </table>
                         </div>
                     @else
-                        <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                        <div class="text-center py-8 text-sm text-gray-500 dark:text-gray-400">
                             ไม่สามารถโหลดข้อมูลคำสั่งซื้อได้
                         </div>
                     @endif
@@ -477,47 +492,57 @@
                     </div>
                     
                     @if(isset($recentQuotations) && $recentQuotations->isEmpty())
-                        <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                        <div class="text-center py-8 text-sm text-gray-500 dark:text-gray-400">
                             ยังไม่มีประวัติใบเสนอราคา
                         </div>
                     @elseif(isset($recentQuotations))
                         <div class="overflow-x-auto">
-                            <table class="min-w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
+                            <table class="min-w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 table-fixed">
                                 <thead>
                                     <tr class="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-200">
-                                        <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-left">เลขที่</th>
-                                        <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-left">วันที่</th>
-                                        <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-left">วันที่หมดอายุ</th>
-                                        <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-left">สถานะ</th>
-                                        <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-right">มูลค่ารวม</th>
+                                        <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-600 text-left font-semibold text-sm w-1/6">เลขที่</th>
+                                        <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-600 text-left font-semibold text-sm w-1/6">วันที่</th>
+                                        <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-600 text-left font-semibold text-sm w-1/6">วันที่หมดอายุ</th>
+                                        <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-600 text-left font-semibold text-sm w-1/6">สถานะ</th>
+                                        <th class="py-3 px-4 border-b border-gray-300 dark:border-gray-600 text-right font-semibold text-sm w-1/4">มูลค่ารวม</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($recentQuotations as $quotation)
-                                        <tr class="hover:bg-gray-200 dark:hover:bg-gray-600 border-b border-gray-200 dark:border-gray-700">
-                                            <td class="py-2 px-4">
+                                        <tr class="hover:bg-gray-100 dark:hover:bg-gray-600 border-b border-gray-200 dark:border-gray-700">
+                                            <td class="py-3 px-4 text-sm truncate">
                                                 <a href="#" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">{{ $quotation->quotation_number }}</a>
                                             </td>
-                                            <td class="py-2 px-4">{{ $quotation->quotation_date->format('d/m/Y') }}</td>
-                                            <td class="py-2 px-4">{{ $quotation->expiration_date->format('d/m/Y') }}</td>
-                                            <td class="py-2 px-4">
-                                                <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                                    @if($quotation->status == 'approved') bg-green-50 text-green-700
-                                                    @elseif($quotation->status == 'pending') bg-yellow-50 text-yellow-700
-                                                    @elseif($quotation->status == 'rejected') bg-red-50 text-red-700
-                                                    @elseif($quotation->status == 'expired') bg-gray-200 text-gray-700
-                                                    @else bg-gray-100 text-gray-600 @endif">
+                                            <td class="py-3 px-4 text-sm">{{ $quotation->quotation_date->format('d/m/Y') }}</td>
+                                            <td class="py-3 px-4 text-sm">{{ $quotation->expiration_date->format('d/m/Y') }}</td>
+                                            <td class="py-3 px-4 text-sm">
+                                                <span class="inline-flex px-2.5 py-1 rounded-full text-sm font-semibold border-2 shadow-sm text-white"
+                                                    style="background-color: {{ 
+                                                        $quotation->status == 'approved' ? '#059669' : 
+                                                        ($quotation->status == 'pending' ? '#4338ca' : 
+                                                        ($quotation->status == 'rejected' ? '#a21caf' : 
+                                                        ($quotation->status == 'expired' ? '#71717a' : 
+                                                        ($quotation->status == 'confirm' ? '#1d4ed8' : 
+                                                        ($quotation->status == 'draft' ? '#b45309' : '#525252'))))) 
+                                                    }}; border-color: {{ 
+                                                        $quotation->status == 'approved' ? '#047857' : 
+                                                        ($quotation->status == 'pending' ? '#3730a3' : 
+                                                        ($quotation->status == 'rejected' ? '#86198f' : 
+                                                        ($quotation->status == 'expired' ? '#52525b' : 
+                                                        ($quotation->status == 'confirm' ? '#1e40af' : 
+                                                        ($quotation->status == 'draft' ? '#92400e' : '#404040'))))) 
+                                                    }};">
                                                     {{ $quotation->status }}
                                                 </span>
                                             </td>
-                                            <td class="py-2 px-4 text-right">{{ number_format($quotation->total_amount, 2) }} บาท</td>
+                                            <td class="py-3 px-4 text-sm text-right">{{ number_format($quotation->total_amount, 2) }} บาท</td>
                                         </tr>
                                     @endforeach
                                 </tbody>
                             </table>
                         </div>
                     @else
-                        <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                        <div class="text-center py-8 text-sm text-gray-500 dark:text-gray-400">
                             ไม่สามารถโหลดข้อมูลใบเสนอราคาได้
                         </div>
                     @endif

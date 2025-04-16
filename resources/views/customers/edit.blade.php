@@ -314,7 +314,7 @@
                             </h3>
                             
                             <div class="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-4">
-                                <div class="grid grid-cols-1 gap-4" id="additional-fields">
+                                <div class="grid gap-4" id="additional-fields">
                                     @if($metadata)
                                         @foreach($metadata as $key => $value)
                                             @if(!in_array($key, ['industry', 'sales_region', 'credit_term']))
@@ -338,7 +338,7 @@
                                     @endif
 
                                     <!-- สำหรับฟิลด์ใหม่ -->
-                                    <div class="grid grid-cols-12 gap-2 additional-field-row hidden" id="additional-field-template">
+                                    <div class="grid-cols-12 gap-2 additional-field-row hidden" id="additional-field-template">
                                         <div class="col-span-5">
                                             <input type="text" name="metadata_keys[]" placeholder="ชื่อฟิลด์" class="focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
                                         </div>
@@ -391,6 +391,7 @@
                 const template = document.getElementById('additional-field-template');
                 const newField = template.cloneNode(true);
                 newField.classList.remove('hidden');
+                newField.classList.add('grid'); // เพิ่มคลาส grid เมื่อแสดงแถวใหม่
                 newField.removeAttribute('id');
                 
                 const additionalFields = document.getElementById('additional-fields');
