@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Shared\Traits\HasCompanyScope;
 
 class ProductCategory extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasCompanyScope;
 
     /**
      * The attributes that are mass assignable.
@@ -16,11 +17,18 @@ class ProductCategory extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'company_id',
+        'code',
         'name',
         'description',
-        'parent_id',
+        'company_id',
         'is_active',
+        'parent_id',
+        'metadata',
+        'slug',
+        'level',
+        'path',
+        'created_by',
+        'updated_by',
     ];
 
     /**
@@ -32,6 +40,7 @@ class ProductCategory extends Model
         'is_active' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'metadata' => 'json',
     ];
 
     /**
@@ -63,6 +72,36 @@ class ProductCategory extends Model
      */
     public function products()
     {
-        return $this->hasMany(Product::class);
+        return $this->hasMany(Product::class, 'category_id');
+    }
+
+    /**
+     * Get category code attribute alias
+     */
+    public function getCategoryCodeAttribute()
+    {
+        return $this->code;
+    }
+
+    /**
+     * Get category name attribute alias
+     */
+    public function getCategoryNameAttribute()
+    {
+        return $this->name;
+    }
+
+    /**
+     * Get the formatted code for the product category.
+     *
+     * @return string
+     */
+    public function getFormattedCodeAttribute()
+    {
+        $id = str_pad($this->id, 3, '0', STR_PAD_LEFT);
+        $companyId = $this->company_id;
+        $code = $this->code ?: 'XXX';
+        
+        return "PC-{$id}-{$companyId}-{$code}";
     }
 }

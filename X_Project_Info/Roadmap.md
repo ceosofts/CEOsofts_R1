@@ -52,10 +52,12 @@ CEOsofts R1 มุ่งสู่การเป็นระบบบริห�
 
 ### เฟส 3: ระบบการขาย (มิถุนายน-กรกฎาคม 2025) - ความคืบหน้า 5%
 - ✅ การจัดการลูกค้า (Customer Management) 
-- 📝 การจัดการสินค้าและบริการ (Product/Service Management) - กำลังดำเนินการ
+- ✅ การจัดการสินค้าและบริการ (Product/Service Management)
+- ✅ การจัดการ หมวดหมู่ สินค้าและบริการ (Product Catalogries)
 
-เช็ค ui style และขนาดตัวหนังสือ ของทุกหน้าที่ทำแล้ว
+- เช็คช่องค้นหาว่าทำงานหรือเปล่าในทุก เพจที่ทำไปแล้ว
 
+- 📝 ProductCategory หมวดหมู่สินค้า - กำลังดำเนินการ
 - 📝 ระบบใบเสนอราคา (Quotation System)
 - 📝 ระบบใบสั่งขาย (Sales Order)
 - 📝 ระบบใบส่งสินค้า (Delivery Order)
@@ -273,6 +275,7 @@ update 2025-04-16
 ├── project_structure_2025_04_13.txt (20.41 KB)
 ├── project_structure_2025_04_14.txt (25.65 KB)
 ├── project_structure_2025_04_15.txt (28.27 KB)
+├── project_structure_2025_04_16.txt (29.17 KB)
 ├── repair-system.sh (2.21 KB)
 ├── runfix.sh (274 B)
 ├── tailwind.config.js (3.36 KB)
@@ -282,8 +285,9 @@ update 2025-04-16
 ├── vscode-settings.json (352 B)
 ├── คำสั่ง.txt (13.52 KB)
 ├── Note/
-├── Project_Info/
-│   ├── Roadmap.md (42.11 KB)
+├── X_Project_Info/
+│   ├── Roadmap.md (43.1 KB)
+│   ├── product_management_guide.md (6.29 KB)
 │   └── BIN/
 │       ├── Next_Actions.md (3.73 KB)
 │       ├── Next_Steps.md (13.61 KB)
@@ -323,6 +327,7 @@ update 2025-04-16
 │   │       ├── FixMigrationsCommand.php (4.24 KB)
 │   │       ├── FixSQLiteCompatibilityCommand.php (7.26 KB)
 │   │       ├── FixSQLiteMigrationCommand.php (8.47 KB)
+│   │       ├── ImportProductCategoriesCommand.php (3.33 KB)
 │   │       ├── ListAllTablesCommand.php (3.13 KB)
 │   │       ├── MigrateSkipCommand.php (2.52 KB)
 │   │       ├── MigrateSkipMultipleCommand.php (2.63 KB)
@@ -369,6 +374,7 @@ update 2025-04-16
 │   │   │   ├── OrganizationStructureController.php (14.61 KB)
 │   │   │   ├── PositionController.php (7.3 KB)
 │   │   │   ├── PositionsController.php (5.66 KB)
+│   │   │   ├── ProductCategoryController.php (11.87 KB)
 │   │   │   ├── ProductController.php (10.09 KB)
 │   │   │   ├── QuotationController.php (2.13 KB)
 │   │   │   ├── SystemCheckController.php (9.37 KB)
@@ -408,8 +414,8 @@ update 2025-04-16
 │   │   ├── LeaveType.php (2.19 KB)
 │   │   ├── Order.php (1.82 KB)
 │   │   ├── Position.php (1.45 KB)
-│   │   ├── Product.php (2.22 KB)
-│   │   ├── ProductCategory.php (1.34 KB)
+│   │   ├── Product.php (2.27 KB)
+│   │   ├── ProductCategory.php (2.19 KB)
 │   │   ├── Quotation.php (1.66 KB)
 │   │   ├── StockMovement.php (1.2 KB)
 │   │   ├── Unit.php (1013 B)
@@ -429,10 +435,12 @@ update 2025-04-16
 │   │   ├── RouteServiceProvider.php (2.22 KB)
 │   │   ├── SimpleEncryptionServiceProvider.php (887 B)
 │   │   └── TelescopeServiceProvider.php (2.23 KB)
+│   ├── Scopes/
+│   │   └── CompanyScope.php (800 B)
 │   ├── Services/
 │   ├── Shared/
 │   │   └── Traits/
-│   │       └── HasCompanyScope.php (1.64 KB)
+│   │       └── HasCompanyScope.php (1.46 KB)
 │   ├── Traits/
 │   │   └── CompanyScope.php (1.4 KB)
 │   └── View/
@@ -468,7 +476,7 @@ update 2025-04-16
 │   └── telescope.php (6.67 KB)
 ├── database/
 │   ├── ceosofts_db_R1 (0 B)
-│   ├── ceosofts_db_R1.sqlite (1.78 MB)
+│   ├── ceosofts_db_R1.sqlite (1.79 MB)
 │   ├── check-companies.php (2.17 KB)
 │   ├── check-db-connection.php (3.58 KB)
 │   ├── create-database.sh (928 B)
@@ -550,7 +558,7 @@ update 2025-04-16
 │   │   ├── OrganizationSeeder.php (0 B)
 │   │   ├── PermissionSeeder.php (444 B)
 │   │   ├── PositionSeeder.php (4.28 KB)
-│   │   ├── ProductCategorySeeder.php (3.03 KB)
+│   │   ├── ProductCategorySeeder.php (4.33 KB)
 │   │   ├── ProductSeeder.php (20.95 KB)
 │   │   ├── QuotationSeeder.php (5.07 KB)
 │   │   ├── ReceiptItemSeeder.php (2.47 KB)
@@ -593,6 +601,7 @@ update 2025-04-16
 │   ├── check-db.php (1.86 KB)
 │   ├── db-check.php (2.84 KB)
 │   ├── favicon.ico (0 B)
+│   ├── hot (17 B)
 │   ├── index.php (543 B)
 │   ├── robots.txt (24 B)
 │   ├── test.html (399 B)
@@ -703,7 +712,7 @@ update 2025-04-16
 │       │   ├── app.blade.php (1.22 KB)
 │       │   ├── basic.blade.php (792 B)
 │       │   ├── guest.blade.php (840 B)
-│       │   └── navigation.blade.php (23.64 KB)
+│       │   └── navigation.blade.php (24.05 KB)
 │       ├── livewire/
 │       │   ├── company-selector.blade.php (0 B)
 │       │   ├── components/
@@ -722,7 +731,8 @@ update 2025-04-16
 │       │   ├── create.blade.php (49.19 KB)
 │       │   ├── edit.blade.php (37.89 KB)
 │       │   ├── index.blade.php (16.34 KB)
-│       │   └── show.blade.php (53.18 KB)
+│       │   ├── show.blade.php (53.18 KB)
+│       │   └── categories/
 │       └── quotations/
 │           └── index.blade.php (742 B)
 ├── routes/
@@ -731,7 +741,7 @@ update 2025-04-16
 │   ├── auth.php (937 B)
 │   ├── channels.php (558 B)
 │   ├── console.php (592 B)
-│   ├── web.php (14.55 KB)
+│   ├── web.php (15.07 KB)
 │   └── domains/
 │       ├── finance.php (0 B)
 │       ├── human-resources.php (0 B)
@@ -751,63 +761,43 @@ update 2025-04-16
 │   │   ├── cache/
 │   │   │   └── data/
 │   │   ├── sessions/
-│   │   │   └── ANjGBeEN1Rw5CVbbElpUBOnRYo5Ji9BpwWcMveWJ (334 B)
+│   │   │   └── ANjGBeEN1Rw5CVbbElpUBOnRYo5Ji9BpwWcMveWJ (341 B)
 │   │   ├── testing/
 │   │   └── views/
-│   │       ├── 000f52382d98a46affca252e1a685a0d.php (3.83 KB)
-│   │       ├── 1acf6fff60b126156710aa96c14b3d28.php (52 KB)
-│   │       ├── 1c09d63b1a394a212080fcbe0cd4612e.php (12.53 KB)
-│   │       ├── 1c17753895a0f36981af295315a8b90a.php (26.12 KB)
-│   │       ├── 28e06e760a46c5e56a0e9fa283f551a9.php (1.68 KB)
+│   │       ├── 04a14b7442f6fc338ab7939f272e43a8.php (1.38 KB)
 │   │       ├── 2d82d6f51f043e617f681965f9eb1388.php (515 B)
 │   │       ├── 30baac441ee757f7eedec098c02ea9ce.php (2.76 KB)
 │   │       ├── 3343465d2ab428739d74303f16f2dfaf.php (707 B)
-│   │       ├── 3a7cab24497d21182754b9ba99cb94c1.php (40.71 KB)
 │   │       ├── 3c1b680d61bc7a7bb7df14c8a678a9de.php (10.36 KB)
 │   │       ├── 4de3d57ff3c17c3aa4d930e2c2cbfbf0.php (531 B)
-│   │       ├── 5220e35eb3e48c45b5aab63d736facfc.php (42.63 KB)
 │   │       ├── 57f9c964972f01fe748c5866ed076e5d.php (10.88 KB)
-│   │       ├── 603c45815335228d97b668cd0fc3ca2b.php (38.38 KB)
-│   │       ├── 6058ff94e11fec1c4416663a99623824.php (1.1 KB)
 │   │       ├── 6558acd15011832cd6aa15743960d38b.php (3.02 KB)
-│   │       ├── 662c268e87fcd1941e5132d177d2c614.php (16.96 KB)
+│   │       ├── 6ee15c368368456900bf99d26300129e.php (1.27 KB)
 │   │       ├── 70991d3b6e4e4e196e729160767e6c75.php (9.42 KB)
-│   │       ├── 78382777a41b2586c8469d62c1b7dfd8.php (441 B)
 │   │       ├── 7aaef36b4137424490c562d155e40830.php (1.11 KB)
 │   │       ├── 7f6cf0ade3c425d8e7e502e196345c4b.php (5.01 KB)
 │   │       ├── 820f920f42080c93c6ed0871e644885b.php (8.12 KB)
-│   │       ├── 8390aacb61fdfca36b73e225a0e62703.php (39.59 KB)
 │   │       ├── 8453bc743b2f98c83e9732ab4ed71306.php (2.24 KB)
-│   │       ├── 858fdf59bcc122a2851e83ab7a9bb93c.php (73.07 KB)
-│   │       ├── 86ed121cec59f9c3993df7023bfd15d6.php (1.16 KB)
-│   │       ├── 8eefe5aeda5502013a83cf68dc3d1ed3.php (15.76 KB)
-│   │       ├── 903e67334b00459fda09642e4872349b.php (603 B)
-│   │       ├── 95d3bcf3ba4f1ae863c033158d70d423.php (8.92 KB)
-│   │       ├── 9b71d1c27c766265d85dda697ea437e5.php (17.54 KB)
-│   │       ├── 9cacc23f728e0d30917b23401c619a42.php (469 B)
-│   │       ├── 9e7361becd92fdb8d7180df0d1ff4d28.php (11.94 KB)
+│   │       ├── 858fdf59bcc122a2851e83ab7a9bb93c.php (73.54 KB)
+│   │       ├── 89ed97ccaf061226ee275a1d70bddb21.php (24.7 KB)
+│   │       ├── 8d9a78a1a85c6160f76f39ae8493572b.php (1.27 KB)
+│   │       ├── 979c67e77d89f33ea3d5716dee402eee.php (1.24 KB)
 │   │       ├── a19789af8775f146a579fc6d6e1766e3.php (352 B)
 │   │       ├── a26d536b72e080b9ea65f354c518c765.php (2.04 KB)
-│   │       ├── ae6dc72376fe381e33a184701009e221.php (1.06 KB)
-│   │       ├── b256ae65d4881fc8f523491e1909e7bc.php (18.82 KB)
+│   │       ├── af3a3652b0b2098e4ebc1694d7db7475.php (584 B)
 │   │       ├── b453ba8120863d30a079c75808bfa61a.php (2.89 KB)
-│   │       ├── b52ce5b0df813a75b2eb2e149ff732b8.php (16.48 KB)
-│   │       ├── bcbb79b399b417f9ea2b3a26d45b56c2.php (49.67 KB)
+│   │       ├── bd8e8ff4c1d48a5496397a972c7cbdcf.php (20.66 KB)
 │   │       ├── c315ed2f896bc7b209c276d2926f2b6c.php (509 B)
-│   │       ├── c4e192da798af33e730cdac30687b2af.php (6.13 KB)
-│   │       ├── cbadd884acfc3823e29aba73268c2f43.php (2.15 KB)
-│   │       ├── d84cde974ec6696aad7f2ba74c4709eb.php (2.8 KB)
+│   │       ├── cbfecf69c34656be6f3e1f0c2c48dd5f.php (1.09 KB)
 │   │       ├── da6c417ae5ff0124e4d3116a0c93d1f7.php (11.39 KB)
-│   │       ├── e4cf380d81790c0ea74a9da9bbd31c14.php (14.42 KB)
-│   │       ├── f19f849ba7b367cc8d43bbbf7865c08b.php (6.71 KB)
 │   │       ├── f2d98475be4395e00d133e49a1ca34cc.php (7.02 KB)
-│   │       ├── f7e76a0dfad82f9517bfe34c2f1ac74c.php (58.67 KB)
 │   │       ├── f9bf975275e39779d2fa08c87d4e5e49.php (616 B)
-│   │       └── fc3fc22c8e542b24b08dace9c21cc510.php (632 B)
+│   │       ├── fc3fc22c8e542b24b08dace9c21cc510.php (632 B)
+│   │       └── fcb1329077faf0f5f28904d12d5cbd3f.php (37.02 KB)
 │   └── logs/
 │       ├── encryption-debug.log (704 B)
 │       ├── encryption-error.log (0 B)
-│       └── laravel.log (11.31 MB)
+│       └── laravel.log (14.04 MB)
 ├── tests/
 │   ├── DuskTestCase.php (1.41 KB)
 │   ├── TestCase.php (142 B)

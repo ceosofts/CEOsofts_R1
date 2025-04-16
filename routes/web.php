@@ -20,6 +20,9 @@ use App\Http\Controllers\OrganizationStructureController; // เพิ่มบ�
 use App\Http\Controllers\ComingSoonController; // เพิ่มบรรทัดนี้
 use App\Http\Controllers\ExecutiveDashboardController; // เพิ่มบรรทัดนี้
 use App\Http\Controllers\ProductController; // เพิ่มการ import นี้
+use App\Http\Controllers\ProductCategoryController; // เพิ่มการ import นี้
+use App\Http\Controllers\UnitController; // import เพิ่มเติม
+use App\Http\Controllers\StockMovementController; // import เพิ่มเติม
 
 /*
 |--------------------------------------------------------------------------
@@ -267,6 +270,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('products', ProductController::class);
     Route::get('/product-categories', [ProductController::class, 'categories'])->name('products.categories');
     Route::post('/product-categories', [ProductController::class, 'storeCategory'])->name('products.categories.store');
+});
+
+// เส้นทางสำหรับจัดการหมวดหมู่สินค้า
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('product-categories', \App\Http\Controllers\ProductCategoryController::class);
 });
 
 // Executive Dashboard Routes

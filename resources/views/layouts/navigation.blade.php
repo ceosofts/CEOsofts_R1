@@ -145,7 +145,7 @@ use Illuminate\Support\Facades\Auth;
                                 <x-dropdown-link :href="route('products.index')">
                                     สินค้าและบริการ
                                 </x-dropdown-link>
-                                <x-dropdown-link href="{{ route('coming-soon', ['feature' => 'product-categories']) }}">
+                                <x-dropdown-link :href="route('product-categories.index')">
                                     หมวดหมู่สินค้า
                                 </x-dropdown-link>
                                 <x-dropdown-link href="{{ route('coming-soon', ['feature' => 'units']) }}">
@@ -297,6 +297,9 @@ use Illuminate\Support\Facades\Auth;
             <div class="px-4 py-2 text-white font-medium border-l-4 border-transparent">สินค้า</div>
             <a href="{{ route('products.index') }}" class="block pl-6 pr-4 py-2 border-l-4 {{ request()->routeIs('products.*') ? 'border-accent-400 text-accent-400 bg-blue-900' : 'border-transparent text-gray-200 hover:text-white hover:bg-blue-700 hover:border-accent-300' }} text-base font-medium focus:outline-none transition duration-150 ease-in-out">
                 สินค้าและบริการ
+            </a>
+            <a href="{{ route('product-categories.index') }}" class="block pl-6 pr-4 py-2 border-l-4 {{ request()->routeIs('product-categories.*') ? 'border-accent-400 text-accent-400 bg-blue-900' : 'border-transparent text-gray-200 hover:text-white hover:bg-blue-700 hover:border-accent-300' }} text-base font-medium focus:outline-none transition duration-150 ease-in-out">
+                หมวดหมู่สินค้า
             </a>
             @else
             <a href="{{ route('about') }}" class="block pl-3 pr-4 py-2 border-l-4 {{ request()->routeIs('about') ? 'border-accent-400 text-accent-400 bg-blue-900' : 'border-transparent text-gray-200 hover:text-white hover:bg-blue-700 hover:border-accent-300' }} text-base font-medium focus:outline-none transition duration-150 ease-in-out">
