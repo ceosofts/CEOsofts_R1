@@ -312,6 +312,20 @@ Route::get('/system-check', [App\Http\Controllers\SystemCheckController::class, 
 Route::get('/coming-soon/{feature?}', [App\Http\Controllers\ComingSoonController::class, 'index'])
     ->name('coming-soon');
 
+// Coming Soon Routes
+Route::get('/coming-soon/{feature}', function($feature) {
+    $featureName = str_replace('-', ' ', $feature);
+    $viewPath = 'coming-soon.' . $feature;
+    
+    // ตรวจสอบว่ามีไฟล์ view นี้หรือไม่
+    if (view()->exists($viewPath)) {
+        return view($viewPath);
+    }
+    
+    // ถ้าไม่มีไฟล์เฉพาะ ให้ใช้ view ทั่วไป
+    return view('coming-soon', ['feature' => $featureName]);
+});
+
 // เพิ่ม route สำหรับตรวจสอบข้อมูลสินค้า
 Route::get('/debug/products', function () {
     $products = \App\Models\Product::all();

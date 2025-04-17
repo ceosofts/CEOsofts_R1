@@ -53,4 +53,27 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * The companies that belong to the user.
+     */
+    public function companies()
+    {
+        return $this->belongsToMany(Company::class, 'company_user');
+    }
+    
+    /**
+     * Get the user's current company.
+     */
+    public function getCurrentCompanyAttribute()
+    {
+        $companyId = session('current_company_id');
+        
+        if ($companyId) {
+            return $this->companies->find($companyId);
+        }
+        
+        // ถ้าไม่มีบริษัทในเซสชัน ให้ใช้บริษัทแรก (ถ้ามี)
+        return $this->companies->first();
+    }
 }
