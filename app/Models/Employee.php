@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo; // เปลี่ยนจากการ import App\Models\BelongsTo
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Log;
-use App\Traits\CompanyScope;
+// use App\Traits\CompanyScope;
 
 class Employee extends Model
 {
-    use HasFactory, SoftDeletes, CompanyScope;
+    use HasFactory, SoftDeletes; // , CompanyScope
 
     protected $fillable = [
         'uuid',

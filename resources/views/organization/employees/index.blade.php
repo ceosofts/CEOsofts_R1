@@ -85,7 +85,7 @@
                                 <label for="company_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">บริษัท</label>
                                 <select name="company_id" id="company_id"
                                     class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                    <option value="">-- ทั้งหมด --</option>
+                                    <option value="">-- ทุกบริษัท --</option>
                                     @foreach($companies as $company)
                                     <option value="{{ $company->id }}" {{ request('company_id') == $company->id ? 'selected' : '' }}>
                                         {{ $company->name }}
@@ -230,7 +230,8 @@
                 console.log('Filtered positions by department:', departmentId, 'company:', companyId);
             }
             
-            // ...existing code...
+            // ตรวจสอบว่ามีการใช้ $currentCompany, $currentCompanyId, หรือ filter เฉพาะบริษัทใน blade หรือไม่
+            // ถ้ามี ให้ลบหรือคอมเมนต์ออก
         });
     </script>
     @endpush

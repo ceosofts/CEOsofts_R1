@@ -19,7 +19,7 @@ class OrganizationServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // ตรวจสอบว่ามีการ apply global scope หรือ logic ที่ filter company_id หรือไม่
+        // ตรวจสอบว่ามี logic ที่ apply global scope หรือ filter company_id หรือไม่
         //
     }
 }

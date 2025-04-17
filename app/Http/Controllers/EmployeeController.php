@@ -21,39 +21,26 @@ class EmployeeController extends Controller
      */
     public function index(Request $request)
     {
-        // แก้ไขให้มีการโหลด relationship ที่จำเป็นอย่างชัดเจน
         $query = Employee::with([
             'company', 
             'department',
-            'position', // ไม่จำกัดฟิลด์ที่เลือก เพื่อให้สามารถดึงชื่อตำแหน่งได้ถูกต้อง
+            'position',
             'branchOffice', 
             'manager'
         ]);
         
-        // เลือกบริษัทปัจจุบัน
+        // ลบ logic ที่ filter ด้วย session('current_company_id') หรือค่า default
         $currentCompanyId = null;
         $currentCompany = null;
-        
+
         // ถ้ามีการระบุบริษัทใน URL ให้ใช้ค่านั้น
         if ($request->has('company_id') && !empty($request->company_id)) {
             $currentCompanyId = $request->company_id;
             session(['current_company_id' => $request->company_id]);
-        }
-        // ถ้ามีการเลือกแสดงทุกบริษัท
-        else if ($request->has('all_companies')) {
-            session()->forget('current_company_id');
-        }
-        // ถ้ายังไม่มีการเลือกใดๆ และมีการบันทึกบริษัทไว้ใน session
-        else if (session('current_company_id')) {
-            $currentCompanyId = session('current_company_id');
-        }
-        
-        // ถ้ามีการตั้งค่าบริษัท ให้กรองตามบริษัทนั้น
-        if ($currentCompanyId) {
             $query->where('company_id', $currentCompanyId);
             $currentCompany = Company::find($currentCompanyId);
         }
-        
+
         // ทำการค้นหาและกรองต่างๆ หากมีการระบุ
         if ($request->filled('id')) {
             $query->where('id', $request->id);
