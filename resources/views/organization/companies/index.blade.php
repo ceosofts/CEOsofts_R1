@@ -34,13 +34,13 @@
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <h3 class="text-lg font-semibold mb-4">ค้นหาและกรองข้อมูล</h3>
 
-                    <form method="GET" action="{{ route('companies.index') }}">
+                    <form method="GET" action="{{ route('companies.index') }}" id="searchForm">
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div>
                                 <label for="search" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ค้นหา</label>
                                 <input type="text" name="search" id="search" value="{{ request('search') }}"
                                     class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                    placeholder="ชื่อบริษัท">
+                                    placeholder="ชื่อบริษัท, เลขทะเบียน">
                             </div>
 
                             <div>
@@ -48,10 +48,28 @@
                                 <select name="status" id="status"
                                     class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                     <option value="">-- ทั้งหมด --</option>
-                                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>ใช้งาน</option>
-                                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>ไม่ใช้งาน</option>
+                                    <option value="1" {{ request('status') === '1' ? 'selected' : '' }}>ใช้งาน</option>
+                                    <option value="0" {{ request('status') === '0' ? 'selected' : '' }}>ไม่ใช้งาน</option>
                                 </select>
                             </div>
+                            
+                            <!-- แสดงผลการค้นหา -->
+                            @if(request('search') || request('status') !== null)
+                                <div class="col-span-full mt-2">
+                                    <p class="text-sm text-gray-600">
+                                        กำลังแสดงผลการค้นหา: 
+                                        @if(request('search'))
+                                            <span class="font-medium">คำค้น "{{ request('search') }}"</span>
+                                        @endif
+                                        @if(request('status') !== null)
+                                            <span class="font-medium">
+                                                {{ request('status') === '1' ? 'สถานะ: ใช้งาน' : (request('status') === '0' ? 'สถานะ: ไม่ใช้งาน' : '') }}
+                                            </span>
+                                        @endif
+                                        <span class="ml-2">({{ $companies->total() }} รายการ)</span>
+                                    </p>
+                                </div>
+                            @endif
                         </div>
 
                         <div class="mt-4 flex justify-end">
@@ -79,7 +97,7 @@
                                     <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-left">ID</th>
                                     <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-left">ชื่อบริษัท</th>
                                     <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-left">ชื่อย่อ</th>
-                                    <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-left">เลขทะเบียน</th>
+                                    <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-left">เลขทะเบียนภาษี</th>
                                     <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-left">สถานะ</th>
                                     <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-center">จัดการ</th>
                                 </tr>
@@ -89,8 +107,8 @@
                                 <tr class="hover:bg-gray-200 dark:hover:bg-gray-600 border-b border-gray-200 dark:border-gray-700">
                                     <td class="py-2 px-4">{{ $company->id }}</td>
                                     <td class="py-2 px-4">{{ $company->name }}</td>
-                                    <td class="py-2 px-4">{{ $company->short_name ?: '-' }}</td>
-                                    <td class="py-2 px-4">{{ $company->registration_no ?: '-' }}</td>
+                                    <td class="py-2 px-4">{{ $company->code ?: '-' }}</td>
+                                    <td class="py-2 px-4">{{ $company->tax_id ?: ($company->registration_number ?: '-') }}</td>
                                     <td class="py-2 px-4">
                                         <span class="inline-flex px-2 py-1 text-xs font-semibold leading-5 rounded-full 
                                                 {{ $company->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">

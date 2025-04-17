@@ -12,7 +12,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            RoleAndPermissionSeeder::class, // ต้องรันก่อน AdminUserSeeder
+            RoleAndPermissionSeeder::class,
             CompanySeeder::class,
             BranchOfficeSeeder::class,
             DepartmentSeeder::class,
@@ -24,23 +24,23 @@ class DatabaseSeeder extends Seeder
             WorkShiftSeeder::class,
             EmployeeWorkShiftSeeder::class,
             CustomerSeeder::class,
-            UnitSeeder::class,    // เพิ่ม UnitSeeder
-            TaxSeeder::class,     // เพิ่ม TaxSeeder
-            ProductCategorySeeder::class,  // เพิ่ม ProductCategorySeeder ก่อน ProductSeeder
-            ProductSeeder::class,  // ย้าย ProductSeeder มาหลัง UnitSeeder และ TaxSeeder
-            StockMovementSeeder::class, // เพิ่ม StockMovementSeeder หลัง ProductSeeder
+            UnitSeeder::class, // ให้ UnitSeeder ทำงานก่อน ProductSeeder
+            TaxSeeder::class,
+            ProductCategorySeeder::class,
+            ProductSeeder::class, // ProductSeeder เรียกใช้หลังจาก UnitSeeder
+            StockMovementSeeder::class,
             QuotationSeeder::class,
             OrderSeeder::class,
             InvoiceSeeder::class,
-            ReceiptSeeder::class, // เพิ่ม ReceiptSeeder
-            ReceiptItemSeeder::class, // เพิ่ม ReceiptItemSeeder หลัง ReceiptSeeder
+            ReceiptSeeder::class,
+            ReceiptItemSeeder::class,
             DocumentTemplateSeeder::class,
             GeneratedDocumentSeeder::class,
-            DocumentSendingSeeder::class, // เพิ่ม DocumentSendingSeeder
-            SettingSeeder::class,          // เพิ่ม SettingSeeder
-            ScheduledEventSeeder::class,    // เพิ่ม ScheduledEventSeeder
-            TranslationSeeder::class,     // เพิ่ม TranslationSeeder
-            FileAttachmentSeeder::class,  // เพิ่ม FileAttachmentSeeder
+            DocumentSendingSeeder::class,
+            SettingSeeder::class,
+            ScheduledEventSeeder::class,
+            TranslationSeeder::class,
+            FileAttachmentSeeder::class,
             ActivityLogSeeder::class,
         ]);
     }

@@ -18,6 +18,12 @@ use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrganizationStructureController; // เพิ่มบรรทัดนี้
 use App\Http\Controllers\ComingSoonController; // เพิ่มบรรทัดนี้
+use App\Http\Controllers\ExecutiveDashboardController; // เพิ่มบรรทัดนี้
+use App\Http\Controllers\ProductController; // เพิ่มการ import นี้
+use App\Http\Controllers\ProductCategoryController; // เพิ่มการ import นี้
+use App\Http\Controllers\UnitController; // import เพิ่มเติม
+use App\Http\Controllers\StockMovementController; // import เพิ่มเติม
+use App\Http\Controllers\BranchOfficeController; // เพิ่ม import สำหรับ BranchOfficeController
 
 /*
 |--------------------------------------------------------------------------
@@ -221,6 +227,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('positions', PositionController::class);
     
     // Employees
+    Route::get('/employees/export', [EmployeeController::class, 'export'])->name('employees.export');
     Route::resource('employees', EmployeeController::class);
     
     // Test Employee Controller
@@ -232,7 +239,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     
-    // Routes สำหรับระบบโครงสร้างองค์กรdex'])->name('index');
+    // Routes สำหรับระบบโครงสร้างองค์กร
     Route::middleware([\App\Http\Middleware\SetDefaultCompany::class])->prefix('organization/structure')->name('organization.structure.')->group(function () {
         Route::get('/', [OrganizationStructureController::class, 'index'])->name('index');
         Route::get('/{company}', [OrganizationStructureController::class, 'show'])->name('show');
@@ -240,6 +247,45 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/{company}', [OrganizationStructureController::class, 'update'])->name('update');
         Route::get('/{company}/tree', [OrganizationStructureController::class, 'treeView'])->name('tree');
     });
+    
+    // Products
+    Route::resource('products', ProductController::class);
+    Route::get('/products/{product}/stock', [ProductController::class, 'stockHistory'])->name('products.stock');
+    Route::get('/product-categories', [ProductController::class, 'categories'])->name('products.categories');
+    Route::post('/product-categories', [ProductController::class, 'storeCategory'])->name('products.categories.store');
+    
+    // Product Categories
+    Route::resource('product-categories', ProductCategoryController::class);
+    
+    // Units
+    Route::resource('units', UnitController::class);
+    
+    // Stock Movements
+    Route::resource('stock-movements', StockMovementController::class);
+    Route::get('/stock/report', [StockMovementController::class, 'report'])->name('stock.report');
+    Route::get('/stock/low-stock', [StockMovementController::class, 'lowStock'])->name('stock.low');
+    
+    // Customers
+    Route::resource('customers', CustomerController::class);
+    Route::get('/customers/export', [CustomerController::class, 'export'])->name('customers.export');
+    Route::get('/customers/{customer}/purchase-history', [CustomerController::class, 'purchaseHistory'])->name('customers.purchase-history');
+    
+    // Branch Offices Routes
+    // Note: Need to import BranchOfficeController at the top of the file
+    Route::get('/branch-offices/export', [BranchOfficeController::class, 'export'])
+        ->name('branch-offices.export');
+    Route::resource('branch-offices', BranchOfficeController::class);
+});
+
+// เส้นทางสำหรับจัดการหมวดหมู่สินค้า
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('product-categories', \App\Http\Controllers\ProductCategoryController::class);
+});
+
+// Executive Dashboard Routes
+Route::middleware(['auth', 'verified'])->prefix('executive')->name('executive.')->group(function () {
+    Route::get('/dashboard', [ExecutiveDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/summary', [ExecutiveDashboardController::class, 'executiveSummary'])->name('summary');
 });
 
 // API Route สำหรับแผนผังองค์กร
@@ -265,6 +311,35 @@ Route::get('/system-check', [App\Http\Controllers\SystemCheckController::class, 
 // เพิ่ม route สำหรับหน้าฟีเจอร์ที่กำลังพัฒนา
 Route::get('/coming-soon/{feature?}', [App\Http\Controllers\ComingSoonController::class, 'index'])
     ->name('coming-soon');
+
+// Coming Soon Routes
+Route::get('/coming-soon/{feature}', function($feature) {
+    $featureName = str_replace('-', ' ', $feature);
+    $viewPath = 'coming-soon.' . $feature;
+    
+    // ตรวจสอบว่ามีไฟล์ view นี้หรือไม่
+    if (view()->exists($viewPath)) {
+        return view($viewPath);
+    }
+    
+    // ถ้าไม่มีไฟล์เฉพาะ ให้ใช้ view ทั่วไป
+    return view('coming-soon', ['feature' => $featureName]);
+});
+
+// เพิ่ม route สำหรับตรวจสอบข้อมูลสินค้า
+Route::get('/debug/products', function () {
+    $products = \App\Models\Product::all();
+    $categories = \App\Models\ProductCategory::all();
+    $units = \App\Models\Unit::all();
+    
+    return response()->json([
+        'products_count' => $products->count(),
+        'categories_count' => $categories->count(),
+        'units_count' => $units->count(),
+        'products' => $products->take(5)->toArray(), // แสดงเฉพาะ 5 รายการแรกเพื่อไม่ให้ข้อมูลเยอะเกินไป
+        'user' => auth()->check() ? auth()->user()->only(['id', 'name', 'email', 'company_id']) : 'ยังไม่ได้เข้าสู่ระบบ'
+    ]);
+})->middleware(['auth'])->name('debug.products');
 
 // นำเข้าเส้นทาง Authentication จากไฟล์ auth.php
 require __DIR__ . '/auth.php';

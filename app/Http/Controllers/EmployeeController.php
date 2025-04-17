@@ -21,145 +21,88 @@ class EmployeeController extends Controller
      */
     public function index(Request $request)
     {
-        try {
-            // ถ้าไม่มี company ที่เลือกไว้ ให้ดึงมาหนึ่งบริษัท
-            if (!session()->has('current_company_id')) {
-                $firstCompany = Company::first();
-                if ($firstCompany) {
-                    session(['current_company_id' => $firstCompany->id]);
-                }
-            }
+        $query = Employee::with([
+            'company', 
+            'department',
+            'position',
+            'branchOffice', 
+            'manager'
+        ]);
+        
+        // ลบ logic ที่ filter ด้วย session('current_company_id') หรือค่า default
+        $currentCompanyId = null;
+        $currentCompany = null;
 
-            // ตรวจสอบว่าเป็นการเรียกแบบ debug หรือไม่
-            $query = Employee::query();
-            if ($request->has('all_companies')) {
-                // ถ้าเป็น debug mode ไม่ต้องใช้ scope
-                $query->withoutGlobalScope('company');
-            }
-            
-            // กรอง query ตามปกติ
-            if ($request->filled('id')) {
-                $query->where('id', $request->id);
-            }
-            
-            // กรองตามรหัสพนักงาน
-            if ($request->filled('employee_code')) {
-                $query->where('employee_code', 'like', '%' . $request->employee_code . '%');
-            }
-            
-            // กรองตามชื่อ
-            if ($request->filled('first_name')) {
-                $query->where('first_name', 'like', '%' . $request->first_name . '%');
-            }
-            
-            // กรองตามนามสกุล
-            if ($request->filled('last_name')) {
-                $query->where('last_name', 'like', '%' . $request->last_name . '%');
-            }
-            
-            // กรองตามบริษัท (แทนที่จะใช้ global scope)
-            if ($request->filled('company_id')) {
-                $query->where('company_id', $request->company_id);
-                // ถ้ามีการเลือกบริษัทจากการค้นหา ให้อัพเดทค่าในเซสชัน
-                session(['current_company_id' => $request->company_id]);
-            } else if (!$request->has('all_companies') && session('current_company_id')) {
-                $query->where('company_id', session('current_company_id'));
-            }
-            
-            // กรองตามแผนก
-            if ($request->filled('department_id')) {
-                $query->where('department_id', $request->department_id);
-            }
-            
-            // กรองตามตำแหน่ง
-            if ($request->filled('position_id')) {
-                $query->where('position_id', $request->position_id);
-            }
-            
-            // กรองตามสาขา
-            if ($request->filled('branch_office_id')) {
-                $query->where('branch_office_id', $request->branch_office_id);
-            }
-            
-            // กรองตามสถานะ
-            if ($request->filled('status')) {
-                $query->where('status', $request->status);
-            }
-            
-            // เพิ่มการเรียงข้อมูล
-            $sort = $request->input('sort', 'id');
-            $direction = $request->input('direction', 'asc');
-            
-            // ตรวจสอบว่าคอลัมน์ที่จะเรียงมีอยู่จริงใน schema
-            $allowedSortColumns = ['id', 'employee_code', 'first_name', 'last_name', 'created_at', 'updated_at'];
-            if (in_array($sort, $allowedSortColumns)) {
-                $query->orderBy($sort, $direction);
-            } else {
-                $query->orderBy('id', 'asc');
-            }
-            
-            $employees = $query->with(['company', 'department', 'position', 'branchOffice'])
-                            ->paginate(10);
-            
-            $companies = Company::all();
-            $departments = Department::all();
-            $positions = Position::all();
-            $branchOffices = BranchOffice::all();
-            
-            // เพิ่ม current company ไปใน view
-            $currentCompany = null;
-            if (session()->has('current_company_id')) {
-                $currentCompany = Company::find(session('current_company_id'));
-            }
-            
-            // Check if the standard view exists
-            if (view()->exists('organization.employees.index')) {
-                return view('organization.employees.index', compact(
-                    'employees', 
-                    'companies', 
-                    'departments', 
-                    'positions', 
-                    'branchOffices',
-                    'currentCompany'
-                ));
-            } 
-            // Try the fallback view
-            else if (view()->exists('organization.employees.fallback')) {
-                return view('organization.employees.fallback');
-            }
-            // Try the simple view
-            else if (view()->exists('organization.employees.simple-index')) {
-                return view('organization.employees.simple-index', compact('employees'));
-            }
-            // Last resort - direct HTML
-            else {
-                $html = "<!DOCTYPE html><html><head><title>พนักงาน</title></head><body>";
-                $html .= "<h1>รายการพนักงาน</h1>";
-                $html .= "<p>ไม่พบ view แต่ controller ทำงานได้</p>";
-                $html .= "<hr>";
-                
-                if ($employees->count() > 0) {
-                    $html .= "<ul>";
-                    foreach ($employees as $employee) {
-                        $html .= "<li>{$employee->first_name} {$employee->last_name}</li>";
-                    }
-                    $html .= "</ul>";
-                } else {
-                    $html .= "<p>ไม่พบข้อมูลพนักงาน</p>";
-                }
-                
-                $html .= "</body></html>";
-                return response($html);
-            }
-        } catch (\Exception $e) {
-            // แสดงข้อความ error เพื่อ debug
-            return response()->json([
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTrace()
-            ]);
+        // ถ้ามีการระบุบริษัทใน URL ให้ใช้ค่านั้น
+        if ($request->has('company_id') && !empty($request->company_id)) {
+            $currentCompanyId = $request->company_id;
+            session(['current_company_id' => $request->company_id]);
+            $query->where('company_id', $currentCompanyId);
+            $currentCompany = Company::find($currentCompanyId);
         }
+
+        // ทำการค้นหาและกรองต่างๆ หากมีการระบุ
+        if ($request->filled('id')) {
+            $query->where('id', $request->id);
+        }
+        
+        // กรอง query ตามปกติ
+        if ($request->filled('employee_code')) {
+            $query->where('employee_code', 'like', '%' . $request->employee_code . '%');
+        }
+        
+        // กรองตามชื่อ
+        if ($request->filled('first_name')) {
+            $query->where('first_name', 'like', '%' . $request->first_name . '%');
+        }
+        
+        // กรองตามนามสกุล
+        if ($request->filled('last_name')) {
+            $query->where('last_name', 'like', '%' . $request->last_name . '%');
+        }
+        
+        // กรองตามแผนก
+        if ($request->filled('department_id')) {
+            $query->where('department_id', $request->department_id);
+        }
+        
+        // กรองตามตำแหน่ง
+        if ($request->filled('position_id')) {
+            $query->where('position_id', $request->position_id);
+        }
+        
+        // กรองตามสาขา
+        if ($request->filled('branch_office_id')) {
+            $query->where('branch_office_id', $request->branch_office_id);
+        }
+        
+        // กรองตามสถานะ
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        
+        // จัดเรียงข้อมูล - แก้ไขให้เรียงตาม id เป็นค่าเริ่มต้น
+        $sortField = $request->get('sort', 'id');
+        $sortDirection = $request->get('direction', 'asc');
+        $query->orderBy($sortField, $sortDirection);
+        
+        // ดึงข้อมูลและเพิ่ม withQueryString() เพื่อรักษา parameter การค้นหา
+        $employees = $query->paginate(15)->withQueryString();
+        
+        // ดึงข้อมูลสำหรับตัวกรอง รวมถึงความสัมพันธ์ที่จำเป็น
+        $companies = Company::all();
+        $departments = Department::with('company')->get();
+        $positions = Position::with('department.company')->get();
+        $branchOffices = BranchOffice::with('company')->get();
+        
+        // ใช้ employee count ในการแสดงผลการค้นหา
+        $totalEmployees = Employee::count();
+        $filteredCount = $employees->total();
+        
+        return view('organization.employees.index', compact(
+            'employees', 'companies', 'departments', 'positions', 'branchOffices', 'currentCompany',
+            'totalEmployees', 'filteredCount'
+        ));
     }
 
     /**
@@ -168,17 +111,30 @@ class EmployeeController extends Controller
     public function create()
     {
         $companies = Company::all();
-        $departments = Department::all();
-        $positions = Position::all();
+        
+        // โหลดความสัมพันธ์ของแผนกและบริษัท
+        $departments = Department::with('company')->get();
+        
+        // โหลดความสัมพันธ์ของตำแหน่ง แผนก และบริษัท
+        $positions = Position::with('department.company')->get();
+        
         $managers = Employee::where('status', 'active')->get();
         $branchOffices = BranchOffice::all();
+        
+        // สร้างตัวอย่างรหัสที่จะใช้จริงสำหรับบริษัทแรก (ถ้ามี)
+        $defaultCompany = $companies->isNotEmpty() ? $companies->first() : null;
+        $nextEmployeeCode = $defaultCompany ? 
+            Employee::generateEmployeeCode($defaultCompany->id) : 
+            "EMP-XX-XXX";
         
         return view('organization.employees.create', compact(
             'companies',
             'departments',
             'positions',
             'managers',
-            'branchOffices'
+            'branchOffices',
+            'nextEmployeeCode',
+            'defaultCompany'
         ));
     }
 
@@ -196,6 +152,12 @@ class EmployeeController extends Controller
             'email' => 'nullable|email|max:255|unique:employees',
             'employee_code' => 'nullable|max:50|unique:employees',
             'profile_image' => 'nullable|image|max:2048', // max 2MB
+            'id_card_number' => 'nullable|max:20',
+            'tax_id' => 'nullable|max:20',
+            'passport_number' => 'nullable|max:20',
+            'company_email' => 'nullable|email|max:255|unique:employees',
+            'bank_account' => 'nullable|max:50',
+            'social_security_number' => 'nullable|max:20',
         ]);
         
         if ($validator->fails()) {
@@ -207,6 +169,11 @@ class EmployeeController extends Controller
         
         $data = $request->all();
         
+        // สร้างรหัสพนักงานตามรูปแบบใหม่ถ้าไม่ได้ระบุ
+        if (empty($data['employee_code'])) {
+            $data['employee_code'] = Employee::generateEmployeeCode($data['company_id']);
+        }
+        
         // จัดการกับการอัพโหลดรูปภาพ
         if ($request->hasFile('profile_image')) {
             $imagePath = $request->file('profile_image')->store('employee-profiles', 'public');
@@ -216,8 +183,28 @@ class EmployeeController extends Controller
         // กำหนดค่าเริ่มต้นถ้าไม่ได้ระบุ
         $data['status'] = $request->input('status', 'active');
         
+        // กำหนดค่า hire_date เป็นวันที่ปัจจุบันถ้าไม่ได้ระบุ
+        if (empty($data['hire_date'])) {
+            $data['hire_date'] = now()->format('Y-m-d');
+        }
+        
         // สร้าง UUID สำหรับพนักงาน
         $data['uuid'] = (string) Str::uuid();
+        
+        // จัดการฟิลด์ boolean checkbox
+        $data['has_company_email'] = $request->has('has_company_email') ? 1 : 0;
+        
+        // ถ้าไม่มีอีเมล์บริษัท ให้เซ็ตค่าเป็น null
+        if (!$data['has_company_email']) {
+            $data['company_email'] = null;
+        }
+        
+        // เก็บ log ข้อมูลที่จะบันทึก
+        Log::info('Creating new employee', [
+            'employee_code' => $data['employee_code'],
+            'name' => $data['first_name'] . ' ' . $data['last_name'],
+            'company_id' => $data['company_id']
+        ]);
         
         Employee::create($data);
         
@@ -417,6 +404,79 @@ class EmployeeController extends Controller
             'timestamp' => now(),
             'employee_count' => Employee::count()
         ]);
+    }
+
+    /**
+     * Export employees data to a downloadable file.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     */
+    public function export(Request $request)
+    {
+        // Create a query with the same filters from index method
+        $query = Employee::with(['company', 'department', 'position', 'branchOffice', 'manager']);
+        
+        // Apply company filter if specific company selected
+        $currentCompanyId = null;
+        
+        if ($request->filled('company_id')) {
+            $currentCompanyId = $request->company_id;
+            $query->where('company_id', $currentCompanyId);
+        } elseif (session('current_company_id') && !$request->has('all_companies')) {
+            $currentCompanyId = session('current_company_id');
+            $query->where('company_id', $currentCompanyId);
+        }
+        
+        // Apply other filters from the request
+        if ($request->filled('department_id')) {
+            $query->where('department_id', $request->department_id);
+        }
+        
+        if ($request->filled('position_id')) {
+            $query->where('position_id', $request->position_id);
+        }
+        
+        if ($request->filled('branch_office_id')) {
+            $query->where('branch_office_id', $request->branch_office_id);
+        }
+        
+        if ($request->filled('employee_code')) {
+            $query->where('employee_code', 'like', '%' . $request->employee_code . '%');
+        }
+        
+        if ($request->filled('first_name')) {
+            $query->where('first_name', 'like', '%' . $request->first_name . '%');
+        }
+        
+        if ($request->filled('last_name')) {
+            $query->where('last_name', 'like', '%' . $request->last_name . '%');
+        }
+        
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        
+        // Get all filtered employees
+        $employees = $query->get();
+        
+        // Generate filename with timestamp
+        $filename = 'employees_export_' . date('Ymd_His') . '.json';
+        
+        // Create exports directory if it doesn't exist
+        $exportPath = storage_path('app/public/exports');
+        if (!is_dir($exportPath)) {
+            mkdir($exportPath, 0755, true);
+        }
+        
+        // Save the data to a JSON file
+        $filePath = $exportPath . '/' . $filename;
+        file_put_contents($filePath, $employees->toJson(JSON_PRETTY_PRINT));
+        
+        // Return the file as download
+        return response()->download($filePath, $filename, [
+            'Content-Type' => 'application/json',
+        ])->deleteFileAfterSend(true);
     }
 
     /**

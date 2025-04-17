@@ -25,6 +25,18 @@ class EmployeeSeeder extends Seeder
 
     private function createEmployeesForCompany($companyId)
     {
+        // แก้ไขรูปแบบรหัสพนักงาน - สร้างฟังก์ชันสำหรับรหัสแบบใหม่
+        $generateEmployeeCode = function($companyId, $employeeNumber) {
+            $companyPart = str_pad($companyId, 2, '0', STR_PAD_LEFT);
+            $employeePart = str_pad($employeeNumber, 3, '0', STR_PAD_LEFT);
+            return "EMP-{$companyPart}-{$employeePart}";
+        };
+        
+        // คำนวณหมายเลขพนักงานล่าสุดของบริษัทนี้
+        $lastEmployeeNumber = Employee::where('company_id', $companyId)
+            ->where('employee_code', 'LIKE', "EMP-" . str_pad($companyId, 2, '0', STR_PAD_LEFT) . "-%")
+            ->count();
+        
         $employees = [
             [
                 'company_id' => $companyId,
@@ -32,7 +44,7 @@ class EmployeeSeeder extends Seeder
                 'department_id' => 1,
                 'position_id' => 1,
                 'branch_office_id' => 1,
-                'employee_code' => 'EMP001',
+                'employee_code' => $generateEmployeeCode($companyId, $lastEmployeeNumber + 1),
                 'first_name' => 'สมชาย',
                 'last_name' => 'ใจดี',
                 'phone' => '081-234-5678',
@@ -102,7 +114,7 @@ class EmployeeSeeder extends Seeder
                 'department_id' => 2,
                 'position_id' => 3,
                 'branch_office_id' => 1,
-                'employee_code' => 'EMP002',
+                'employee_code' => $generateEmployeeCode($companyId, $lastEmployeeNumber + 2),
                 'first_name' => 'สมศรี',
                 'last_name' => 'มีสุข',
                 'phone' => '089-876-5432',
@@ -172,7 +184,7 @@ class EmployeeSeeder extends Seeder
                 'department_id' => 3,
                 'position_id' => 5,
                 'branch_office_id' => 2,
-                'employee_code' => 'EMP003',
+                'employee_code' => $generateEmployeeCode($companyId, $lastEmployeeNumber + 3),
                 'first_name' => 'สมหญิง',
                 'last_name' => 'รักงาน',
                 'phone' => '083-456-7890',

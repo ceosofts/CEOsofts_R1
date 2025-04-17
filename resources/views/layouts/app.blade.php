@@ -38,6 +38,12 @@
         <!-- Footer Component -->
         <x-footer />
     </div>
+    
+    <!-- Scripts -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
+    <!-- Additional Scripts -->
+    @stack('scripts')
 </body>
 
 </html>
