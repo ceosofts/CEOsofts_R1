@@ -148,7 +148,7 @@ use Illuminate\Support\Facades\Auth;
                                 <x-dropdown-link :href="route('product-categories.index')">
                                     หมวดหมู่สินค้า
                                 </x-dropdown-link>
-                                <x-dropdown-link href="{{ route('coming-soon', ['feature' => 'units']) }}">
+                                <x-dropdown-link href="{{ route('units.index') }}">
                                     หน่วยนับ
                                 </x-dropdown-link>
                                 <x-dropdown-link href="{{ route('coming-soon', ['feature' => 'stock-movements']) }}">

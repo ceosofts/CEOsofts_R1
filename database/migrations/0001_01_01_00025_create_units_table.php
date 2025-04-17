@@ -33,16 +33,16 @@ return new class extends Migration
         Schema::create('units', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
-            $table->string('name', 50);
-            $table->string('code', 10);
-            $table->string('symbol', 10)->nullable();
+            $table->string('name', 100);
+            $table->string('code', 50)->nullable();
+            $table->string('symbol', 20)->nullable();
             $table->foreignId('base_unit_id')->nullable()->references('id')->on('units')->onDelete('set null');
             $table->decimal('conversion_factor', 15, 5)->default(1.00000);
             $table->boolean('is_active')->default(true);
 
             // คอลัมน์เพิ่มเติมจาก add_missing_columns_to_units_table.php
             $table->text('description')->nullable(); // คำอธิบายเพิ่มเติม
-            $table->string('type', 20)->default('standard'); // ประเภทหน่วย (standard, derived, etc)
+            $table->string('type', 30)->nullable(); // ประเภทหน่วย (standard, derived, etc)
             $table->string('category', 30)->nullable(); // หมวดหมู่ (length, weight, volume, etc)
             $table->boolean('is_default')->default(false); // เป็นหน่วยเริ่มต้นหรือไม่
             $table->boolean('is_system')->default(false); // เป็นหน่วยของระบบหรือไม่

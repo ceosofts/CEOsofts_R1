@@ -7,6 +7,7 @@ use App\Models\Company;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\Unit;
+use Faker\Factory as Faker;
 
 class ProductSeeder extends Seeder
 {
@@ -15,10 +16,16 @@ class ProductSeeder extends Seeder
      */
     public function run(): void
     {
+        $faker = Faker::create('th_TH');
         $companies = Company::all();
 
         foreach ($companies as $company) {
-            $this->createProductsForCompany($company->id);
+            $categories = ProductCategory::where('company_id', $company->id)->get();
+            $units = Unit::where('company_id', $company->id)->get();
+            
+            if ($categories->count() > 0 && $units->count() > 0) {
+                $this->createProductsForCompany($company->id);
+            }
         }
     }
 
@@ -350,30 +357,44 @@ class ProductSeeder extends Seeder
     private function ensureUnitsExist($companyId)
     {
         $units = [
-            'ชิ้น' => ['description' => 'หน่วยนับทั่วไป', 'code' => 'UNIT-' . $companyId . '-PC'],
-            'เครื่อง' => ['description' => 'สำหรับอุปกรณ์ไฟฟ้า/อิเล็กทรอนิกส์', 'code' => 'UNIT-' . $companyId . '-MCH'],
-            'ตัว' => ['description' => 'สำหรับเฟอร์นิเจอร์และของใหญ่', 'code' => 'UNIT-' . $companyId . '-PCS'],
-            'อัน' => ['description' => 'หน่วยนับทั่วไป', 'code' => 'UNIT-' . $companyId . '-EA'],
-            'กล่อง' => ['description' => 'บรรจุภัณฑ์กล่อง', 'code' => 'UNIT-' . $companyId . '-BOX'],
-            'แพ็ค' => ['description' => 'บรรจุภัณฑ์แพ็ค', 'code' => 'UNIT-' . $companyId . '-PKG'],
-            'รีม' => ['description' => 'สำหรับกระดาษ', 'code' => 'UNIT-' . $companyId . '-RIM'],
-            'ตลับ' => ['description' => 'สำหรับหมึกพิมพ์', 'code' => 'UNIT-' . $companyId . '-CT'],
-            'ชั่วโมง' => ['description' => 'หน่วยเวลา', 'code' => 'UNIT-' . $companyId . '-HR'],
-            'ครั้ง' => ['description' => 'สำหรับบริการ', 'code' => 'UNIT-' . $companyId . '-TM'],
+            'ชิ้น' => ['description' => 'หน่วยนับพื้นฐานสำหรับสินค้าทั่วไป'],
+            'เครื่อง' => ['description' => 'สำหรับอุปกรณ์ไฟฟ้า/อิเล็กทรอนิกส์'],
+            'ตัว' => ['description' => 'สำหรับเฟอร์นิเจอร์และของใหญ่'],
+            'อัน' => ['description' => 'หน่วยนับทั่วไป'],
+            'กล่อง' => ['description' => 'บรรจุภัณฑ์กล่อง'],
+            'แพ็ค' => ['description' => 'บรรจุภัณฑ์แพ็ค'],
+            'รีม' => ['description' => 'สำหรับกระดาษ'],
+            'ตลับ' => ['description' => 'สำหรับหมึกพิมพ์'],
+            'ชั่วโมง' => ['description' => 'หน่วยเวลา'],
+            'ครั้ง' => ['description' => 'สำหรับบริการ'],
         ];
         
         foreach ($units as $name => $data) {
-            // เปลี่ยนจาก firstOrCreate เป็น updateOrCreate เพื่อให้แน่ใจว่า code จะถูกอัปเดตเข้าไป
-            Unit::updateOrCreate(
-                [
-                    'company_id' => $companyId,
-                    'name' => $name
-                ],
-                [
+            // ตรวจสอบก่อนว่ามีหน่วยนี้อยู่แล้วหรือไม่
+            $existingUnit = Unit::where('company_id', $companyId)
+                ->where('name', $name)
+                ->first();
+                
+            if ($existingUnit) {
+                // ถ้ามีอยู่แล้ว ให้อัพเดทข้อมูลอื่นๆ แต่คงรหัสเดิมไว้
+                $existingUnit->update([
                     'description' => $data['description'],
-                    'code' => $data['code']
-                ]
-            );
+                    'symbol' => $name,
+                    'is_active' => true,
+                    'type' => 'standard'
+                ]);
+            } else {
+                // ถ้ายังไม่มี ให้สร้างใหม่พร้อมสร้างรหัสใหม่
+                Unit::create([
+                    'company_id' => $companyId,
+                    'name' => $name,
+                    'description' => $data['description'],
+                    'code' => Unit::generateUnitCode($companyId),
+                    'symbol' => $name,
+                    'is_active' => true,
+                    'type' => 'standard'
+                ]);
+            }
         }
     }
 
