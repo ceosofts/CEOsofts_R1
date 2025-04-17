@@ -43,18 +43,12 @@ class CustomerController extends Controller
             $query->whereRaw("JSON_EXTRACT(metadata, '$.industry') LIKE ?", ["%{$industry}%"]);
         }
         
-        // Apply sorting
-        $sortField = $request->input('sort', 'name');
-        $direction = $request->input('direction', 'asc');
-        $allowedSortFields = ['name', 'created_at', 'email', 'status'];
-        
-        if (in_array($sortField, $allowedSortFields)) {
-            $query->orderBy($sortField, $direction);
-        } else {
-            $query->orderBy('name', 'asc');
-        }
-        
-        $customers = $query->paginate(10);
+        // เรียงลำดับ (เปลี่ยนค่าเริ่มต้นเป็น 'id')
+        $sortField = $request->get('sort', 'id');
+        $sortDirection = $request->get('direction', 'asc');
+        $query->orderBy($sortField, $sortDirection);
+
+        $customers = $query->paginate(15)->withQueryString();
         
         return view('customers.index', compact('customers'));
     }
