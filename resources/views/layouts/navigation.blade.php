@@ -45,7 +45,7 @@ use Illuminate\Support\Facades\Auth;
                                 <x-dropdown-link :href="route('companies.index')">
                                     บริษัท
                                 </x-dropdown-link>
-                                <x-dropdown-link href="{{ route('coming-soon', ['feature' => 'branch-offices']) }}">
+                                <x-dropdown-link :href="route('branch-offices.index')">
                                     สาขา
                                 </x-dropdown-link>
                                 <x-dropdown-link :href="route('departments.index')">

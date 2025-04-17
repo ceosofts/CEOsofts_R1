@@ -77,15 +77,14 @@
                         <div>
                             <h3 class="text-lg font-medium text-gray-900 mb-4">ข้อมูลเพิ่มเติม</h3>
                             
-                            <!-- แสดงบริษัทที่อ้างอิง - แสดงชื่อบริษัทชัดเจนขึ้น -->
+                            <!-- แสดงบริษัทที่อ้างอิง - ลบการแสดง ID -->
                             <div class="mb-4">
                                 <p class="text-sm font-medium text-gray-500">บริษัท:</p>
                                 <p class="mt-1 text-sm text-gray-900 font-medium">
-                                    @if($productCategory->company_id && $productCategory->company)
-                                        {{ $productCategory->company->company_name ?? $productCategory->company->name ?? 'ชื่อบริษัทไม่พบ' }}
-                                        <!-- <span class="text-xs text-gray-500">(รหัส: {{ $productCategory->company_id }})</span> -->
+                                    @if($productCategory->company)
+                                        {{ $productCategory->company->company_name }}
                                     @else
-                                        ไม่ระบุบริษัท
+                                        ไม่ระบุ
                                     @endif
                                 </p>
                             </div>
@@ -176,9 +175,7 @@
             <!-- แสดงรายการสินค้าในหมวดหมู่นี้ (ถ้ามี) -->
             <div class="mt-6 bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 bg-white border-b border-gray-200">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">
-                        สินค้าในหมวดหมู่นี้และหมวดหมู่ย่อย ({{ $products->count() }} รายการ จาก {{ $products->pluck('company_id')->unique()->count() }} บริษัท)
-                    </h3>
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">สินค้าในหมวดหมู่นี้ ({{ $products->count() }} รายการ)</h3>
                     
                     @if($products && $products->count() > 0)
                         <div class="overflow-x-auto">
@@ -188,50 +185,21 @@
                                         <th class="py-2 px-4 border-b text-left">รหัสสินค้า</th>
                                         <th class="py-2 px-4 border-b text-left">ชื่อสินค้า</th>
                                         <th class="py-2 px-4 border-b text-left">บริษัท</th>
-                                        <th class="py-2 px-4 border-b text-left">หมวดหมู่</th>
                                         <th class="py-2 px-4 border-b text-right">ราคา</th>
                                         <th class="py-2 px-4 border-b text-center">สถานะ</th>
                                         <th class="py-2 px-4 border-b text-center">จัดการ</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @php 
-                                        $currentCompanyId = null;
-                                    @endphp
-                                    
                                     @foreach($products as $product)
-                                        @if($currentCompanyId !== $product->company_id)
-                                            @php 
-                                                $currentCompanyId = $product->company_id;
-                                                $companyName = $product->company ? ($product->company->company_name ?? $product->company->name ?? 'ไม่ระบุชื่อ') : 'ไม่ระบุบริษัท';
-                                            @endphp
-                                            <tr class="bg-blue-50">
-                                                <td colspan="7" class="py-1 px-4 font-medium text-blue-800">
-                                                    {{ $companyName }}
-                                                    @if($product->company_id)
-                                                        <span class="text-xs text-gray-500">(รหัส: {{ $product->company_id }})</span>
-                                                    @endif
-                                                </td>
-                                            </tr>
-                                        @endif
-                                        
                                         <tr class="hover:bg-gray-50 border-b">
                                             <td class="py-2 px-4">{{ $product->code }}</td>
                                             <td class="py-2 px-4">{{ $product->name }}</td>
                                             <td class="py-2 px-4">
-                                                @if($product->company_id && $product->company)
-                                                    {{ $product->company->company_name ?? $product->company->name ?? 'ชื่อบริษัทไม่พบ' }}
+                                                @if($product->company)
+                                                    {{ $product->company->company_name }}
                                                 @else
-                                                    ไม่ระบุบริษัท
-                                                @endif
-                                            </td>
-                                            <td class="py-2 px-4">
-                                                @if($product->product_category_id != $productCategory->id && $product->productCategory)
-                                                    <span class="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded">
-                                                        {{ $product->productCategory->name ?? 'หมวดหมู่ย่อย' }}
-                                                    </span>
-                                                @else
-                                                    <span class="text-xs">หมวดหมู่หลัก</span>
+                                                    ไม่ระบุ
                                                 @endif
                                             </td>
                                             <td class="py-2 px-4 text-right">{{ number_format($product->selling_price, 2) }}</td>

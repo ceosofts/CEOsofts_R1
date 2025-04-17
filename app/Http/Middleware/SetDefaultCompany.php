@@ -18,6 +18,7 @@ class SetDefaultCompany
      */
     public function handle(Request $request, Closure $next)
     {
+        // ตรวจสอบว่ามีการ set ค่า default company_id หรือบังคับกรอง company_id หรือไม่
         if (!session()->has('current_company_id')) {
             $firstCompany = Company::first();
             if ($firstCompany) {

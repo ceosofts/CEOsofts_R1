@@ -40,7 +40,16 @@
             <!-- เพิ่มการ์ดสำหรับการกรองข้อมูล -->
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
-                    <h3 class="text-lg font-semibold mb-4">ค้นหาและกรองข้อมูล</h3>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">ค้นหาและกรองข้อมูล</h3>
+                        <!-- เพิ่มปุ่มแสดงพนักงานทั้งหมด -->
+                        <!-- <a href="{{ route('employees.index') }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+                            </svg>
+                            แสดงพนักงานทั้งหมด
+                        </a> -->
+                    </div>
 
                     <form method="GET" action="{{ route('employees.index') }}">
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -134,6 +143,24 @@
                 </div>
             </div>
 
+            <!-- แสดงสรุปการค้นหา (ถ้ามีการค้นหา) -->
+            @if(request()->anyFilled(['id', 'employee_code', 'first_name', 'last_name', 'company_id', 'department_id', 'position_id', 'status']))
+                <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-md mb-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm">
+                                กำลังแสดงผลการค้นหา. <a href="{{ route('employees.index') }}" class="font-medium underline">คลิกที่นี่</a> เพื่อแสดงพนักงานทั้งหมด
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <!-- แยกส่วนของตารางไปไว้ใน partial view -->
@@ -142,4 +169,69 @@
             </div>
         </div>
     </div>
+
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const companySelect = document.getElementById('company_id');
+            const departmentSelect = document.getElementById('department_id');
+            const positionSelect = document.getElementById('position_id');
+            const branchOfficeSelect = document.getElementById('branch_office_id');
+            
+            // เก็บตัวเลือกทั้งหมดไว้
+            const allDepartments = Array.from(departmentSelect.options);
+            const allPositions = Array.from(positionSelect.options);
+            const allBranchOffices = Array.from(branchOfficeSelect.options);
+            
+            // กรองแผนกตามบริษัท
+            function filterDepartmentsByCompany(companyId) {
+                // เก็บตัวเลือกแรก (-- ทุกแผนก --)
+                const firstOption = departmentSelect.options[0];
+                departmentSelect.innerHTML = '';
+                departmentSelect.appendChild(firstOption);
+                
+                // เพิ่มเฉพาะแผนกที่อยู่ในบริษัทที่เลือก หรือทั้งหมดถ้าไม่ได้เลือกบริษัท
+                allDepartments.forEach(option => {
+                    if (option.value === '') return; // ข้ามตัวเลือกแรก
+                    
+                    if (!companyId || option.dataset.companyId === companyId) {
+                        departmentSelect.appendChild(option.cloneNode(true));
+                    }
+                });
+            }
+            
+            // กรองตำแหน่งตามแผนกและบริษัท
+            function filterPositionsByDepartment(departmentId, companyId) {
+                // เก็บตัวเลือกแรก (-- ทุกตำแหน่ง --)
+                const firstOption = positionSelect.options[0];
+                positionSelect.innerHTML = '';
+                positionSelect.appendChild(firstOption);
+                
+                // เพิ่มเฉพาะตำแหน่งที่อยู่ในแผนกและบริษัทที่เลือก หรือทั้งหมดถ้าไม่ได้เลือก
+                allPositions.forEach(option => {
+                    if (option.value === '') return; // ข้ามตัวเลือกแรก
+                    
+                    // ตรวจสอบว่า dataset มีค่าหรือไม่ก่อนเปรียบเทียบ
+                    const optCompanyId = option.dataset.companyId || '';
+                    const optDepartmentId = option.dataset.departmentId || '';
+                    
+                    const matchesCompany = !companyId || optCompanyId === companyId;
+                    const matchesDepartment = !departmentId || optDepartmentId === departmentId;
+                    
+                    if (matchesCompany && matchesDepartment) {
+                        positionSelect.appendChild(option.cloneNode(true));
+                    } else if (!departmentId && matchesCompany) {
+                        // ถ้าไม่ได้เลือกแผนกแต่เลือกบริษัท ให้แสดงตำแหน่งที่อยู่ในบริษัทนั้น
+                        positionSelect.appendChild(option.cloneNode(true));
+                    }
+                });
+                
+                // เพิ่ม debug log
+                console.log('Filtered positions by department:', departmentId, 'company:', companyId);
+            }
+            
+            // ...existing code...
+        });
+    </script>
+    @endpush
 </x-app-layout>

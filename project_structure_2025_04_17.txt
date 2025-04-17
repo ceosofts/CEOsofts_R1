@@ -1,249 +1,3 @@
-# CEOsofts R1 - Roadmap การพัฒนาระบบใหม่
-
-กฎการทำงานร่วมกันระหว่างฉันกับ AI
-1.ให้คุยเป็นภาษาไทย
-2.อนุญาตให้ เพิ่ม ลบ แก้ไข ย้าย ไฟล์ทั้งหมดได้
-3.migration file สามารถแก้ไขได้ ไม่จำเป็นไม่ต้องสร้างใหม่ เพราะอยู่ในช่วงเริ่มทำเท่านั้น
-4.หลังจากนี้คือ update migration+seed file เสร็จแล้ว ขอ งด การแก้ไขทั้ง2ไฟล์นี้ หรือแก้ให้น้อยที่สุด
-5.หากมีการแก้อะไร แล้วมีผลกระทบไฟล์อื่น ควรแก้ให้ด้วยหรือแจ้งให้ทราบไว้ว่าจะมีผลกับไฟล์ไหนบ้าง
-6.ให้คุณ ศึกษา project_structure , Project_Status , roadmap-new-system , ui-ux และ ตารางฐานข้อมูล ของฉันเพื่อจะได้เข้าใจใน บริบท
-
-เนื่องจากมีปัญหาเครื่องช้า ต้องเปลี่ยนมาใช้ valet แทน http://ceosofts.test
-# ดูรายการ site ทั้งหมดที่ link ไว้กับ Valet
-valet links
-
-# รีสตาร์ท Valet (หากมีปัญหา)
-valet restart
-
-# หยุดการทำงานของ Valet ชั่วคราว
-valet stop
-
-# เริ่มการทำงานของ Valet
-valet start
-
-# เปิดใช้งาน SSL สำหรับโปรเจคนี้ (https)
-valet secure ceosofts
-
-# ยกเลิก SSL
-valet unsecure ceosofts
-
-
-## วิสัยทัศน์
-CEOsofts R1 มุ่งสู่การเป็นระบบบริหารจัดการองค์กรครบวงจรที่ใช้งานง่าย ปรับแต่งได้ตามความต้องการ และช่วยเพิ่มประสิทธิภาพการทำงานสำหรับธุรกิจทุกขนาด
-
-## แผนการพัฒนาระบบ (ปี 2025-2026)
-
-### เฟส 1: พื้นฐานระบบและการยืนยันตัวตน (เมษายน 2025) ✓
-- ✅ โครงสร้างพื้นฐานระบบ
-- ✅ การออกแบบฐานข้อมูล
-- ✅ ระบบยืนยันตัวตน (Login/Register)
-- ✅ ระบบรีเซ็ตรหัสผ่าน
-- ✅ การออกแบบ UI/UX หลัก
-- ✅ โครงสร้างแผนการทำงาน (Project Structure)
-
-### เฟส 2: บริหารจัดการผู้ใช้และบริษัท (พฤษภาคม 2025) - ความคืบหน้า 100%
-- ✅ welcome page
-- ✅ การจัดการบริษัท/สาขา (Company/Branch Management)
-- ✅ การจัดการแผนก (Department Management)
-- ✅ การจัดการตำแหน่ง (Position Management) 
-- ✅ การจัดการพนักงาน (Employee Management) 
-- ✅ การกำหนดโครงสร้างองค์กร (Organization Structure) 
-- ✅ Dashboard สำหรับผู้บริหาร (Executive Dashboard) 
-
-### เฟส 3: ระบบการขาย (มิถุนายน-กรกฎาคม 2025) - ความคืบหน้า 5%
-- ✅ การจัดการลูกค้า (Customer Management) 
-- ✅ การจัดการสินค้าและบริการ (Product/Service Management)
-- ✅ การจัดการ หมวดหมู่ สินค้าและบริการ (Product Catalogries)
-
-- 🔄 เช็คช่องค้นหาว่าทำงานหรือเปล่าในทุก เพจที่ทำไปแล้ว -กำลังดำเนินการ ( Empolyees finish)
-
-- 📝 ระบบใบเสนอราคา (Quotation System)
-- 📝 ระบบใบสั่งขาย (Sales Order)
-- 📝 ระบบใบส่งสินค้า (Delivery Order)
-- 📝 ระบบใบแจ้งหนี้ (Invoice System)
-- 📝 ระบบใบเสร็จรับเงิน (Receipt System)
-- 📝 รายงานการขาย (Sales Report)
-
-### เฟส 4: ระบบสินค้าคงคลัง (สิงหาคม-กันยายน 2025)
-- 📝 การจัดการคลังสินค้า (Warehouse Management)
-- 📝 การรับสินค้า (Goods Receipt)
-- 📝 การเบิกจ่ายสินค้า (Goods Issue)
-- 📝 การโอนย้ายสินค้า (Stock Transfer)
-- 📝 การตรวจนับสินค้า (Stock Count)
-- 📝 การปรับปรุงสินค้า (Stock Adjustment)
-- 📝 การจัดการสินค้าใกล้หมดอายุ (Expiry Management)
-- 📝 รายงานสินค้าคงคลัง (Inventory Report)
-
-### เฟส 5: ระบบการเงินและบัญชี (ตุลาคม-พฤศจิกายน 2025)
-- 📝 ระบบบัญชีแยกประเภท (General Ledger)
-- 📝 ระบบบัญชีเจ้าหนี้ (Account Payable)
-- 📝 ระบบบัญชีลูกหนี้ (Account Receivable)
-- 📝 การบันทึกรายรับ-รายจ่าย (Cash Flow)
-- 📝 การจัดการภาษี (Tax Management)
-- 📝 การปิดงวดบัญชี (Accounting Period Close)
-- 📝 รายงานทางการเงิน (Financial Report)
-
-### เฟส 6: ระบบทรัพยากรบุคคล (ธันวาคม 2025 - มกราคม 2026)
-- 🔄 การจัดการข้อมูลพนักงาน (Employee Information) - เริ่มต้นการพัฒนา
-- 📝 การลงเวลาทำงาน (Time Attendance)
-- 📝 การจัดการวันลาและวันหยุด (Leave Management)
-- 📝 การคำนวณเงินเดือนและค่าตอบแทน (Payroll)
-- 📝 การประเมินผลการปฏิบัติงาน (Performance Evaluation)
-- 📝 การฝึกอบรมและพัฒนา (Training & Development)
-- 📝 รายงานทรัพยากรบุคคล (HR Reports)
-
-### เฟส 7: การบูรณาการระบบและการปรับแต่ง (กุมภาพันธ์ 2026)
-- 📝 การเชื่อมต่อกับระบบภายนอก (External System Integration)
-- 📝 การสร้างรายงานแบบกำหนดเอง (Custom Report Generator)
-- 📝 ระบบแจ้งเตือนอัตโนมัติ (Automated Alert System)
-- 📝 Mobile Application สำหรับผู้บริหารและพนักงาน
-- 📝 การ Import/Export ข้อมูล (Data Import/Export)
-
-### เฟส 8: การปรับปรุงและทดสอบระบบ (มีนาคม 2026)
-- 📝 การทดสอบประสิทธิภาพ (Performance Testing)
-- 📝 การทดสอบความปลอดภัย (Security Testing)
-- 📝 การทดสอบการใช้งานจริง (User Acceptance Testing)
-- 📝 การปรับแต่งประสิทธิภาพ (Performance Optimization)
-- 📝 การจัดทำเอกสารคู่มือการใช้งาน (User Documentation)
-
-## ความคืบหน้าปัจจุบัน
-- เฟส 1: เสร็จสมบูรณ์ 100%
-- เฟส 2: อยู่ระหว่างดำเนินการ 35%
-- เฟส 3: อยู่ระหว่างดำเนินการ 5%
-- เฟส 6: เริ่มพัฒนาบางส่วน 5%
-
-## อัพเดทล่าสุด (16 เมษายน 2568)
-
-### การพัฒนาระบบจัดการแผนก (Department Management)
-- ✅ หน้าแสดงรายการแผนก (Department Index)
-- ✅ หน้าแสดงรายละเอียดแผนก (Department Details)
-- ✅ หน้าเพิ่ม/แก้ไขแผนก (Department Create/Edit)
-- ✅ ปรับปรุงการแสดงผล dropdown เลือกบริษัทในหน้าแก้ไข
-- ✅ แก้ไขปัญหา error จากการเรียกใช้ activity log
-- ✅ ปรับปรุง redirect หลังจาก update เพื่อประสบการณ์ผู้ใช้ที่ดีขึ้น
-- ✅ ปรับปรุงโมเดล Department ให้สอดคล้องกับโครงสร้างฐานข้อมูลจริง
-
-### แผนงานระยะสั้น (17-30 เมษายน 2568)
-1. **พัฒนาระบบจัดการตำแหน่ง** (17-24 เม.ย.):
-   - การแสดงรายการตำแหน่งทั้งหมด
-   - การแสดงรายละเอียดตำแหน่ง
-   - การเพิ่ม/แก้ไข/ลบข้อมูลตำแหน่ง
-
-2. **พัฒนาระบบจัดการพนักงาน** (25-30 เม.ย.):
-   - การแสดงรายการพนักงานทั้งหมด
-   - การแสดงรายละเอียดพนักงาน
-   - การเพิ่ม/แก้ไข/ลบข้อมูลพนักงาน
-
-## ตัวชี้วัดความสำเร็จ (KPIs)
-1. ลดระยะเวลาในกระบวนการทำงานลง 30%
-2. ลดข้อผิดพลาดในการทำงานลง 50%
-3. เพิ่มประสิทธิภาพการรายงานผลลัพธ์ 40%
-4. ลดต้นทุนการดำเนินงาน 25%
-5. เพิ่มความพึงพอใจของผู้ใช้งาน 80%
-
-## ทรัพยากรที่ใช้ในโครงการ
-1. ทีมพัฒนา: 5 คน
-   - 1 Project Manager
-   - 2 Full-stack Developers
-   - 1 UX/UI Designer
-   - 1 QA Engineer
-
-2. เทคโนโลยี:
-   - PHP 8.4.4
-   - Laravel 12.8.1
-   - Tailwind CSS
-   - Alpine.js
-   - SQLite (พัฒนา) / MySQL (Production)
-   - Redis
-   - Docker
-
-3. เครื่องมือ:
-   - GitHub (Version Control)
-   - Jira (Task Management)
-   - Figma (UI/UX Design)
-   - Laravel Telescope (Debug)
-   - PHPUnit (Testing)
-
-## ความคืบหน้าโดยรวม: 15%
-- วันที่อัพเดท: 16 เมษายน 2568
-- สถานะ: เสร็จสิ้นเฟส 1 และส่วนสำคัญของเฟส 2
-- ดำเนินการตามแผนและเป้าหมายอย่างต่อเนื่อง
-
-
-
-## Data base table list
-http://ceosofts.test/db-explorer.php ดูฐานข้อมูลในเว็บ
-
-CEOsofts R1 System Check Report
-
-Generated at: 2025-04-15 05:08:56
-
-Database Connection
-
-Status: Connected
-Database: /Users/iwasbornforthis/MyProject/CEOsofts_R1/database/ceosofts_db_R1.sqlite
-Database Tables
-
-Tables Found: Yes
-Total Tables: 56
-Table List
-
-activity_logs, attendances, branch_offices, cache, cache_locks, companies, company_user, customers, delivery_note_items, delivery_notes, departments, document_sendings, document_templates, employee_work_shifts, employees, failed_jobs, file_attachments, generated_documents, invoice_items, invoices, job_batches, jobs, leave_types, leaves, migrations, model_has_permissions, model_has_roles, order_items, orders, password_reset_tokens, payment_methods, payments, permissions, permissions_tables, positions, product_categories, products, quotation_items, quotations, receipt_items, receipts, role_has_permissions, roles, scheduled_events, sessions, settings, sqlite_sequence, stock_movements, taxes, telescope_entries, telescope_entries_tags, telescope_monitoring, translations, units, users, work_shifts
-Record Counts
-
-Table	Count
-employees	9
-companies	3
-departments	15
-positions	15
-View Files
-
-Views Directory: Writable
-employees/index.blade.php: Exists
-employees/create.blade.php: Exists
-debug/employee-status.blade.php: Exists
-View Paths
-
-/Users/iwasbornforthis/MyProject/CEOsofts_R1/resources/views
-Directory Permissions
-
-Storage Directory: Writable
-Environment
-
-Laravel Version: 12.8.1
-PHP Version: 8.4.6
-Environment: local
-Actions
-
-Test Employee View
-Debug Employees
-Employees Page
-Home
-Laravel Artisan Commands
-
-Run these commands in terminal to fix common issues:
-
-php artisan cache:clear
-php artisan view:clear
-php artisan route:clear
-php artisan optimize:clear
-php artisan storage:link
-56.78ms
-2MB
-GET system-check
-5 statements were executed6.94ms
-database/ceosofts_db_R1.sqlite6.12msSELECT name FROM sqlite_master WHERE type='table' ORDER BY name
-database/ceosofts_db_R1.sqlite130μsselect count(*) as aggregate from "employees"
-database/ceosofts_db_R1.sqlite250μsselect count(*) as aggregate from "companies"
-database/ceosofts_db_R1.sqlite220μsselect count(*) as aggregate from "departments"
-database/ceosofts_db_R1.sqlite220μsselect count(*) as aggregate from "positions"
-
-
-## Dfile structure
-php artisan project:structure --output=project_structure_$(date +%Y_%m_%d).txt
-หรือ file ที่ export
-update 2025-04-16
-
 ├── CONTRIBUTING.md (4.06 KB)
 ├── Dockerfile (857 B)
 ├── README.md (6.53 KB)
@@ -274,7 +28,7 @@ update 2025-04-16
 ├── project_structure_2025_04_13.txt (20.41 KB)
 ├── project_structure_2025_04_14.txt (25.65 KB)
 ├── project_structure_2025_04_15.txt (28.27 KB)
-├── project_structure_2025_04_16.txt (29.17 KB)
+├── project_structure_2025_04_16.txt (28.12 KB)
 ├── repair-system.sh (2.21 KB)
 ├── runfix.sh (274 B)
 ├── tailwind.config.js (3.36 KB)
@@ -285,7 +39,7 @@ update 2025-04-16
 ├── คำสั่ง.txt (13.52 KB)
 ├── Note/
 ├── X_Project_Info/
-│   ├── Roadmap.md (43.1 KB)
+│   ├── Roadmap.md (42.13 KB)
 │   ├── product_management_guide.md (6.29 KB)
 │   └── BIN/
 │       ├── Next_Actions.md (3.73 KB)
@@ -357,16 +111,17 @@ update 2025-04-16
 │   ├── Http/
 │   │   ├── Kernel.php (2.71 KB)
 │   │   ├── Controllers/
+│   │   │   ├── BranchOfficeController.php (16.54 KB)
 │   │   │   ├── ComingSoonController.php (1.66 KB)
 │   │   │   ├── CompaniesController.php (9.57 KB)
-│   │   │   ├── CompanyController.php (1.28 KB)
+│   │   │   ├── CompanyController.php (2.34 KB)
 │   │   │   ├── Controller.php (77 B)
 │   │   │   ├── CustomerController.php (10.86 KB)
 │   │   │   ├── DashboardController.php (654 B)
 │   │   │   ├── DebugCompanyController.php (2.99 KB)
 │   │   │   ├── DebugController.php (2.23 KB)
 │   │   │   ├── DepartmentController.php (8.01 KB)
-│   │   │   ├── EmployeeController.php (18.54 KB)
+│   │   │   ├── EmployeeController.php (21.72 KB)
 │   │   │   ├── ExecutiveDashboardController.php (5.83 KB)
 │   │   │   ├── HomeController.php (522 B)
 │   │   │   ├── OrderController.php (2.02 KB)
@@ -405,14 +160,14 @@ update 2025-04-16
 │   │   └── Dashboard/
 │   │       └── StatsOverview.php (0 B)
 │   ├── Models/
-│   │   ├── BranchOffice.php (1.79 KB)
+│   │   ├── BranchOffice.php (4.41 KB)
 │   │   ├── Company.php (4.43 KB)
 │   │   ├── Customer.php (5.2 KB)
 │   │   ├── Department.php (3.23 KB)
-│   │   ├── Employee.php (4.89 KB)
+│   │   ├── Employee.php (9.54 KB)
 │   │   ├── LeaveType.php (2.19 KB)
 │   │   ├── Order.php (1.82 KB)
-│   │   ├── Position.php (1.45 KB)
+│   │   ├── Position.php (1.47 KB)
 │   │   ├── Product.php (2.27 KB)
 │   │   ├── ProductCategory.php (2.19 KB)
 │   │   ├── Quotation.php (1.66 KB)
@@ -445,6 +200,7 @@ update 2025-04-16
 │   └── View/
 │       └── Components/
 │           ├── AppLayout.php (296 B)
+│           ├── BranchOfficeCard.php (945 B)
 │           ├── BreadcrumbNav.php (1.41 KB)
 │           ├── GuestLayout.php (310 B)
 │           ├── SearchFilter.php (463 B)
@@ -534,18 +290,20 @@ update 2025-04-16
 │   │   ├── 0001_01_01_00041_create_permissions_tables.php (2.83 KB)
 │   │   ├── 0001_01_01_00042_create_telescope_entries_table.php (2.02 KB)
 │   │   ├── 0001_01_01_00043_create_permissions_tables.php (553 B)
-│   │   └── 0001_01_01_00044_add_parent_id_to_departments_table.php (2.79 KB)
+│   │   ├── 0001_01_01_00044_add_parent_id_to_departments_table.php (2.79 KB)
+│   │   ├── 2025_04_16_add_branch_office_id_to_departments_table.php (769 B)
+│   │   └── 2025_04_17_000001_add_manager_id_to_branch_offices_table.php (799 B)
 │   ├── seeders/
 │   │   ├── ActivityLogSeeder.php (2.16 KB)
 │   │   ├── AdminUserSeeder.php (1.69 KB)
-│   │   ├── BranchOfficeSeeder.php (2.98 KB)
+│   │   ├── BranchOfficeSeeder.php (4.22 KB)
 │   │   ├── CompanySeeder.php (4.86 KB)
 │   │   ├── CustomerSeeder.php (6.15 KB)
 │   │   ├── DatabaseSeeder.php (1.95 KB)
 │   │   ├── DepartmentSeeder.php (3.66 KB)
 │   │   ├── DocumentSendingSeeder.php (5.83 KB)
 │   │   ├── DocumentTemplateSeeder.php (4.31 KB)
-│   │   ├── EmployeeSeeder.php (13.44 KB)
+│   │   ├── EmployeeSeeder.php (14.36 KB)
 │   │   ├── EmployeeWorkShiftSeeder.php (2.32 KB)
 │   │   ├── FileAttachmentSeeder.php (1.81 KB)
 │   │   ├── GeneratedDocumentSeeder.php (3.41 KB)
@@ -637,6 +395,7 @@ update 2025-04-16
 │   │   ├── app.js (999 B)
 │   │   ├── auth.js (698 B)
 │   │   ├── bootstrap.js (127 B)
+│   │   ├── branch-office-form.js (5.6 KB)
 │   │   └── company-selector.js (3.34 KB)
 │   ├── templates/
 │   │   └── migration_template.php (2.23 KB)
@@ -657,6 +416,7 @@ update 2025-04-16
 │       │   ├── application-logo.blade.php (83 B)
 │       │   ├── auth-session-status.blade.php (147 B)
 │       │   ├── auth-validation-errors.blade.php (518 B)
+│       │   ├── branch-office-card.blade.php (4.41 KB)
 │       │   ├── breadcrumb-nav.blade.php (1.96 KB)
 │       │   ├── button.blade.php (1.2 KB)
 │       │   ├── card.blade.php (400 B)
@@ -708,10 +468,10 @@ update 2025-04-16
 │       ├── executive/
 │       │   └── dashboard.blade.php (15.77 KB)
 │       ├── layouts/
-│       │   ├── app.blade.php (1.22 KB)
+│       │   ├── app.blade.php (1.36 KB)
 │       │   ├── basic.blade.php (792 B)
 │       │   ├── guest.blade.php (840 B)
-│       │   └── navigation.blade.php (24.05 KB)
+│       │   └── navigation.blade.php (24.03 KB)
 │       ├── livewire/
 │       │   ├── company-selector.blade.php (0 B)
 │       │   ├── components/
@@ -720,6 +480,7 @@ update 2025-04-16
 │       ├── orders/
 │       │   └── index.blade.php (736 B)
 │       ├── organization/
+│       │   ├── branch_offices/
 │       │   ├── companies/
 │       │   ├── departments/
 │       │   ├── employees/
@@ -736,11 +497,11 @@ update 2025-04-16
 │           └── index.blade.php (742 B)
 ├── routes/
 │   ├── admin.php (0 B)
-│   ├── api.php (876 B)
+│   ├── api.php (1.39 KB)
 │   ├── auth.php (937 B)
 │   ├── channels.php (558 B)
 │   ├── console.php (592 B)
-│   ├── web.php (15.07 KB)
+│   ├── web.php (15.47 KB)
 │   └── domains/
 │       ├── finance.php (0 B)
 │       ├── human-resources.php (0 B)
@@ -760,43 +521,56 @@ update 2025-04-16
 │   │   ├── cache/
 │   │   │   └── data/
 │   │   ├── sessions/
-│   │   │   └── ANjGBeEN1Rw5CVbbElpUBOnRYo5Ji9BpwWcMveWJ (341 B)
+│   │   │   ├── giHlKi51dX4pfxGBlvUGzzMvSiXhhTXDVWjIb2i5 (344 B)
+│   │   │   └── tu7Mf3tWCvGLH2iilWzaRuxdfiC8kvFIE7EOMgAA (337 B)
 │   │   ├── testing/
 │   │   └── views/
-│   │       ├── 04a14b7442f6fc338ab7939f272e43a8.php (1.38 KB)
+│   │       ├── 000f52382d98a46affca252e1a685a0d.php (3.83 KB)
+│   │       ├── 01622dbbc1784720ce1ee9f4b782d9aa.php (22.19 KB)
+│   │       ├── 15d69a7dd885ff51876e57b078c0252c.php (18.95 KB)
+│   │       ├── 1c09d63b1a394a212080fcbe0cd4612e.php (13.97 KB)
+│   │       ├── 28e06e760a46c5e56a0e9fa283f551a9.php (1.68 KB)
+│   │       ├── 2ba982a8604daf5dedf650b980639d4a.php (19.86 KB)
 │   │       ├── 2d82d6f51f043e617f681965f9eb1388.php (515 B)
 │   │       ├── 30baac441ee757f7eedec098c02ea9ce.php (2.76 KB)
 │   │       ├── 3343465d2ab428739d74303f16f2dfaf.php (707 B)
+│   │       ├── 3a7cab24497d21182754b9ba99cb94c1.php (40.71 KB)
 │   │       ├── 3c1b680d61bc7a7bb7df14c8a678a9de.php (10.36 KB)
 │   │       ├── 4de3d57ff3c17c3aa4d930e2c2cbfbf0.php (531 B)
 │   │       ├── 57f9c964972f01fe748c5866ed076e5d.php (10.88 KB)
+│   │       ├── 6058ff94e11fec1c4416663a99623824.php (1.1 KB)
 │   │       ├── 6558acd15011832cd6aa15743960d38b.php (3.02 KB)
-│   │       ├── 6ee15c368368456900bf99d26300129e.php (1.27 KB)
 │   │       ├── 70991d3b6e4e4e196e729160767e6c75.php (9.42 KB)
+│   │       ├── 78382777a41b2586c8469d62c1b7dfd8.php (441 B)
 │   │       ├── 7aaef36b4137424490c562d155e40830.php (1.11 KB)
 │   │       ├── 7f6cf0ade3c425d8e7e502e196345c4b.php (5.01 KB)
 │   │       ├── 820f920f42080c93c6ed0871e644885b.php (8.12 KB)
 │   │       ├── 8453bc743b2f98c83e9732ab4ed71306.php (2.24 KB)
 │   │       ├── 858fdf59bcc122a2851e83ab7a9bb93c.php (73.54 KB)
-│   │       ├── 89ed97ccaf061226ee275a1d70bddb21.php (24.7 KB)
-│   │       ├── 8d9a78a1a85c6160f76f39ae8493572b.php (1.27 KB)
-│   │       ├── 979c67e77d89f33ea3d5716dee402eee.php (1.24 KB)
+│   │       ├── 86ed121cec59f9c3993df7023bfd15d6.php (1.16 KB)
+│   │       ├── 8eefe5aeda5502013a83cf68dc3d1ed3.php (15.76 KB)
+│   │       ├── 95d3bcf3ba4f1ae863c033158d70d423.php (15.5 KB)
 │   │       ├── a19789af8775f146a579fc6d6e1766e3.php (352 B)
 │   │       ├── a26d536b72e080b9ea65f354c518c765.php (2.04 KB)
-│   │       ├── af3a3652b0b2098e4ebc1694d7db7475.php (584 B)
-│   │       ├── b453ba8120863d30a079c75808bfa61a.php (2.89 KB)
-│   │       ├── bd8e8ff4c1d48a5496397a972c7cbdcf.php (20.66 KB)
+│   │       ├── ae6dc72376fe381e33a184701009e221.php (1.06 KB)
+│   │       ├── b256ae65d4881fc8f523491e1909e7bc.php (18.82 KB)
+│   │       ├── b453ba8120863d30a079c75808bfa61a.php (3.11 KB)
+│   │       ├── b52ce5b0df813a75b2eb2e149ff732b8.php (16.48 KB)
+│   │       ├── b70bacc532d3f035cf680f4d954cdfd6.php (25.79 KB)
 │   │       ├── c315ed2f896bc7b209c276d2926f2b6c.php (509 B)
-│   │       ├── cbfecf69c34656be6f3e1f0c2c48dd5f.php (1.09 KB)
+│   │       ├── d13a71c8e8f9def1a99c85aced916af3.php (7.94 KB)
 │   │       ├── da6c417ae5ff0124e4d3116a0c93d1f7.php (11.39 KB)
+│   │       ├── e4cf380d81790c0ea74a9da9bbd31c14.php (20.56 KB)
+│   │       ├── e8383de63822edc686ef4e1c5636c16e.php (18.06 KB)
+│   │       ├── f19f849ba7b367cc8d43bbbf7865c08b.php (6.71 KB)
 │   │       ├── f2d98475be4395e00d133e49a1ca34cc.php (7.02 KB)
+│   │       ├── f7e76a0dfad82f9517bfe34c2f1ac74c.php (58.67 KB)
 │   │       ├── f9bf975275e39779d2fa08c87d4e5e49.php (616 B)
-│   │       ├── fc3fc22c8e542b24b08dace9c21cc510.php (632 B)
-│   │       └── fcb1329077faf0f5f28904d12d5cbd3f.php (37.02 KB)
+│   │       └── fc3fc22c8e542b24b08dace9c21cc510.php (632 B)
 │   └── logs/
 │       ├── encryption-debug.log (704 B)
 │       ├── encryption-error.log (0 B)
-│       └── laravel.log (14.04 MB)
+│       └── laravel.log (19.35 MB)
 ├── tests/
 │   ├── DuskTestCase.php (1.41 KB)
 │   ├── TestCase.php (142 B)
@@ -825,7 +599,7 @@ update 2025-04-16
     ├── cleanup-cache.sh (2.06 KB)
     ├── cleanup-debugbar.sh (1.26 KB)
     ├── cleanup.sh (9.51 KB)
-    ├── clear-all-cache.sh (718 B)
+    ├── clear-all-cache.sh (236 B)
     ├── cli.sh (27.09 KB)
     ├── complete-reset.php (116 B)
     ├── create-permission-tables.php (4.7 KB)

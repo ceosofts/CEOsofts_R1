@@ -23,6 +23,7 @@ use App\Http\Controllers\ProductController; // เพิ่มการ import �
 use App\Http\Controllers\ProductCategoryController; // เพิ่มการ import นี้
 use App\Http\Controllers\UnitController; // import เพิ่มเติม
 use App\Http\Controllers\StockMovementController; // import เพิ่มเติม
+use App\Http\Controllers\BranchOfficeController; // เพิ่ม import สำหรับ BranchOfficeController
 
 /*
 |--------------------------------------------------------------------------
@@ -226,6 +227,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('positions', PositionController::class);
     
     // Employees
+    Route::get('/employees/export', [EmployeeController::class, 'export'])->name('employees.export');
     Route::resource('employees', EmployeeController::class);
     
     // Test Employee Controller
@@ -237,7 +239,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     
-    // Routes สำหรับระบบโครงสร้างองค์กรdex'])->name('index');
+    // Routes สำหรับระบบโครงสร้างองค์กร
     Route::middleware([\App\Http\Middleware\SetDefaultCompany::class])->prefix('organization/structure')->name('organization.structure.')->group(function () {
         Route::get('/', [OrganizationStructureController::class, 'index'])->name('index');
         Route::get('/{company}', [OrganizationStructureController::class, 'show'])->name('show');
@@ -249,6 +251,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Products
     Route::resource('products', ProductController::class);
     Route::get('/products/{product}/stock', [ProductController::class, 'stockHistory'])->name('products.stock');
+    Route::get('/product-categories', [ProductController::class, 'categories'])->name('products.categories');
+    Route::post('/product-categories', [ProductController::class, 'storeCategory'])->name('products.categories.store');
     
     // Product Categories
     Route::resource('product-categories', ProductCategoryController::class);
@@ -266,10 +270,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/customers/export', [CustomerController::class, 'export'])->name('customers.export');
     Route::get('/customers/{customer}/purchase-history', [CustomerController::class, 'purchaseHistory'])->name('customers.purchase-history');
     
-    // Product routes
-    Route::resource('products', ProductController::class);
-    Route::get('/product-categories', [ProductController::class, 'categories'])->name('products.categories');
-    Route::post('/product-categories', [ProductController::class, 'storeCategory'])->name('products.categories.store');
+    // Branch Offices Routes
+    // Note: Need to import BranchOfficeController at the top of the file
+    Route::get('/branch-offices/export', [BranchOfficeController::class, 'export'])
+        ->name('branch-offices.export');
+    Route::resource('branch-offices', BranchOfficeController::class);
 });
 
 // เส้นทางสำหรับจัดการหมวดหมู่สินค้า
