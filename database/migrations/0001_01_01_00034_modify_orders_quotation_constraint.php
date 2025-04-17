@@ -13,62 +13,48 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // แยกการจัดการตาม database driver
-        $driver = DB::connection()->getDriverName();
-
-        if (Schema::hasTable('orders') && Schema::hasTable('quotations')) {
-            try {
-                Schema::table('orders', function (Blueprint $table) use ($driver) {
-                    // สำหรับ SQLite ไม่สามารถใช้ information_schema ได้
-                    if ($driver === 'sqlite') {
-                        // สำหรับ SQLite ให้พยายาม drop และสร้าง constraint ใหม่ด้วยวิธีพื้นฐาน
-                        try {
-                            // นี่อาจจะไม่ทำงานใน SQLite เพราะข้อจำกัด แต่เราจะพยายาม
-                            if (Schema::hasColumn('orders', 'quotation_id')) {
-                                // สำหรับ SQLite เราไม่สามารถแค่ drop constraint และสร้างใหม่ได้
-                                // ต้องสร้างตารางใหม่หรือใช้วิธีอื่น
-                                $table->foreign('quotation_id')
-                                    ->references('id')->on('quotations')
-                                    ->onDelete('set null')
-                                    ->onUpdate('cascade');
-
-                                Log::info("พยายามปรับปรุง foreign key constraint สำหรับ orders.quotation_id ใน SQLite");
+        // ป้องกันการทำงานซ้ำหรือเกิด error
+        try {
+            // ตรวจสอบว่ามีตาราง orders หรือไม่
+            if (Schema::hasTable('orders')) {
+                // ตรวจสอบว่ามีคอลัมน์ quotation_id หรือไม่
+                if (Schema::hasColumn('orders', 'quotation_id')) {
+                    Schema::table('orders', function (Blueprint $table) {
+                        // ถ้ามี foreign key อยู่แล้ว ให้ลบออกก่อน
+                        $foreignKeys = $this->listTableForeignKeys('orders');
+                        foreach ($foreignKeys as $key) {
+                            if (str_contains($key, 'quotation_id')) {
+                                $table->dropForeign($key);
+                                Log::info('ลบ foreign key เดิม: ' . $key);
                             }
-                        } catch (\Exception $e) {
-                            Log::warning("ไม่สามารถปรับปรุง constraint ของ orders.quotation_id ใน SQLite: " . $e->getMessage());
                         }
-                    }
-                    // สำหรับ MySQL
-                    else if ($driver === 'mysql') {
-                        // ดึงข้อมูล constraint ที่มีอยู่
-                        $constraintName = DB::selectOne("
-                            SELECT CONSTRAINT_NAME 
-                            FROM information_schema.KEY_COLUMN_USAGE 
-                            WHERE TABLE_SCHEMA = DATABASE() 
-                            AND TABLE_NAME = 'orders' 
-                            AND COLUMN_NAME = 'quotation_id' 
-                            AND REFERENCED_TABLE_NAME = 'quotations'
-                        ");
-
-                        // ถ้ามี constraint อยู่แล้ว ให้ลบก่อน
-                        if ($constraintName && isset($constraintName->CONSTRAINT_NAME)) {
-                            $table->dropForeign($constraintName->CONSTRAINT_NAME);
-                        }
-
-                        // สร้าง constraint ใหม่
+                        
+                        // เพิ่ม foreign key ใหม่ที่มี onDelete('set null')
                         $table->foreign('quotation_id')
-                            ->references('id')->on('quotations')
-                            ->onDelete('set null')
-                            ->onUpdate('cascade');
-
-                        Log::info("ปรับปรุง foreign key constraint สำหรับ orders.quotation_id เรียบร้อยแล้ว");
-                    }
-                });
-            } catch (\Exception $e) {
-                Log::warning("ไม่สามารถปรับปรุง foreign key ได้: " . $e->getMessage());
+                              ->references('id')
+                              ->on('quotations')
+                              ->nullOnDelete();
+                        
+                        Log::info('เพิ่ม foreign key ใหม่: orders.quotation_id -> quotations.id (nullOnDelete)');
+                    });
+                } else {
+                    Schema::table('orders', function (Blueprint $table) {
+                        // เพิ่มคอลัมน์ quotation_id ถ้ายังไม่มี
+                        $table->foreignId('quotation_id')->nullable()->after('customer_id');
+                        
+                        // เพิ่ม foreign key
+                        $table->foreign('quotation_id')
+                              ->references('id')
+                              ->on('quotations')
+                              ->nullOnDelete();
+                        
+                        Log::info('เพิ่มคอลัมน์และ foreign key: orders.quotation_id -> quotations.id (nullOnDelete)');
+                    });
+                }
             }
-        } else {
-            Log::warning("ไม่พบตาราง orders หรือ quotations จึงไม่สามารถปรับปรุง foreign key ได้");
+        } catch (\Exception $e) {
+            Log::error('ไม่สามารถแก้ไข constraint ของตาราง orders: ' . $e->getMessage());
+            // ไม่ throw exception เพื่อให้การ migrate ทำงานต่อได้
         }
     }
 
@@ -77,29 +63,52 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // การ reverse ก็ควรตรวจสอบ driver เช่นกัน
-        $driver = DB::connection()->getDriverName();
-
-        // สำหรับ SQLite ไม่ต้องทำอะไร เพราะไม่สามารถจัดการ constraints ได้โดยตรง
-        if ($driver === 'sqlite') {
-            Log::info('SQLite ไม่สนับสนุนการแก้ไข foreign key constraints หลังจากสร้างตาราง');
-            return;
-        }
-
-        if (Schema::hasTable('orders') && Schema::hasColumn('orders', 'quotation_id')) {
-            try {
+        // ป้องกันการทำงานซ้ำหรือเกิด error
+        try {
+            // ตรวจสอบว่ามีตาราง orders หรือไม่
+            if (Schema::hasTable('orders') && Schema::hasColumn('orders', 'quotation_id')) {
                 Schema::table('orders', function (Blueprint $table) {
-                    $table->dropForeign(['quotation_id']);
-
-                    // สร้าง constraint กลับเป็นแบบเดิม
+                    // ถ้ามี foreign key อยู่แล้ว ให้ลบออกก่อน
+                    $foreignKeys = $this->listTableForeignKeys('orders');
+                    foreach ($foreignKeys as $key) {
+                        if (str_contains($key, 'quotation_id')) {
+                            $table->dropForeign($key);
+                        }
+                    }
+                    
+                    // เพิ่ม foreign key ใหม่แบบมาตรฐาน (onDelete cascade)
                     $table->foreign('quotation_id')
-                        ->references('id')->on('quotations')
-                        ->onDelete('restrict') // เปลี่ยนกลับเป็น restrict
-                        ->onUpdate('restrict');
+                          ->references('id')
+                          ->on('quotations')
+                          ->cascadeOnDelete();
                 });
-            } catch (\Exception $e) {
-                Log::warning("ไม่สามารถย้อนกลับ foreign key ได้: " . $e->getMessage());
             }
+        } catch (\Exception $e) {
+            Log::error('ไม่สามารถย้อนกลับ constraint ของตาราง orders: ' . $e->getMessage());
+            // ไม่ throw exception เพื่อให้การ rollback ทำงานต่อได้
         }
+    }
+
+    /**
+     * Get the foreign keys for the given table.
+     *
+     * @param string $table
+     * @return array
+     */
+    protected function listTableForeignKeys($table)
+    {
+        $conn = Schema::getConnection()->getDoctrineSchemaManager();
+        
+        $foreignKeys = [];
+        try {
+            $tableDetails = $conn->listTableDetails($table);
+            foreach ($tableDetails->getForeignKeys() as $key) {
+                $foreignKeys[] = $key->getName();
+            }
+        } catch (\Exception $e) {
+            // หากมีข้อผิดพลาดในการดึง foreign key ให้กลับ array ว่าง
+        }
+        
+        return $foreignKeys;
     }
 };
