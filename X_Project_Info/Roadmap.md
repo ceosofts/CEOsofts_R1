@@ -56,6 +56,7 @@ CEOsofts R1 มุ่งสู่การเป็นระบบบริห�
 - ✅ การจัดการ หมวดหมู่ สินค้าและบริการ (Product Catalogries)
 
 - 🔄 เช็คช่องค้นหาว่าทำงานหรือเปล่าในทุก เพจที่ทำไปแล้ว -กำลังดำเนินการ ( Empolyees finish)
+
 - ✅ การจัดการ หน่วยนับ
 - 🔄 การจัดการ การเคลื่อนไหวของสินค้า
 
@@ -244,7 +245,7 @@ database/ceosofts_db_R1.sqlite220μsselect count(*) as aggregate from "positions
 ## Dfile structure
 php artisan project:structure --output=project_structure_$(date +%Y_%m_%d).txt
 หรือ file ที่ export
-update 2025-04-16
+update 2025-04-17
 
 ├── CONTRIBUTING.md (4.06 KB)
 ├── Dockerfile (857 B)
@@ -276,7 +277,8 @@ update 2025-04-16
 ├── project_structure_2025_04_13.txt (20.41 KB)
 ├── project_structure_2025_04_14.txt (25.65 KB)
 ├── project_structure_2025_04_15.txt (28.27 KB)
-├── project_structure_2025_04_16.txt (29.17 KB)
+├── project_structure_2025_04_16.txt (28.12 KB)
+├── project_structure_2025_04_17.txt (30.44 KB)
 ├── repair-system.sh (2.21 KB)
 ├── runfix.sh (274 B)
 ├── tailwind.config.js (3.36 KB)
@@ -287,7 +289,7 @@ update 2025-04-16
 ├── คำสั่ง.txt (13.52 KB)
 ├── Note/
 ├── X_Project_Info/
-│   ├── Roadmap.md (43.1 KB)
+│   ├── Roadmap.md (42.28 KB)
 │   ├── product_management_guide.md (6.29 KB)
 │   └── BIN/
 │       ├── Next_Actions.md (3.73 KB)
@@ -313,9 +315,12 @@ update 2025-04-16
 │   │   └── Commands/
 │   │       ├── CheckDatabaseCommand.php (4.45 KB)
 │   │       ├── CheckDatabaseTables.php (1.93 KB)
+│   │       ├── CheckDuplicateUnits.php (2.82 KB)
 │   │       ├── CheckDuplicatesCommand.php (4.88 KB)
 │   │       ├── CheckMigrationSyntax.php (2.79 KB)
 │   │       ├── CheckMigrationsCommand.php (7.55 KB)
+│   │       ├── CheckUnitCodes.php (2.55 KB)
+│   │       ├── CheckUnits.php (568 B)
 │   │       ├── ClearAllCacheCommand.php (5.56 KB)
 │   │       ├── ClearDebugbarCommand.php (1.95 KB)
 │   │       ├── ClearViewCacheCommand.php (1.89 KB)
@@ -332,6 +337,7 @@ update 2025-04-16
 │   │       ├── ListAllTablesCommand.php (3.13 KB)
 │   │       ├── MigrateSkipCommand.php (2.52 KB)
 │   │       ├── MigrateSkipMultipleCommand.php (2.63 KB)
+│   │       ├── NormalizeUnitCodes.php (1.27 KB)
 │   │       └── ProjectStructureCommand.php (8.09 KB)
 │   ├── Domain/
 │   │   ├── DocumentGeneration/
@@ -359,16 +365,17 @@ update 2025-04-16
 │   ├── Http/
 │   │   ├── Kernel.php (2.71 KB)
 │   │   ├── Controllers/
+│   │   │   ├── BranchOfficeController.php (16.68 KB)
 │   │   │   ├── ComingSoonController.php (1.66 KB)
 │   │   │   ├── CompaniesController.php (9.57 KB)
-│   │   │   ├── CompanyController.php (1.28 KB)
+│   │   │   ├── CompanyController.php (2.34 KB)
 │   │   │   ├── Controller.php (77 B)
-│   │   │   ├── CustomerController.php (10.86 KB)
+│   │   │   ├── CustomerController.php (10.76 KB)
 │   │   │   ├── DashboardController.php (654 B)
 │   │   │   ├── DebugCompanyController.php (2.99 KB)
 │   │   │   ├── DebugController.php (2.23 KB)
 │   │   │   ├── DepartmentController.php (8.01 KB)
-│   │   │   ├── EmployeeController.php (18.54 KB)
+│   │   │   ├── EmployeeController.php (20.78 KB)
 │   │   │   ├── ExecutiveDashboardController.php (5.83 KB)
 │   │   │   ├── HomeController.php (522 B)
 │   │   │   ├── OrderController.php (2.02 KB)
@@ -380,6 +387,7 @@ update 2025-04-16
 │   │   │   ├── QuotationController.php (2.13 KB)
 │   │   │   ├── SystemCheckController.php (9.37 KB)
 │   │   │   ├── TestController.php (808 B)
+│   │   │   ├── UnitController.php (5.63 KB)
 │   │   │   ├── Auth/
 │   │   │   └── Organization/
 │   │   ├── Livewire/
@@ -392,7 +400,7 @@ update 2025-04-16
 │   │   │   ├── EncryptCookies.php (2.34 KB)
 │   │   │   ├── EnsureCompanyAccess.php (1.24 KB)
 │   │   │   ├── RedirectIfAuthenticated.php (754 B)
-│   │   │   └── SetDefaultCompany.php (770 B)
+│   │   │   └── SetDefaultCompany.php (1.15 KB)
 │   │   └── Requests/
 │   │       ├── StoreEmployeeRequest.php (6.17 KB)
 │   │       ├── UpdateEmployeeRequest.php (4.96 KB)
@@ -407,19 +415,19 @@ update 2025-04-16
 │   │   └── Dashboard/
 │   │       └── StatsOverview.php (0 B)
 │   ├── Models/
-│   │   ├── BranchOffice.php (1.79 KB)
+│   │   ├── BranchOffice.php (4.52 KB)
 │   │   ├── Company.php (4.43 KB)
 │   │   ├── Customer.php (5.2 KB)
 │   │   ├── Department.php (3.23 KB)
-│   │   ├── Employee.php (4.89 KB)
+│   │   ├── Employee.php (9.54 KB)
 │   │   ├── LeaveType.php (2.19 KB)
 │   │   ├── Order.php (1.82 KB)
-│   │   ├── Position.php (1.45 KB)
+│   │   ├── Position.php (1.47 KB)
 │   │   ├── Product.php (2.27 KB)
 │   │   ├── ProductCategory.php (2.19 KB)
 │   │   ├── Quotation.php (1.66 KB)
 │   │   ├── StockMovement.php (1.2 KB)
-│   │   ├── Unit.php (1013 B)
+│   │   ├── Unit.php (4.1 KB)
 │   │   ├── User.php (1.16 KB)
 │   │   └── WorkShift.php (5.27 KB)
 │   ├── Policies/
@@ -432,7 +440,7 @@ update 2025-04-16
 │   │   ├── CustomEncryptionProvider.php (1.49 KB)
 │   │   ├── CustomEncryptionServiceProvider.php (558 B)
 │   │   ├── EventServiceProvider.php (884 B)
-│   │   ├── OrganizationServiceProvider.php (338 B)
+│   │   ├── OrganizationServiceProvider.php (474 B)
 │   │   ├── RouteServiceProvider.php (2.22 KB)
 │   │   ├── SimpleEncryptionServiceProvider.php (887 B)
 │   │   └── TelescopeServiceProvider.php (2.23 KB)
@@ -447,6 +455,7 @@ update 2025-04-16
 │   └── View/
 │       └── Components/
 │           ├── AppLayout.php (296 B)
+│           ├── BranchOfficeCard.php (945 B)
 │           ├── BreadcrumbNav.php (1.41 KB)
 │           ├── GuestLayout.php (310 B)
 │           ├── SearchFilter.php (463 B)
@@ -477,7 +486,7 @@ update 2025-04-16
 │   └── telescope.php (6.67 KB)
 ├── database/
 │   ├── ceosofts_db_R1 (0 B)
-│   ├── ceosofts_db_R1.sqlite (1.79 MB)
+│   ├── ceosofts_db_R1.sqlite (1.8 MB)
 │   ├── check-companies.php (2.17 KB)
 │   ├── check-db-connection.php (3.58 KB)
 │   ├── create-database.sh (928 B)
@@ -536,18 +545,20 @@ update 2025-04-16
 │   │   ├── 0001_01_01_00041_create_permissions_tables.php (2.83 KB)
 │   │   ├── 0001_01_01_00042_create_telescope_entries_table.php (2.02 KB)
 │   │   ├── 0001_01_01_00043_create_permissions_tables.php (553 B)
-│   │   └── 0001_01_01_00044_add_parent_id_to_departments_table.php (2.79 KB)
+│   │   ├── 0001_01_01_00044_add_parent_id_to_departments_table.php (2.79 KB)
+│   │   ├── 2025_04_16_add_branch_office_id_to_departments_table.php (769 B)
+│   │   └── 2025_04_17_000001_add_manager_id_to_branch_offices_table.php (799 B)
 │   ├── seeders/
 │   │   ├── ActivityLogSeeder.php (2.16 KB)
 │   │   ├── AdminUserSeeder.php (1.69 KB)
-│   │   ├── BranchOfficeSeeder.php (2.98 KB)
+│   │   ├── BranchOfficeSeeder.php (4.22 KB)
 │   │   ├── CompanySeeder.php (4.86 KB)
 │   │   ├── CustomerSeeder.php (6.15 KB)
-│   │   ├── DatabaseSeeder.php (1.95 KB)
+│   │   ├── DatabaseSeeder.php (1.46 KB)
 │   │   ├── DepartmentSeeder.php (3.66 KB)
 │   │   ├── DocumentSendingSeeder.php (5.83 KB)
 │   │   ├── DocumentTemplateSeeder.php (4.31 KB)
-│   │   ├── EmployeeSeeder.php (13.44 KB)
+│   │   ├── EmployeeSeeder.php (14.36 KB)
 │   │   ├── EmployeeWorkShiftSeeder.php (2.32 KB)
 │   │   ├── FileAttachmentSeeder.php (1.81 KB)
 │   │   ├── GeneratedDocumentSeeder.php (3.41 KB)
@@ -560,25 +571,22 @@ update 2025-04-16
 │   │   ├── PermissionSeeder.php (444 B)
 │   │   ├── PositionSeeder.php (4.28 KB)
 │   │   ├── ProductCategorySeeder.php (4.33 KB)
-│   │   ├── ProductSeeder.php (20.95 KB)
+│   │   ├── ProductSeeder.php (21.69 KB)
 │   │   ├── QuotationSeeder.php (5.07 KB)
 │   │   ├── ReceiptItemSeeder.php (2.47 KB)
 │   │   ├── ReceiptSeeder.php (1.89 KB)
 │   │   ├── RoleAndPermissionSeeder.php (5.24 KB)
 │   │   ├── RoleSeeder.php (374 B)
-│   │   ├── RolesAndPermissionsSeeder.php (0 B)
 │   │   ├── ScheduledEventSeeder.php (16 KB)
 │   │   ├── SettingSeeder.php (4.41 KB)
-│   │   ├── SettingsSeeder.php (0 B)
 │   │   ├── SimpleCompanySeeder.php (4.44 KB)
 │   │   ├── StockMovementSeeder.php (3.71 KB)
 │   │   ├── SystemSettingSeeder.php (3.65 KB)
 │   │   ├── TaxSeeder.php (1.96 KB)
 │   │   ├── TestCompanySeeder.php (5.8 KB)
 │   │   ├── TranslationSeeder.php (7.29 KB)
-│   │   ├── UnitSeeder.php (4.16 KB)
+│   │   ├── UnitSeeder.php (5.85 KB)
 │   │   ├── UserSeeder.php (1.08 KB)
-│   │   ├── UsersSeeder.php (0 B)
 │   │   └── WorkShiftSeeder.php (6.1 KB)
 │   └── sql/
 ├── docker/
@@ -639,6 +647,7 @@ update 2025-04-16
 │   │   ├── app.js (999 B)
 │   │   ├── auth.js (698 B)
 │   │   ├── bootstrap.js (127 B)
+│   │   ├── branch-office-form.js (5.6 KB)
 │   │   └── company-selector.js (3.34 KB)
 │   ├── templates/
 │   │   └── migration_template.php (2.23 KB)
@@ -659,6 +668,7 @@ update 2025-04-16
 │       │   ├── application-logo.blade.php (83 B)
 │       │   ├── auth-session-status.blade.php (147 B)
 │       │   ├── auth-validation-errors.blade.php (518 B)
+│       │   ├── branch-office-card.blade.php (4.41 KB)
 │       │   ├── breadcrumb-nav.blade.php (1.96 KB)
 │       │   ├── button.blade.php (1.2 KB)
 │       │   ├── card.blade.php (400 B)
@@ -710,10 +720,10 @@ update 2025-04-16
 │       ├── executive/
 │       │   └── dashboard.blade.php (15.77 KB)
 │       ├── layouts/
-│       │   ├── app.blade.php (1.22 KB)
+│       │   ├── app.blade.php (1.36 KB)
 │       │   ├── basic.blade.php (792 B)
 │       │   ├── guest.blade.php (840 B)
-│       │   └── navigation.blade.php (24.05 KB)
+│       │   └── navigation.blade.php (24 KB)
 │       ├── livewire/
 │       │   ├── company-selector.blade.php (0 B)
 │       │   ├── components/
@@ -722,6 +732,7 @@ update 2025-04-16
 │       ├── orders/
 │       │   └── index.blade.php (736 B)
 │       ├── organization/
+│       │   ├── branch_offices/
 │       │   ├── companies/
 │       │   ├── departments/
 │       │   ├── employees/
@@ -734,15 +745,20 @@ update 2025-04-16
 │       │   ├── index.blade.php (16.34 KB)
 │       │   ├── show.blade.php (53.18 KB)
 │       │   └── categories/
-│       └── quotations/
-│           └── index.blade.php (742 B)
+│       ├── quotations/
+│       │   └── index.blade.php (742 B)
+│       └── units/
+│           ├── create.blade.php (5.42 KB)
+│           ├── edit.blade.php (6.27 KB)
+│           ├── index.blade.php (13.28 KB)
+│           └── show.blade.php (4.26 KB)
 ├── routes/
 │   ├── admin.php (0 B)
-│   ├── api.php (876 B)
+│   ├── api.php (1.39 KB)
 │   ├── auth.php (937 B)
 │   ├── channels.php (558 B)
 │   ├── console.php (592 B)
-│   ├── web.php (15.07 KB)
+│   ├── web.php (15.47 KB)
 │   └── domains/
 │       ├── finance.php (0 B)
 │       ├── human-resources.php (0 B)
@@ -762,43 +778,65 @@ update 2025-04-16
 │   │   ├── cache/
 │   │   │   └── data/
 │   │   ├── sessions/
-│   │   │   └── ANjGBeEN1Rw5CVbbElpUBOnRYo5Ji9BpwWcMveWJ (341 B)
+│   │   │   └── tu7Mf3tWCvGLH2iilWzaRuxdfiC8kvFIE7EOMgAA (292 B)
 │   │   ├── testing/
 │   │   └── views/
-│   │       ├── 04a14b7442f6fc338ab7939f272e43a8.php (1.38 KB)
+│   │       ├── 000f52382d98a46affca252e1a685a0d.php (3.83 KB)
+│   │       ├── 01622dbbc1784720ce1ee9f4b782d9aa.php (22.19 KB)
+│   │       ├── 15d69a7dd885ff51876e57b078c0252c.php (18.95 KB)
+│   │       ├── 1c09d63b1a394a212080fcbe0cd4612e.php (13.97 KB)
+│   │       ├── 28e06e760a46c5e56a0e9fa283f551a9.php (1.68 KB)
+│   │       ├── 2ba982a8604daf5dedf650b980639d4a.php (19.86 KB)
 │   │       ├── 2d82d6f51f043e617f681965f9eb1388.php (515 B)
 │   │       ├── 30baac441ee757f7eedec098c02ea9ce.php (2.76 KB)
 │   │       ├── 3343465d2ab428739d74303f16f2dfaf.php (707 B)
+│   │       ├── 3a7cab24497d21182754b9ba99cb94c1.php (40.71 KB)
 │   │       ├── 3c1b680d61bc7a7bb7df14c8a678a9de.php (10.36 KB)
+│   │       ├── 3c2b07d57267b3d97cb65bdac1f7600f.php (7.12 KB)
+│   │       ├── 3c6083ec5c860fea3de3a938b1f8b4f8.php (15.65 KB)
 │   │       ├── 4de3d57ff3c17c3aa4d930e2c2cbfbf0.php (531 B)
 │   │       ├── 57f9c964972f01fe748c5866ed076e5d.php (10.88 KB)
+│   │       ├── 5ac3692d3307d350cd69867597296420.php (5.9 KB)
+│   │       ├── 6058ff94e11fec1c4416663a99623824.php (1.1 KB)
 │   │       ├── 6558acd15011832cd6aa15743960d38b.php (3.02 KB)
-│   │       ├── 6ee15c368368456900bf99d26300129e.php (1.27 KB)
+│   │       ├── 662c268e87fcd1941e5132d177d2c614.php (16.96 KB)
 │   │       ├── 70991d3b6e4e4e196e729160767e6c75.php (9.42 KB)
+│   │       ├── 78382777a41b2586c8469d62c1b7dfd8.php (441 B)
 │   │       ├── 7aaef36b4137424490c562d155e40830.php (1.11 KB)
+│   │       ├── 7e9497152c6abd32f721c6133f0ae20a.php (8.63 KB)
 │   │       ├── 7f6cf0ade3c425d8e7e502e196345c4b.php (5.01 KB)
 │   │       ├── 820f920f42080c93c6ed0871e644885b.php (8.12 KB)
+│   │       ├── 8390aacb61fdfca36b73e225a0e62703.php (39.59 KB)
 │   │       ├── 8453bc743b2f98c83e9732ab4ed71306.php (2.24 KB)
-│   │       ├── 858fdf59bcc122a2851e83ab7a9bb93c.php (73.54 KB)
+│   │       ├── 858fdf59bcc122a2851e83ab7a9bb93c.php (73.5 KB)
+│   │       ├── 86ed121cec59f9c3993df7023bfd15d6.php (1.16 KB)
 │   │       ├── 89ed97ccaf061226ee275a1d70bddb21.php (24.7 KB)
-│   │       ├── 8d9a78a1a85c6160f76f39ae8493572b.php (1.27 KB)
-│   │       ├── 979c67e77d89f33ea3d5716dee402eee.php (1.24 KB)
+│   │       ├── 8eefe5aeda5502013a83cf68dc3d1ed3.php (15.76 KB)
+│   │       ├── 903e67334b00459fda09642e4872349b.php (603 B)
+│   │       ├── 95d3bcf3ba4f1ae863c033158d70d423.php (15.5 KB)
 │   │       ├── a19789af8775f146a579fc6d6e1766e3.php (352 B)
 │   │       ├── a26d536b72e080b9ea65f354c518c765.php (2.04 KB)
-│   │       ├── af3a3652b0b2098e4ebc1694d7db7475.php (584 B)
-│   │       ├── b453ba8120863d30a079c75808bfa61a.php (2.89 KB)
-│   │       ├── bd8e8ff4c1d48a5496397a972c7cbdcf.php (20.66 KB)
+│   │       ├── ae6dc72376fe381e33a184701009e221.php (1.06 KB)
+│   │       ├── b256ae65d4881fc8f523491e1909e7bc.php (18.82 KB)
+│   │       ├── b453ba8120863d30a079c75808bfa61a.php (3.11 KB)
+│   │       ├── b52ce5b0df813a75b2eb2e149ff732b8.php (16.48 KB)
+│   │       ├── b70bacc532d3f035cf680f4d954cdfd6.php (25.79 KB)
 │   │       ├── c315ed2f896bc7b209c276d2926f2b6c.php (509 B)
-│   │       ├── cbfecf69c34656be6f3e1f0c2c48dd5f.php (1.09 KB)
+│   │       ├── cbadd884acfc3823e29aba73268c2f43.php (2.15 KB)
+│   │       ├── d13a71c8e8f9def1a99c85aced916af3.php (7.94 KB)
+│   │       ├── d84cde974ec6696aad7f2ba74c4709eb.php (2.8 KB)
 │   │       ├── da6c417ae5ff0124e4d3116a0c93d1f7.php (11.39 KB)
+│   │       ├── e4cf380d81790c0ea74a9da9bbd31c14.php (20.81 KB)
+│   │       ├── e8383de63822edc686ef4e1c5636c16e.php (18.06 KB)
+│   │       ├── f19f849ba7b367cc8d43bbbf7865c08b.php (6.71 KB)
 │   │       ├── f2d98475be4395e00d133e49a1ca34cc.php (7.02 KB)
+│   │       ├── f7e76a0dfad82f9517bfe34c2f1ac74c.php (58.67 KB)
 │   │       ├── f9bf975275e39779d2fa08c87d4e5e49.php (616 B)
-│   │       ├── fc3fc22c8e542b24b08dace9c21cc510.php (632 B)
-│   │       └── fcb1329077faf0f5f28904d12d5cbd3f.php (37.02 KB)
+│   │       └── fc3fc22c8e542b24b08dace9c21cc510.php (632 B)
 │   └── logs/
 │       ├── encryption-debug.log (704 B)
 │       ├── encryption-error.log (0 B)
-│       └── laravel.log (14.04 MB)
+│       └── laravel.log (21.84 MB)
 ├── tests/
 │   ├── DuskTestCase.php (1.41 KB)
 │   ├── TestCase.php (142 B)
@@ -827,7 +865,7 @@ update 2025-04-16
     ├── cleanup-cache.sh (2.06 KB)
     ├── cleanup-debugbar.sh (1.26 KB)
     ├── cleanup.sh (9.51 KB)
-    ├── clear-all-cache.sh (718 B)
+    ├── clear-all-cache.sh (236 B)
     ├── cli.sh (27.09 KB)
     ├── complete-reset.php (116 B)
     ├── create-permission-tables.php (4.7 KB)

@@ -18,13 +18,15 @@ class StockMovement extends Model
     protected $fillable = [
         'company_id',
         'product_id',
+        'movement_type',  // in, out, adjust
         'quantity',
-        'type', // in, out
-        'reference_type', // purchase, sale, adjustment
+        'unit_id',
+        'reference_type',
         'reference_id',
-        'unit_cost',
-        'date',
-        'notes',
+        'movement_date',
+        'note',
+        'created_by',
+        'updated_by',
     ];
 
     /**
@@ -33,15 +35,28 @@ class StockMovement extends Model
      * @var array<string, string>
      */
     protected $casts = [
+        'movement_date' => 'datetime',
         'quantity' => 'float',
-        'unit_cost' => 'float',
-        'date' => 'datetime',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
     ];
 
     /**
-     * Get the company that owns the stock movement.
+     * Get the product associated with the movement.
+     */
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+
+    /**
+     * Get the unit associated with the movement.
+     */
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class);
+    }
+
+    /**
+     * Get the company associated with the movement.
      */
     public function company()
     {
@@ -49,10 +64,18 @@ class StockMovement extends Model
     }
 
     /**
-     * Get the product that owns the stock movement.
+     * Get the user who created the record.
      */
-    public function product()
+    public function createdBy()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Get the user who last updated the record.
+     */
+    public function updatedBy()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 }

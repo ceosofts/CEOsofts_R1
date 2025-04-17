@@ -151,7 +151,7 @@ use Illuminate\Support\Facades\Auth;
                                 <x-dropdown-link href="{{ route('units.index') }}">
                                     หน่วยนับ
                                 </x-dropdown-link>
-                                <x-dropdown-link href="{{ route('coming-soon', ['feature' => 'stock-movements']) }}">
+                                <x-dropdown-link href="{{ route('stock-movements.index') }}">
                                     การเคลื่อนไหวสินค้า
                                 </x-dropdown-link>
                             </x-slot>
@@ -300,6 +300,12 @@ use Illuminate\Support\Facades\Auth;
             </a>
             <a href="{{ route('product-categories.index') }}" class="block pl-6 pr-4 py-2 border-l-4 {{ request()->routeIs('product-categories.*') ? 'border-accent-400 text-accent-400 bg-blue-900' : 'border-transparent text-gray-200 hover:text-white hover:bg-blue-700 hover:border-accent-300' }} text-base font-medium focus:outline-none transition duration-150 ease-in-out">
                 หมวดหมู่สินค้า
+            </a>
+            <a href="{{ route('units.index') }}" class="block pl-6 pr-4 py-2 border-l-4 {{ request()->routeIs('units.*') ? 'border-accent-400 text-accent-400 bg-blue-900' : 'border-transparent text-gray-200 hover:text-white hover:bg-blue-700 hover:border-accent-300' }} text-base font-medium focus:outline-none transition duration-150 ease-in-out">
+                หน่วยนับ
+            </a>
+            <a href="{{ route('stock-movements.index') }}" class="block pl-6 pr-4 py-2 border-l-4 {{ request()->routeIs('stock-movements.*') ? 'border-accent-400 text-accent-400 bg-blue-900' : 'border-transparent text-gray-200 hover:text-white hover:bg-blue-700 hover:border-accent-300' }} text-base font-medium focus:outline-none transition duration-150 ease-in-out">
+                การเคลื่อนไหวสินค้า
             </a>
             @else
             <a href="{{ route('about') }}" class="block pl-3 pr-4 py-2 border-l-4 {{ request()->routeIs('about') ? 'border-accent-400 text-accent-400 bg-blue-900' : 'border-transparent text-gray-200 hover:text-white hover:bg-blue-700 hover:border-accent-300' }} text-base font-medium focus:outline-none transition duration-150 ease-in-out">
