@@ -69,12 +69,34 @@ Route::resource('customers', CustomerController::class);
 
 // เพิ่มเส้นทางสำหรับใบเสนอราคา
 Route::resource('quotations', QuotationController::class);
-Route::post('quotations/{quotation}/approve', [QuotationController::class, 'approve'])->name('quotations.approve');
-Route::post('quotations/{quotation}/reject', [QuotationController::class, 'reject'])->name('quotations.reject');
-Route::get('quotations/{quotation}/pdf', [QuotationController::class, 'viewPdf'])->name('quotations.pdf');
+
+// เพิ่ม route สำหรับ quotations.get-data (API ดึงข้อมูลใบเสนอราคาแบบ JSON)
+Route::get('/quotations/{quotation}/get-data', [\App\Http\Controllers\QuotationApiController::class, 'getData'])
+    ->name('quotations.get-data')
+    ->middleware(['auth']);
 
 // เพิ่มเส้นทางสำหรับใบสั่งขาย
 Route::resource('orders', OrderController::class);
+
+// เพิ่ม route สำหรับการจัดส่งสินค้า (orders.ship)
+Route::post('/orders/{order}/ship', [OrderController::class, 'ship'])
+    ->name('orders.ship')
+    ->middleware(['auth']);
+
+// เพิ่ม route สำหรับยืนยันใบสั่งขาย (orders.confirm)
+Route::post('/orders/{order}/confirm', [OrderController::class, 'confirm'])
+    ->name('orders.confirm')
+    ->middleware(['auth']);
+
+// เพิ่ม route สำหรับการยกเลิกใบสั่งขาย (orders.cancel)
+Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])
+    ->name('orders.cancel')
+    ->middleware(['auth']);
+
+// เพิ่ม route สำหรับเริ่มดำเนินการใบสั่งขาย (orders.process)
+Route::post('/orders/{order}/process', [OrderController::class, 'process'])
+    ->name('orders.process')
+    ->middleware(['auth']);
 
 // ทดสอบเส้นทางเพื่อ debug
 Route::get('/test-companies', function () {
@@ -278,12 +300,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/branch-offices/export', [BranchOfficeController::class, 'export'])
         ->name('branch-offices.export');
     Route::resource('branch-offices', BranchOfficeController::class);
-
-    // Quotation Routes
-    Route::resource('quotations', QuotationController::class);
-    Route::post('quotations/{quotation}/approve', [QuotationController::class, 'approve'])->name('quotations.approve');
-    Route::post('quotations/{quotation}/reject', [QuotationController::class, 'reject'])->name('quotations.reject');
-    Route::get('quotations/{quotation}/pdf', [QuotationController::class, 'viewPdf'])->name('quotations.pdf');
 });
 
 // เส้นทางสำหรับจัดการหมวดหมู่สินค้า
@@ -349,79 +365,6 @@ Route::get('/debug/products', function () {
         'user' => auth()->check() ? auth()->user()->only(['id', 'name', 'email', 'company_id']) : 'ยังไม่ได้เข้าสู่ระบบ'
     ]);
 })->middleware(['auth'])->name('debug.products');
-
-// เพิ่มเส้นทางเฉพาะกิจสำหรับตรวจสอบการดึงข้อมูลใบเสนอราคา (เฉพาะ local environment)
-if (app()->environment('local')) {
-    Route::get('/debug/quotations-query', function () {
-        $query = \App\Models\Quotation::with(['customer', 'creator']);
-        $quotations = $query->limit(5)->get();
-        
-        return response()->json([
-            'count' => $quotations->count(),
-            'data' => $quotations,
-            'db_config' => [
-                'connection' => config('database.default'),
-                'database' => config('database.connections.' . config('database.default') . '.database')
-            ]
-        ]);
-    })->middleware('auth');
-}
-
-// เพิ่มเส้นทางสำหรับสร้างข้อมูลใบเสนอราคาทดสอบ
-Route::get('/debug/create-test-quotations', function () {
-    if (!app()->environment('local')) {
-        return abort(403);
-    }
-
-    $companyId = auth()->user()->company_id;
-    $customer = \App\Models\Customer::where('company_id', $companyId)->first();
-
-    if (!$customer) {
-        return response()->json(['error' => 'ไม่พบข้อมูลลูกค้า'], 404);
-    }
-
-    try {
-        // สร้างใบเสนอราคาทดสอบ
-        $quotation = \App\Models\Quotation::create([
-            'company_id' => $companyId,
-            'customer_id' => $customer->id,
-            'quotation_number' => 'QT-TEST-' . rand(1000, 9999),
-            'issue_date' => now(),
-            'expiry_date' => now()->addDays(30),
-            'status' => 'draft',
-            'subtotal' => 10000,
-            'discount_amount' => 0,
-            'discount_type' => 'fixed',
-            'tax_rate' => 7,
-            'tax_amount' => 700,
-            'total_amount' => 10700,
-            'reference_number' => 'REF-TEST-' . rand(1000, 9999),
-            'created_by' => auth()->id(),
-            'currency' => 'THB',
-            'currency_rate' => 1
-        ]);
-
-        return response()->json([
-            'message' => 'สร้างใบเสนอราคาทดสอบสำเร็จ',
-            'quotation' => $quotation
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'error' => 'เกิดข้อผิดพลาด: ' . $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ], 500);
-    }
-})->middleware('auth');
-
-// เพิ่มเส้นทางใหม่เพื่อตรวจสอบสถานะ session
-Route::get('/debug/session', function() {
-    return response()->json([
-        'company_id' => session('company_id'),
-        'auth_user' => Auth::check() ? Auth::user()->only(['id', 'name', 'email', 'company_id']) : null,
-        'all_companies' => DB::table('companies')->get(['id', 'name']),
-        'all_session_data' => session()->all()
-    ]);
-})->middleware('auth');
 
 // นำเข้าเส้นทาง Authentication จากไฟล์ auth.php
 require __DIR__ . '/auth.php';

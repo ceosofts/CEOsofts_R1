@@ -2,207 +2,286 @@
 
 namespace Database\Seeders;
 
+use App\Models\Customer;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Product;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
-use App\Domain\Sales\Models\Order;
-use App\Domain\Sales\Models\OrderItem;
-use App\Domain\Sales\Models\Customer;
-use App\Domain\Inventory\Models\Product;
-use App\Domain\Inventory\Models\Unit;
-use App\Domain\Organization\Models\Company;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 class OrderSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
-        $companies = Company::all();
-        foreach ($companies as $company) {
-            $this->createOrdersForCompany($company);
+        // ตรวจสอบโครงสร้างตาราง order_items
+        $orderItemColumns = Schema::getColumnListing('order_items');
+        
+        // สร้าง column mapping สำหรับตรวจสอบ
+        $hasOrderItemColumns = [];
+        foreach ($orderItemColumns as $column) {
+            $hasOrderItemColumns[$column] = true;
+        }
+        
+        // ตรวจสอบคอลัมน์ในตาราง orders
+        $orderColumns = Schema::getColumnListing('orders');
+        $hasOrderColumns = [];
+        foreach ($orderColumns as $column) {
+            $hasOrderColumns[$column] = true;
+        }
+        
+        // ตรวจสอบว่ามีข้อมูลที่จำเป็นสำหรับการสร้างใบสั่งขาย
+        $customers = Customer::all();
+        $products = Product::all();
+        $users = User::all();
+
+        if ($customers->isEmpty() || $products->isEmpty() || $users->isEmpty()) {
+            $this->command->info('ไม่สามารถสร้างข้อมูลใบสั่งขายเนื่องจากไม่มีข้อมูลลูกค้า สินค้า หรือผู้ใช้งาน');
+            return;
+        }
+
+        // สถานะที่เป็นไปได้ของใบสั่งขาย
+        $statuses = ['draft', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+        
+        $this->command->info('เริ่มสร้างข้อมูลใบสั่งขาย...');
+        
+        // ใช้ Transaction เพื่อความปลอดภัย
+        DB::beginTransaction();
+        
+        try {
+            // สร้างใบสั่งขาย 10 รายการ
+            for ($i = 0; $i < 10; $i++) {
+                $orderDate = Carbon::now()->subDays(rand(1, 30));
+                $status = Arr::random($statuses);
+                $customer = $customers->random();
+                $creator = $users->random();
+                
+                // คำนวณตัวเลขทางการเงินเบื้องต้น
+                $randomProducts = $products->random(rand(1, 5));
+                $tempSubtotal = 0;
+                
+                foreach ($randomProducts as $product) {
+                    $quantity = rand(1, 10);
+                    $unitPrice = $product->price;
+                    $tempSubtotal += $quantity * $unitPrice;
+                }
+                
+                $tempDiscountType = Arr::random(['fixed', 'percentage', null]);
+                $tempDiscountAmount = 0;
+                
+                if ($tempDiscountType === 'fixed') {
+                    $tempDiscountAmount = min(rand(100, 1000), $tempSubtotal * 0.2);
+                } elseif ($tempDiscountType === 'percentage') {
+                    $tempDiscountRate = rand(5, 15);
+                    $tempDiscountAmount = $tempSubtotal * ($tempDiscountRate / 100);
+                }
+                
+                $tempNetTotal = $tempSubtotal - $tempDiscountAmount;
+                $tempTaxRate = rand(0, 1) ? 7 : 0;
+                $tempTaxAmount = $tempTaxRate ? $tempNetTotal * ($tempTaxRate / 100) : 0;
+                $tempShippingCost = rand(0, 5) * 100;
+                $tempTotalAmount = $tempNetTotal + $tempTaxAmount + $tempShippingCost;
+
+                // สร้างข้อมูลเบื้องต้นสำหรับใบสั่งขาย
+                $orderData = [
+                    'company_id' => 1,
+                    'customer_id' => $customer->id,
+                    'quotation_id' => null,
+                    'order_number' => 'SO' . date('Ym') . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT),
+                    'order_date' => $orderDate,
+                    'delivery_date' => $orderDate->copy()->addDays(rand(7, 14)),
+                    'status' => $status,
+                    'created_at' => $orderDate,
+                    'updated_at' => $orderDate,
+                ];
+                
+                // เพิ่มคอลัมน์ที่มีในฐานข้อมูล
+                if (isset($hasOrderColumns['customer_po_number'])) {
+                    $orderData['customer_po_number'] = 'PO' . date('Ym') . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
+                }
+                
+                if (isset($hasOrderColumns['created_by'])) {
+                    $orderData['created_by'] = $creator->id;
+                }
+                
+                if (isset($hasOrderColumns['notes'])) {
+                    $orderData['notes'] = Arr::random(['กรุณาจัดส่งด่วน', 'ติดต่อก่อนจัดส่ง', 'ลูกค้า VIP', null]);
+                }
+                
+                if (isset($hasOrderColumns['payment_terms'])) {
+                    $orderData['payment_terms'] = Arr::random(['30 วัน', '15 วัน', '7 วัน', 'ชำระเงินทันที', null]);
+                }
+                
+                if (isset($hasOrderColumns['shipping_address'])) {
+                    $orderData['shipping_address'] = $customer->address;
+                }
+                
+                if (isset($hasOrderColumns['shipping_method'])) {
+                    $orderData['shipping_method'] = Arr::random(['รถบริษัท', 'Kerry', 'Flash', 'ไปรษณีย์ไทย', null]);
+                }
+                
+                if (isset($hasOrderColumns['shipping_cost'])) {
+                    $orderData['shipping_cost'] = $tempShippingCost;
+                }
+                
+                // เพิ่มข้อมูลการเงิน
+                if (isset($hasOrderColumns['subtotal'])) {
+                    $orderData['subtotal'] = $tempSubtotal;
+                }
+                
+                if (isset($hasOrderColumns['discount_type'])) {
+                    $orderData['discount_type'] = $tempDiscountType;
+                }
+                
+                if (isset($hasOrderColumns['discount_amount'])) {
+                    $orderData['discount_amount'] = $tempDiscountAmount;
+                }
+                
+                if (isset($hasOrderColumns['tax_rate'])) {
+                    $orderData['tax_rate'] = $tempTaxRate;
+                }
+                
+                if (isset($hasOrderColumns['tax_amount'])) {
+                    $orderData['tax_amount'] = $tempTaxAmount;
+                }
+                
+                if (isset($hasOrderColumns['total_amount'])) {
+                    $orderData['total_amount'] = $tempTotalAmount;
+                }
+
+                // สร้างใบสั่งขาย
+                $order = Order::create($orderData);
+                
+                // อัพเดทข้อมูลสถานะ
+                $this->updateOrderStatus($order, $status, $orderDate, $users, $hasOrderColumns);
+
+                // สร้างรายการสินค้า 
+                $subtotal = 0;
+                
+                foreach ($randomProducts as $product) {
+                    $quantity = rand(1, 10);
+                    $unitPrice = $product->price;
+                    $total = $quantity * $unitPrice;
+                    $subtotal += $total;
+
+                    // สร้างข้อมูลพื้นฐานสำหรับ OrderItem
+                    $itemData = [
+                        'order_id' => $order->id,
+                        'product_id' => $product->id,
+                        'description' => $product->name,
+                        'quantity' => $quantity,
+                        'created_at' => $orderDate,
+                        'updated_at' => $orderDate,
+                        'total' => $total,
+                    ];
+                    
+                    // ใส่ข้อมูลตามโครงสร้างตาราง
+                    if (isset($hasOrderItemColumns['unit_price'])) {
+                        $itemData['unit_price'] = $unitPrice;
+                    }
+                    
+                    if (isset($hasOrderItemColumns['price'])) {
+                        $itemData['price'] = $unitPrice;
+                    }
+                    
+                    if (isset($hasOrderItemColumns['unit_id'])) {
+                        $itemData['unit_id'] = $product->unit_id ?? 1; // default = 1 ถ้าไม่มี
+                    }
+                    
+                    if (isset($hasOrderItemColumns['sku'])) {
+                        $itemData['sku'] = $product->sku ?? null;
+                    }
+                    
+                    if (isset($hasOrderItemColumns['notes'])) {
+                        $itemData['notes'] = rand(0, 1) ? 'หมายเหตุ: ' . $product->name : null;
+                    }
+
+                    OrderItem::create($itemData);
+                }
+
+                // อัพเดทยอดเงินใบสั่งขาย
+                $this->updateOrderFinancials($order, $subtotal, $hasOrderColumns);
+            }
+            
+            DB::commit();
+            $this->command->info('สร้างข้อมูลใบสั่งขายจำนวน 10 รายการเรียบร้อยแล้ว');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $this->command->error('เกิดข้อผิดพลาด: ' . $e->getMessage());
+            $this->command->error('ที่ไฟล์: ' . $e->getFile() . ' บรรทัด: ' . $e->getLine());
         }
     }
 
-    private function createOrdersForCompany($company)
+    /**
+     * อัพเดทสถานะใบสั่งขาย
+     */
+    private function updateOrderStatus($order, $status, $orderDate, $users, $hasOrderColumns)
     {
-        // ตรวจสอบว่ามีลูกค้าสำหรับบริษัทนี้หรือไม่
-        $customers = Customer::where('company_id', $company->id)->get();
-        if ($customers->isEmpty()) {
-            return;
-        }
-
-        // เลือกสินค้าสำหรับสร้าง order items
-        $products = Product::where('company_id', $company->id)->limit(5)->get();
-        if ($products->isEmpty()) {
-            return;
-        }
-
-        // ตรวจสอบคอลัมน์ที่มีในตาราง orders และ order_items
-        $orderColumns = Schema::getColumnListing('orders');
-        $orderItemColumns = Schema::getColumnListing('order_items');
+        $updateData = [];
         
-        // สร้าง Orders
-        foreach ($customers as $index => $customer) {
-            // สร้างเลขที่เอกสารไม่ซ้ำกัน
-            $uniqueTimestamp = (int)(microtime(true) * 1000);
-            $randomSuffix1 = str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT) . $index;
-            $randomSuffix2 = str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT) . ($index + 100);
-            
-            // สร้างข้อมูลพื้นฐาน
-            $baseOrderData = [
-                'company_id' => $company->id,
-                'customer_id' => $customer->id,
-                'order_number' => 'PO' . date('Ym') . $randomSuffix1,
-                'order_date' => now(),
-                'delivery_date' => now()->addDays(7),
-                'status' => 'confirmed',
-                'subtotal' => 50000,
-                'total_amount' => 52430,
-                'notes' => 'จัดส่งในเวลาทำการ',
-                'terms' => 'ชำระเงินภายใน 30 วัน',
-                'shipping_address' => '123/45 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110',
-                'shipping_method' => 'standard',
-                'payment_method' => 'credit',
-                'payment_terms' => '30',
-                'prepared_by' => 1,
-                'approved_by' => 1,
-                'approved_at' => now(),
-                'metadata' => json_encode([
-                    'source' => 'direct',
-                    'priority' => 'normal',
-                    'department' => 'sales',
-                    'currency' => 'THB',
-                    'discount_type' => 'fixed',
-                    'discount_amount' => 1000,
-                    'tax_inclusive' => false,
-                    'tax_rate' => 7,
-                    'tax_amount' => 3430,
-                    'total_discount' => 1000,
-                ])
-            ];
-            
-            $secondOrderData = [
-                'company_id' => $company->id,
-                'customer_id' => $customer->id,
-                'order_number' => 'PO' . date('Ym') . $randomSuffix2,
-                'order_date' => now()->subDays(5),
-                'delivery_date' => now()->addDays(2),
-                'status' => 'delivered',
-                'subtotal' => 75000,
-                'total_amount' => 71250,
-                'notes' => 'จัดส่งด่วน',
-                'terms' => 'ชำระเงินล่วงหน้า',
-                'shipping_address' => '456/78 ถนนพระราม 9 แขวงบางกะปิ เขตห้วยขวาง กรุงเทพฯ 10310',
-                'shipping_method' => 'express',
-                'payment_method' => 'prepaid',
-                'payment_terms' => 'prepaid',
-                'prepared_by' => 1,
-                'approved_by' => 1,
-                'approved_at' => now()->subDays(5),
-                'delivered_at' => now(),
-                'metadata' => json_encode([
-                    'source' => 'website',
-                    'priority' => 'high',
-                    'department' => 'marketing',
-                    'currency' => 'THB',
-                    'discount_type' => 'percentage',
-                    'discount_amount' => 5,
-                    'tax_inclusive' => true,
-                    'tax_rate' => 7,
-                    'tax_amount' => 4747.50,
-                    'total_discount' => 3750,
-                ])
-            ];
+        if ($status != 'draft' && isset($hasOrderColumns['confirmed_by']) && isset($hasOrderColumns['confirmed_at'])) {
+            $updateData['confirmed_by'] = $users->random()->id;
+            $updateData['confirmed_at'] = $orderDate->copy()->addHours(rand(1, 24));
+        }
 
-            $orderDataArray = [$baseOrderData, $secondOrderData];
-            
-            // Process each order
-            foreach ($orderDataArray as $orderData) {
-                // กรองเฉพาะคอลัมน์ที่มีอยู่ในตาราง orders
-                $filteredOrderData = array_intersect_key($orderData, array_flip($orderColumns));
-                
-                // สร้าง order
-                try {
-                    $order = Order::create($filteredOrderData);
-                } catch (\Exception $e) {
-                    // หากเกิดข้อผิดพลาด UniqueConstraintViolation ให้สร้างเลขที่ใหม่และลองอีกครั้ง
-                    if ($e instanceof \Illuminate\Database\UniqueConstraintViolationException) {
-                        // สร้างเลขที่ใหม่ที่มั่นใจว่าไม่ซ้ำ
-                        $uniqueID = uniqid('', true);
-                        $filteredOrderData['order_number'] = 'PO' . date('Ym') . substr(md5($uniqueID . $index), 0, 6);
-                        
-                        // ลองบันทึกอีกครั้ง
-                        try {
-                            $order = Order::create($filteredOrderData);
-                        } catch (\Exception $innerEx) {
-                            // บันทึกข้อผิดพลาดถ้ายังไม่สำเร็จ
-                            \Log::error("Failed to create order after retry: " . $innerEx->getMessage());
-                            continue; // ข้ามไปยังรายการถัดไป
-                        }
-                    } else {
-                        // บันทึกข้อผิดพลาดประเภทอื่น
-                        \Log::error("Error creating order: " . $e->getMessage());
-                        continue; // ข้ามไปยังรายการถัดไป
-                    }
-                }
+        if (in_array($status, ['processing', 'shipped', 'delivered']) && 
+            isset($hasOrderColumns['processed_by']) && isset($hasOrderColumns['processed_at'])) {
+            $updateData['processed_by'] = $users->random()->id;
+            $updateData['processed_at'] = isset($updateData['confirmed_at']) ? 
+                Carbon::parse($updateData['confirmed_at'])->addHours(rand(1, 48)) : 
+                $orderDate->copy()->addHours(rand(24, 72));
+        }
 
-                // สร้าง order items เมื่อสร้าง order สำเร็จ
-                if (isset($order) && $order) {
-                    // แก้ไขการใช้งาน random() เพื่อรองรับกรณีที่มีสินค้าน้อย
-                    $itemCount = min(mt_rand(1, 3), count($products)); 
-                    $selectedProducts = $itemCount > 0 ? $products->random($itemCount) : collect([$products->first()]);
-                    
-                    foreach ($selectedProducts as $product) {
-                        if (!$product) {
-                            continue;
-                        }
-                        
-                        $quantity = mt_rand(1, 5);
-                        $unitPrice = $product->price ?? 100;
-                        $subtotal = $quantity * $unitPrice;
-                        
-                        // สร้างข้อมูลพื้นฐานสำหรับ OrderItem
-                        $orderItemData = [
-                            'order_id' => $order->id,
-                            'product_id' => $product->id,
-                            'description' => $product->name ?? 'สินค้า',
-                            'quantity' => $quantity,
-                            'unit' => 'ชิ้น',
-                            'unit_price' => $unitPrice,
-                            'price' => $unitPrice,
-                            'subtotal' => $subtotal,
-                            'tax_rate' => 7,
-                            'tax_amount' => $subtotal * 0.07,
-                            'total' => $subtotal * 1.07,
-                            'metadata' => json_encode([
-                                'unit_name' => 'ชิ้น',
-                                'unit_id' => $product->unit_id,
-                                'product_price' => $unitPrice,
-                                'product_subtotal' => $subtotal,
-                            ])
-                        ];
-                        
-                        // กรองเฉพาะคอลัมน์ที่มีอยู่ในตาราง order_items
-                        $filteredOrderItemData = array_intersect_key($orderItemData, array_flip($orderItemColumns));
-                        
-                        // ตรวจสอบคอลัมน์ที่จำเป็นต้องมีข้อมูล
-                        if (in_array('price', $orderItemColumns) && !isset($filteredOrderItemData['price'])) {
-                            $filteredOrderItemData['price'] = $unitPrice;
-                        }
-                        
-                        if (in_array('unit_price', $orderItemColumns) && !isset($filteredOrderItemData['unit_price'])) {
-                            $filteredOrderItemData['unit_price'] = $unitPrice;
-                        }
-                        
-                        // สร้าง order item
-                        try {
-                            OrderItem::create($filteredOrderItemData);
-                        } catch (\Exception $e) {
-                            \Log::error("Error creating order item: " . $e->getMessage(), [
-                                'data' => $filteredOrderItemData
-                            ]);
-                        }
-                    }
-                }
-            }
+        // อัพเดทสถานะเพิ่มเติม...
+        
+        if (!empty($updateData)) {
+            $order->update($updateData);
+        }
+    }
+
+    /**
+     * อัพเดทข้อมูลการเงินของใบสั่งขาย
+     */
+    private function updateOrderFinancials($order, $subtotal, $hasOrderColumns)
+    {
+        $updateData = [];
+        
+        $discountType = Arr::random(['fixed', 'percentage', null]);
+        $discountAmount = 0;
+        
+        if ($discountType === 'fixed') {
+            $discountAmount = min(rand(100, 1000), $subtotal * 0.2);
+        } elseif ($discountType === 'percentage') {
+            $discountRate = rand(5, 15);
+            $discountAmount = $subtotal * ($discountRate / 100);
+        }
+        
+        $netTotal = $subtotal - $discountAmount;
+        $taxRate = rand(0, 1) ? 7 : 0;
+        $taxAmount = $taxRate ? $netTotal * ($taxRate / 100) : 0;
+        $shippingCost = $order->shipping_cost ?? 0;
+        $totalAmount = $netTotal + $taxAmount + $shippingCost;
+        
+        if (isset($hasOrderColumns['subtotal'])) {
+            $updateData['subtotal'] = $subtotal;
+        }
+        
+        if (isset($hasOrderColumns['discount_type'])) {
+            $updateData['discount_type'] = $discountType;
+        }
+        
+        // อัพเดทข้อมูลการเงินเพิ่มเติม...
+        
+        if (!empty($updateData)) {
+            $order->update($updateData);
         }
     }
 }

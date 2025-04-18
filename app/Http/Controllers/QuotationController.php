@@ -536,4 +536,40 @@ class QuotationController extends Controller
                 ->with('error', 'เกิดข้อผิดพลาดในการปฏิเสธใบเสนอราคา: ' . $e->getMessage());
         }
     }
+
+    /**
+     * จัดเตรียมข้อมูลใบเสนอราคาสำหรับการนำไปสร้างใบสั่งขาย
+     * ใช้สำหรับ AJAX request เพื่อดึงข้อมูลแบบ JSON
+     */
+    public function getData(Quotation $quotation)
+    {
+        try {
+            // โหลดความสัมพันธ์ที่จำเป็น
+            $quotation->load([
+                'customer', 
+                'items.product.unit'
+            ]);
+            
+            // เพิ่ม log สำหรับตรวจสอบ
+            Log::info('Quotation data requested', [
+                'quotation_id' => $quotation->id,
+                'quotation_number' => $quotation->quotation_number,
+                'items_count' => $quotation->items->count()
+            ]);
+            
+            // ส่งข้อมูลกลับเป็น JSON
+            return response()->json($quotation);
+        
+        } catch (\Exception $e) {
+            Log::error('Error fetching quotation data', [
+                'quotation_id' => $quotation->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'error' => 'ไม่สามารถดึงข้อมูลใบเสนอราคาได้: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
