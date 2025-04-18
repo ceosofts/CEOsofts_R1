@@ -252,8 +252,8 @@ update 2025-04-17
 ├── check-companies-structure.php (957 B)
 ├── check-env.php (1.5 KB)
 ├── clear-cache.sh (217 B)
-├── composer.json (2.37 KB)
-├── composer.lock (323.78 KB)
+├── composer.json (2.49 KB)
+├── composer.lock (300.77 KB)
 ├── create-db.sh (525 B)
 ├── create-fix-middleware.sh (105 B)
 ├── docker-compose.debug.yml (307 B)
@@ -273,7 +273,8 @@ update 2025-04-17
 ├── project_structure_2025_04_14.txt (25.65 KB)
 ├── project_structure_2025_04_15.txt (28.27 KB)
 ├── project_structure_2025_04_16.txt (28.12 KB)
-├── project_structure_2025_04_17.txt (27.46 KB)
+├── project_structure_2025_04_17.txt (30.45 KB)
+├── project_structure_2025_04_18.txt (30.3 KB)
 ├── repair-system.sh (2.21 KB)
 ├── runfix.sh (274 B)
 ├── tailwind.config.js (3.36 KB)
@@ -281,10 +282,10 @@ update 2025-04-17
 ├── tinker-commands.php (1.38 KB)
 ├── vite.config.js (2.26 KB)
 ├── vscode-settings.json (352 B)
-├── คำสั่ง.txt (13.52 KB)
+├── คำสั่ง.txt (14.46 KB)
 ├── Note/
 ├── X_Project_Info/
-│   ├── Roadmap.md (45.77 KB)
+│   ├── Roadmap.md (45.4 KB)
 │   ├── product_management_guide.md (6.29 KB)
 │   └── BIN/
 │       ├── Next_Actions.md (3.73 KB)
@@ -309,6 +310,7 @@ update 2025-04-17
 │   │   ├── Kernel.php (2.51 KB)
 │   │   └── Commands/
 │   │       ├── CheckDatabaseCommand.php (4.45 KB)
+│   │       ├── CheckDatabaseConnection.php (2.49 KB)
 │   │       ├── CheckDatabaseTables.php (1.93 KB)
 │   │       ├── CheckDuplicateUnits.php (2.82 KB)
 │   │       ├── CheckDuplicatesCommand.php (4.88 KB)
@@ -329,12 +331,14 @@ update 2025-04-17
 │   │       ├── FixMigrationsCommand.php (4.24 KB)
 │   │       ├── FixSQLiteCompatibilityCommand.php (7.26 KB)
 │   │       ├── FixSQLiteMigrationCommand.php (8.47 KB)
+│   │       ├── ImportOrdersFromJson.php (2.2 KB)
 │   │       ├── ImportProductCategoriesCommand.php (3.33 KB)
 │   │       ├── ListAllTablesCommand.php (3.13 KB)
 │   │       ├── MigrateSkipCommand.php (2.52 KB)
 │   │       ├── MigrateSkipMultipleCommand.php (2.63 KB)
 │   │       ├── NormalizeUnitCodes.php (1.27 KB)
-│   │       └── ProjectStructureCommand.php (8.09 KB)
+│   │       ├── ProjectStructureCommand.php (8.09 KB)
+│   │       └── TestOrderCreation.php (5.14 KB)
 │   ├── Domain/
 │   │   ├── DocumentGeneration/
 │   │   │   └── Models/
@@ -358,8 +362,10 @@ update 2025-04-17
 │   ├── Encryption/
 │   │   ├── CustomEncrypter.php (7.37 KB)
 │   │   └── SimpleEncrypter.php (6.16 KB)
+│   ├── Exceptions/
+│   ├── Helpers/
 │   ├── Http/
-│   │   ├── Kernel.php (2.71 KB)
+│   │   ├── Kernel.php (2.83 KB)
 │   │   ├── Controllers/
 │   │   │   ├── BranchOfficeController.php (16.68 KB)
 │   │   │   ├── ComingSoonController.php (1.66 KB)
@@ -374,13 +380,15 @@ update 2025-04-17
 │   │   │   ├── EmployeeController.php (20.78 KB)
 │   │   │   ├── ExecutiveDashboardController.php (5.83 KB)
 │   │   │   ├── HomeController.php (522 B)
-│   │   │   ├── OrderController.php (2.02 KB)
+│   │   │   ├── OrderController.php (28.16 KB)
+│   │   │   ├── OrderDebugController.php (1.28 KB)
 │   │   │   ├── OrganizationStructureController.php (14.61 KB)
 │   │   │   ├── PositionController.php (7.3 KB)
 │   │   │   ├── PositionsController.php (5.66 KB)
 │   │   │   ├── ProductCategoryController.php (11.87 KB)
 │   │   │   ├── ProductController.php (10.09 KB)
-│   │   │   ├── QuotationController.php (27.61 KB)
+│   │   │   ├── QuotationApiController.php (802 B)
+│   │   │   ├── QuotationController.php (29.09 KB)
 │   │   │   ├── StockMovementController.php (8.69 KB)
 │   │   │   ├── SystemCheckController.php (9.37 KB)
 │   │   │   ├── TestController.php (808 B)
@@ -397,9 +405,10 @@ update 2025-04-17
 │   │   │   ├── EncryptCookies.php (2.34 KB)
 │   │   │   ├── EnsureCompanyAccess.php (1.24 KB)
 │   │   │   ├── RedirectIfAuthenticated.php (754 B)
-│   │   │   └── SetDefaultCompany.php (1.15 KB)
+│   │   │   └── SetDefaultCompany.php (922 B)
 │   │   └── Requests/
 │   │       ├── StoreEmployeeRequest.php (6.17 KB)
+│   │       ├── StoreOrderRequest.php (2 KB)
 │   │       ├── UpdateEmployeeRequest.php (4.96 KB)
 │   │       └── Organization/
 │   ├── Infrastructure/
@@ -418,7 +427,8 @@ update 2025-04-17
 │   │   ├── Department.php (3.23 KB)
 │   │   ├── Employee.php (9.54 KB)
 │   │   ├── LeaveType.php (2.19 KB)
-│   │   ├── Order.php (1.82 KB)
+│   │   ├── Order.php (4.76 KB)
+│   │   ├── OrderItem.php (1.28 KB)
 │   │   ├── Position.php (1.47 KB)
 │   │   ├── Product.php (2.27 KB)
 │   │   ├── ProductCategory.php (2.19 KB)
@@ -426,7 +436,7 @@ update 2025-04-17
 │   │   ├── QuotationItem.php (1.22 KB)
 │   │   ├── StockMovement.php (1.62 KB)
 │   │   ├── Unit.php (4.1 KB)
-│   │   ├── User.php (1.78 KB)
+│   │   ├── User.php (1.74 KB)
 │   │   └── WorkShift.php (5.27 KB)
 │   ├── Policies/
 │   │   ├── CompanyPolicy.php (1.27 KB)
@@ -449,7 +459,8 @@ update 2025-04-17
 │   │   └── Traits/
 │   │       └── HasCompanyScope.php (1.46 KB)
 │   ├── Traits/
-│   │   └── CompanyScope.php (1.4 KB)
+│   │   ├── CompanyScope.php (1.4 KB)
+│   │   └── HasCompanyScope.php (1.67 KB)
 │   └── View/
 │       └── Components/
 │           ├── AppLayout.php (296 B)
@@ -463,8 +474,8 @@ update 2025-04-17
 │   ├── app.php (513 B)
 │   ├── providers.php (64 B)
 │   └── cache/
-│       ├── packages.php (2.02 KB)
-│       └── services.php (21.9 KB)
+│       ├── packages.php (1.31 KB)
+│       └── services.php (21.47 KB)
 ├── config/
 │   ├── app-fix.php (7.57 KB)
 │   ├── app.local.php (84 B)
@@ -484,7 +495,7 @@ update 2025-04-17
 │   └── telescope.php (6.67 KB)
 ├── database/
 │   ├── ceosofts_db_R1 (0 B)
-│   ├── ceosofts_db_R1.sqlite (1.53 MB)
+│   ├── ceosofts_db_R1.sqlite (1.42 MB)
 │   ├── check-companies.php (2.17 KB)
 │   ├── check-db-connection.php (3.58 KB)
 │   ├── create-database.sh (928 B)
@@ -495,6 +506,7 @@ update 2025-04-17
 │   ├── factories/
 │   │   ├── CompanyFactory.php (1013 B)
 │   │   ├── ModelNameFactory.php (416 B)
+│   │   ├── OrderFactory.php (3.11 KB)
 │   │   ├── UserFactory.php (1.05 KB)
 │   │   └── Domain/
 │   │       └── Organization/
@@ -507,22 +519,22 @@ update 2025-04-17
 │   │   ├── 0001_01_01_00004_create_companies_table.php (7.92 KB)
 │   │   ├── 0001_01_01_00005_create_activity_logs_table.php (1.42 KB)
 │   │   ├── 0001_01_01_00006_create_customers_table.php (5.9 KB)
-│   │   ├── 0001_01_01_00007_create_departments_table.php (1.38 KB)
+│   │   ├── 0001_01_01_00007_create_departments_table.php (3.67 KB)
 │   │   ├── 0001_01_01_00008_create_positions_table.php (1.48 KB)
-│   │   ├── 0001_01_01_00009_create_branch_offices_table.php (1.4 KB)
+│   │   ├── 0001_01_01_00009_create_branch_offices_table.php (2.88 KB)
 │   │   ├── 0001_01_01_00010_create_employees_table.php (9.9 KB)
 │   │   ├── 0001_01_01_00011_create_leave_types_table.php (8.33 KB)
 │   │   ├── 0001_01_01_00012_create_work_shifts_table.php (7.95 KB)
-│   │   ├── 0001_01_01_00013_create_quotations_table.php (6.05 KB)
+│   │   ├── 0001_01_01_00013_create_quotations_table.php (8.53 KB)
 │   │   ├── 0001_01_01_00014_create_employee_work_shifts_table.php (5.54 KB)
 │   │   ├── 0001_01_01_00015_create_document_templates_table.php (6.63 KB)
-│   │   ├── 0001_01_01_00016_create_orders_table.php (1.34 KB)
+│   │   ├── 0001_01_01_00016_create_orders_table.php (6.3 KB)
 │   │   ├── 0001_01_01_00017_create_generated_documents_table.php (5.09 KB)
 │   │   ├── 0001_01_01_00018_create_invoices_table.php (1.57 KB)
-│   │   ├── 0001_01_01_00019_create_products_table.php (11 KB)
+│   │   ├── 0001_01_01_00019_create_products_table.php (12.57 KB)
 │   │   ├── 0001_01_01_00020_create_receipts_table.php (6.26 KB)
-│   │   ├── 0001_01_01_00021_create_permissions_tables.php (1.82 KB)
-│   │   ├── 0001_01_01_00022_create_roles_tables.php (4.41 KB)
+│   │   ├── 0001_01_01_00021_create_permissions_tables.php (7.94 KB)
+│   │   ├── 0001_01_01_00022_create_roles_tables.php (2.49 KB)
 │   │   ├── 0001_01_01_00023_create_stock_movements_table.php (9.33 KB)
 │   │   ├── 0001_01_01_00024_create_translations_table.php (1.89 KB)
 │   │   ├── 0001_01_01_00025_create_units_table.php (4.96 KB)
@@ -535,21 +547,10 @@ update 2025-04-17
 │   │   ├── 0001_01_01_00032_update_company_user_table.php (3.86 KB)
 │   │   ├── 0001_01_01_00033_add_missing_columns_to_product_categories_table.php (1.54 KB)
 │   │   ├── 0001_01_01_00034_modify_orders_quotation_constraint.php (5.11 KB)
-│   │   ├── 0001_01_01_00035_add_unit_to_order_items_table.php (776 B)
-│   │   ├── 0001_01_01_00036_add_price_to_order_items_table.php (1.38 KB)
 │   │   ├── 0001_01_01_00037_create_document_sendings_table_if_not_exists.php (1.8 KB)
 │   │   ├── 0001_01_01_00038_create_translations_table_clean.php (3.83 KB)
 │   │   ├── 0001_01_01_00040_create_missing_tables.php (1.68 KB)
-│   │   ├── 0001_01_01_00041_create_permissions_tables.php (2.83 KB)
-│   │   ├── 0001_01_01_00042_create_telescope_entries_table.php (2.02 KB)
-│   │   ├── 0001_01_01_00043_create_permissions_tables.php (553 B)
-│   │   ├── 0001_01_01_00044_add_parent_id_to_departments_table.php (2.79 KB)
-│   │   ├── 2025_04_16_add_branch_office_id_to_departments_table.php (769 B)
-│   │   ├── 2025_04_17_000001_add_manager_id_to_branch_offices_table.php (799 B)
-│   │   ├── 2025_04_19_000001_create_quotation_items_table.php (1.64 KB)
-│   │   ├── 2025_05_01_000001_ensure_deleted_at_on_quotation_items.php (1.19 KB)
-│   │   ├── 2025_05_02_000001_add_unit_id_to_quotation_items.php (1.56 KB)
-│   │   └── 2025_05_02_000002_fix_quotation_items_table_schema.php (3.16 KB)
+│   │   └── 0001_01_01_00042_create_telescope_entries_table.php (3.34 KB)
 │   ├── seeders/
 │   │   ├── ActivityLogSeeder.php (2.16 KB)
 │   │   ├── AdminUserSeeder.php (1.69 KB)
@@ -557,7 +558,7 @@ update 2025-04-17
 │   │   ├── CompanySeeder.php (2.91 KB)
 │   │   ├── CustomerSeeder.php (6.15 KB)
 │   │   ├── DatabaseSeeder.php (1.55 KB)
-│   │   ├── DepartmentSeeder.php (3.66 KB)
+│   │   ├── DepartmentSeeder.php (3.48 KB)
 │   │   ├── DocumentSendingSeeder.php (5.83 KB)
 │   │   ├── DocumentTemplateSeeder.php (4.31 KB)
 │   │   ├── EmployeeSeeder.php (14.36 KB)
@@ -568,7 +569,7 @@ update 2025-04-17
 │   │   ├── InvoiceSeeder.php (3.59 KB)
 │   │   ├── JobSeeder.php (1.85 KB)
 │   │   ├── LeaveTypeSeeder.php (3.43 KB)
-│   │   ├── OrderSeeder.php (10.38 KB)
+│   │   ├── OrderSeeder.php (12.51 KB)
 │   │   ├── OrganizationSeeder.php (0 B)
 │   │   ├── PermissionSeeder.php (444 B)
 │   │   ├── PositionSeeder.php (4.28 KB)
@@ -613,7 +614,6 @@ update 2025-04-17
 │   ├── check-db.php (1.86 KB)
 │   ├── db-check.php (2.84 KB)
 │   ├── favicon.ico (0 B)
-│   ├── hot (17 B)
 │   ├── index.php (543 B)
 │   ├── robots.txt (24 B)
 │   ├── test-quotation-preview.html (5.28 KB)
@@ -652,11 +652,12 @@ update 2025-04-17
 │   │   └── app.css (1.72 KB)
 │   ├── docs/
 │   ├── js/
-│   │   ├── app.js (999 B)
+│   │   ├── app.js (1.01 KB)
 │   │   ├── auth.js (698 B)
 │   │   ├── bootstrap.js (127 B)
 │   │   ├── branch-office-form.js (5.6 KB)
-│   │   └── company-selector.js (3.34 KB)
+│   │   ├── company-selector.js (3.34 KB)
+│   │   └── order-calculator.js (7.53 KB)
 │   ├── templates/
 │   │   └── migration_template.php (2.23 KB)
 │   └── views/
@@ -742,7 +743,10 @@ update 2025-04-17
 │       │   ├── dashboard/
 │       │   └── department/
 │       ├── orders/
-│       │   └── index.blade.php (736 B)
+│       │   ├── create.blade.php (52.54 KB)
+│       │   ├── edit.blade.php (36.67 KB)
+│       │   ├── index.blade.php (11.95 KB)
+│       │   └── show.blade.php (33.63 KB)
 │       ├── organization/
 │       │   ├── branch_offices/
 │       │   ├── companies/
@@ -764,6 +768,8 @@ update 2025-04-17
 │       │   ├── pdf-view.blade.php (10.86 KB)
 │       │   ├── pdf.blade.php (7.07 KB)
 │       │   └── show.blade.php (28.04 KB)
+│       ├── shared/
+│       │   └── validation_errors.blade.php (470 B)
 │       ├── stock-movements/
 │       │   ├── create.blade.php (11.59 KB)
 │       │   ├── edit.blade.php (10.55 KB)
@@ -776,11 +782,11 @@ update 2025-04-17
 │           └── show.blade.php (4.26 KB)
 ├── routes/
 │   ├── admin.php (0 B)
-│   ├── api.php (1.39 KB)
+│   ├── api.php (1.89 KB)
 │   ├── auth.php (937 B)
 │   ├── channels.php (558 B)
 │   ├── console.php (592 B)
-│   ├── web.php (19.7 KB)
+│   ├── web.php (17.25 KB)
 │   └── domains/
 │       ├── finance.php (0 B)
 │       ├── human-resources.php (0 B)
@@ -801,41 +807,15 @@ update 2025-04-17
 │   │   ├── cache/
 │   │   │   └── data/
 │   │   ├── sessions/
-│   │   │   └── BL73aKxXZxFkpk9qSUOhvPT4HprDJvOUWYIacDup (325 B)
+│   │   │   └── SD8WYZWQu743u70OplbgNi5BuVhEXraQgUi086Jj (321 B)
 │   │   ├── testing/
 │   │   └── views/
-│   │       ├── 270ad9ed1a040a8fa03bc0e96b6851b9.php (34.54 KB)
-│   │       ├── 2d82d6f51f043e617f681965f9eb1388.php (515 B)
-│   │       ├── 30baac441ee757f7eedec098c02ea9ce.php (2.76 KB)
-│   │       ├── 3343465d2ab428739d74303f16f2dfaf.php (707 B)
-│   │       ├── 3c1b680d61bc7a7bb7df14c8a678a9de.php (10.36 KB)
-│   │       ├── 4de3d57ff3c17c3aa4d930e2c2cbfbf0.php (531 B)
-│   │       ├── 4dffb7556735484d4ea3f4e9787b86a2.php (31.06 KB)
-│   │       ├── 57f9c964972f01fe748c5866ed076e5d.php (10.88 KB)
-│   │       ├── 6558acd15011832cd6aa15743960d38b.php (3.02 KB)
-│   │       ├── 70991d3b6e4e4e196e729160767e6c75.php (9.42 KB)
-│   │       ├── 7aaef36b4137424490c562d155e40830.php (1.11 KB)
-│   │       ├── 7f6cf0ade3c425d8e7e502e196345c4b.php (5.01 KB)
-│   │       ├── 820f920f42080c93c6ed0871e644885b.php (8.12 KB)
-│   │       ├── 8453bc743b2f98c83e9732ab4ed71306.php (2.24 KB)
-│   │       ├── 858fdf59bcc122a2851e83ab7a9bb93c.php (145.26 KB)
-│   │       ├── 970af8ca66de1d1a0c8a7bd31a3e5ad1.php (31.77 KB)
-│   │       ├── a19789af8775f146a579fc6d6e1766e3.php (352 B)
-│   │       ├── a26d536b72e080b9ea65f354c518c765.php (2.04 KB)
-│   │       ├── b453ba8120863d30a079c75808bfa61a.php (3.48 KB)
-│   │       ├── c02e9848cd37a95cc934929a47850ee5.php (11.69 KB)
-│   │       ├── c315ed2f896bc7b209c276d2926f2b6c.php (509 B)
-│   │       ├── da6c417ae5ff0124e4d3116a0c93d1f7.php (11.39 KB)
-│   │       ├── f023db5ca158086f6ed01dffa3058997.php (122 B)
-│   │       ├── f2d98475be4395e00d133e49a1ca34cc.php (7.02 KB)
-│   │       ├── f9bf975275e39779d2fa08c87d4e5e49.php (616 B)
-│   │       ├── fc3fc22c8e542b24b08dace9c21cc510.php (632 B)
-│   │       └── fc6760a17fdb788d90efa6f006ab67e4.php (26.73 KB)
 │   └── logs/
 │       ├── encryption-debug.log (704 B)
 │       ├── encryption-error.log (0 B)
-│       ├── laravel.log (3.61 MB)
-│       └── laravel.log.backup-2025-04-17-093427 (24.84 MB)
+│       ├── laravel.log (484.58 KB)
+│       ├── laravel.log.backup-2025-04-17-093427 (24.84 MB)
+│       └── laravel.log.backup-2025-04-18-114410 (10.66 MB)
 ├── tests/
 │   ├── DuskTestCase.php (1.41 KB)
 │   ├── TestCase.php (142 B)

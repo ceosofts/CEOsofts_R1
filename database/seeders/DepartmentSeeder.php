@@ -29,7 +29,6 @@ class DepartmentSeeder extends Seeder
                 'code' => 'MGMT',
                 'description' => 'ฝ่ายบริหารจัดการองค์กร',
                 'is_active' => true,
-                'status' => 'active',
                 'parent_id' => null,
                 'metadata' => json_encode([
                     'level' => 1,
@@ -43,7 +42,6 @@ class DepartmentSeeder extends Seeder
                 'code' => 'FIN',
                 'description' => 'ฝ่ายบัญชีและการเงิน',
                 'is_active' => true,
-                'status' => 'active',
                 'parent_id' => null,
                 'metadata' => json_encode([
                     'level' => 2,
@@ -57,7 +55,6 @@ class DepartmentSeeder extends Seeder
                 'code' => 'IT',
                 'description' => 'ฝ่ายเทคโนโลยีสารสนเทศ',
                 'is_active' => true,
-                'status' => 'active',
                 'parent_id' => null,
                 'metadata' => json_encode([
                     'level' => 2,
@@ -71,7 +68,6 @@ class DepartmentSeeder extends Seeder
                 'code' => 'HR',
                 'description' => 'ฝ่ายทรัพยากรบุคคล',
                 'is_active' => true,
-                'status' => 'active',
                 'parent_id' => null,
                 'metadata' => json_encode([
                     'level' => 2,
@@ -85,7 +81,6 @@ class DepartmentSeeder extends Seeder
                 'code' => 'SALES',
                 'description' => 'ฝ่ายการตลาดและการขาย',
                 'is_active' => true,
-                'status' => 'active',
                 'parent_id' => null,
                 'metadata' => json_encode([
                     'level' => 2,
