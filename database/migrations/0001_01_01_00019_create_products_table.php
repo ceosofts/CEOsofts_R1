@@ -15,6 +15,7 @@ return new class extends Migration
      * - 2024_08_01_000041_add_uuid_to_products_table.php
      * - 0001_01_01_00044_add_current_stock_to_products_table.php
      * - 0001_01_01_00045_add_unit_id_to_products_table.php
+     * - 0001_01_01_00033_add_missing_columns_to_product_categories_table.php
      */
     public function up(): void
     {
@@ -30,6 +31,18 @@ return new class extends Migration
                 $table->unsignedBigInteger('parent_id')->nullable();
                 $table->foreign('parent_id')->references('id')->on('product_categories')->onDelete('set null');
                 $table->json('metadata')->nullable();
+                // คอลัมน์เพิ่มเติมที่ย้ายมาจาก add_missing_columns_to_product_categories_table.php
+                $table->string('icon')->nullable();  // ไอคอนสำหรับหมวดหมู่
+                $table->string('image')->nullable(); // รูปภาพสำหรับหมวดหมู่
+                $table->string('slug')->nullable(); // URL-friendly name
+                $table->integer('display_order')->default(0); // ลำดับการแสดงผล
+                $table->boolean('is_featured')->default(false); // หมวดหมู่แนะนำหรือไม่
+                $table->boolean('is_visible')->default(true); // แสดงบนหน้าเว็บหรือไม่
+                
+                // เพิ่มคอลัมน์ที่ขาดและใช้ในการ seed
+                $table->integer('level')->default(0);  // ระดับความลึกของหมวดหมู่
+                $table->string('path')->nullable();    // เส้นทางแบบ hierarchical
+                
                 $table->timestamps();
                 $table->softDeletes();
 
@@ -39,9 +52,61 @@ return new class extends Migration
                 $table->index('code');
                 $table->index('parent_id');
                 $table->index('is_active');
+                // Index เพิ่มเติมสำหรับคอลัมน์ใหม่
+                $table->index('slug');
+                $table->index('display_order');
+                $table->index('is_featured');
+                $table->index('is_visible');
             });
 
             Log::info('สร้างตาราง product_categories เรียบร้อยแล้ว');
+        } else {
+            // ตรวจสอบและเพิ่มคอลัมน์ที่หายไปในกรณีที่ตารางมีอยู่แล้ว (จากไฟล์ add_missing_columns_to_product_categories_table.php)
+            Schema::table('product_categories', function (Blueprint $table) {
+                // เพิ่มคอลัมน์ที่อาจหายไป
+                if (!Schema::hasColumn('product_categories', 'icon')) {
+                    $table->string('icon')->nullable();
+                }
+                if (!Schema::hasColumn('product_categories', 'image')) {
+                    $table->string('image')->nullable();
+                }
+                if (!Schema::hasColumn('product_categories', 'slug')) {
+                    $table->string('slug')->nullable();
+                }
+                if (!Schema::hasColumn('product_categories', 'display_order')) {
+                    $table->integer('display_order')->default(0);
+                }
+                if (!Schema::hasColumn('product_categories', 'is_featured')) {
+                    $table->boolean('is_featured')->default(false);
+                }
+                if (!Schema::hasColumn('product_categories', 'is_visible')) {
+                    $table->boolean('is_visible')->default(true);
+                }
+                
+                // เพิ่มคอลัมน์ที่ขาดสำหรับการ seed
+                if (!Schema::hasColumn('product_categories', 'level')) {
+                    $table->integer('level')->default(0);
+                }
+                if (!Schema::hasColumn('product_categories', 'path')) {
+                    $table->string('path')->nullable();
+                }
+
+                // เพิ่ม index สำหรับคอลัมน์ใหม่
+                if (!Schema::hasIndex('product_categories', 'product_categories_slug_index')) {
+                    $table->index('slug');
+                }
+                if (!Schema::hasIndex('product_categories', 'product_categories_display_order_index')) {
+                    $table->index('display_order');
+                }
+                if (!Schema::hasIndex('product_categories', 'product_categories_is_featured_index')) {
+                    $table->index('is_featured');
+                }
+                if (!Schema::hasIndex('product_categories', 'product_categories_is_visible_index')) {
+                    $table->index('is_visible');
+                }
+            });
+
+            Log::info('อัปเดตโครงสร้างตาราง product_categories เรียบร้อยแล้ว');
         }
 
         // สร้างตารางสินค้า
