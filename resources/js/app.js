@@ -2,6 +2,7 @@
 import Alpine from 'alpinejs';
 import './bootstrap';
 import './auth'; // เพิ่มไฟล์ auth.js
+import './order-calculator.js';
 
 // Initialize Alpine.js
 window.Alpine = Alpine;

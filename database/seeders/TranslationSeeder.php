@@ -2,163 +2,103 @@
 
 namespace Database\Seeders;
 
-use App\Domain\Settings\Models\Translation;
-use App\Domain\Organization\Models\Company;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class TranslationSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
-        // ตรวจสอบว่ามีตาราง translations หรือไม่
-        if (!Schema::hasTable('translations')) {
-            $this->command->error('ไม่พบตาราง translations กรุณารัน migration ก่อน');
-            return;
-        }
-        
-        // ดึงข้อมูล companies ทั้งหมด
-        $companies = Company::all();
-        
-        if ($companies->isEmpty()) {
-            $this->command->warn('ไม่พบข้อมูล Company กรุณารัน CompanySeeder ก่อน');
-            return;
-        }
-        
-        foreach ($companies as $company) {
-            $this->createTranslationsForCompany($company->id);
+        try {
+            // ตรวจสอบว่าเป็น SQLite หรือไม่
+            $connection = DB::connection()->getPdo()->getAttribute(\PDO::ATTR_DRIVER_NAME);
+            $isSQLite = ($connection === 'sqlite');
+            
+            // ตรวจสอบว่าตาราง translations มีอยู่หรือไม่
+            if (!Schema::hasTable('translations')) {
+                Log::error('ไม่พบตาราง translations');
+                echo "ไม่พบตาราง translations ไม่สามารถเพิ่มคำแปลได้\n";
+                return;
+            }
+            
+            // ตรวจสอบโครงสร้างตาราง
+            $columns = [];
+            if ($isSQLite) {
+                $columnInfo = DB::select("PRAGMA table_info(translations)");
+                foreach ($columnInfo as $column) {
+                    $columns[] = $column->name;
+                }
+            } else {
+                $columns = Schema::getColumnListing('translations');
+            }
+            
+            // ตรวจสอบชื่อคอลัมน์ที่เกี่ยวข้อง
+            if (!in_array('company_id', $columns)) {
+                Log::error('ไม่พบคอลัมน์ company_id ในตาราง translations');
+                echo "ไม่พบคอลัมน์ company_id ในตาราง translations\n";
+                return;
+            }
+            
+            // กำหนดชื่อคอลัมน์ group ที่ถูกต้อง
+            $groupColumnName = in_array('translation_group', $columns) ? 'translation_group' : 'group';
+            
+            // คำแปลภาษาอังกฤษ
+            $this->addTranslation('en', $groupColumnName, 'messages', 'welcome', 'Welcome to CEOsofts');
+            $this->addTranslation('th', $groupColumnName, 'messages', 'welcome', 'ยินดีต้อนรับสู่ CEOsofts');
+            
+            // คำแปลปุ่ม
+            $this->addTranslation('en', $groupColumnName, 'buttons', 'save', 'Save');
+            $this->addTranslation('th', $groupColumnName, 'buttons', 'save', 'บันทึก');
+            $this->addTranslation('en', $groupColumnName, 'buttons', 'cancel', 'Cancel');
+            $this->addTranslation('th', $groupColumnName, 'buttons', 'cancel', 'ยกเลิก');
+            
+        } catch (\Exception $e) {
+            Log::error('เกิดข้อผิดพลาดในการเพิ่มคำแปล: ' . $e->getMessage());
+            $this->command->error('เกิดข้อผิดพลาดในการเพิ่มคำแปล: ' . $e->getMessage());
         }
     }
     
-    private function createTranslationsForCompany($companyId)
+    /**
+     * เพิ่มหรืออัพเดทคำแปล
+     * 
+     * @param string $locale รหัสภาษา
+     * @param string $groupColumnName ชื่อคอลัมน์กลุ่ม (group หรือ translation_group)
+     * @param string $group กลุ่มของคำแปล
+     * @param string $key คีย์
+     * @param string $value คำแปล
+     */
+    private function addTranslation(string $locale, string $groupColumnName, string $group, string $key, string $value): void
     {
-        // ข้อมูลการแปลภาษา
-        $translations = [
-            // ข้อความทั่วไป
-            [
-                'locale' => 'en',
-                'group' => 'messages',
-                'key' => 'welcome',
-                'field' => 'general',
-                'value' => 'Welcome to CEOsofts',
-                'translatable_type' => 'general',
-                'translatable_id' => 0,
-            ],
-            [
-                'locale' => 'th',
-                'group' => 'messages',
-                'key' => 'welcome',
-                'field' => 'general',
-                'value' => 'ยินดีต้อนรับสู่ CEOsofts',
-                'translatable_type' => 'general',
-                'translatable_id' => 0,
-            ],
-            // ปุ่ม
-            [
-                'locale' => 'en',
-                'group' => 'buttons',
-                'key' => 'save',
-                'field' => 'general',
-                'value' => 'Save',
-                'translatable_type' => 'general',
-                'translatable_id' => 0,
-            ],
-            [
-                'locale' => 'th',
-                'group' => 'buttons',
-                'key' => 'save',
-                'field' => 'general',
-                'value' => 'บันทึก',
-                'translatable_type' => 'general',
-                'translatable_id' => 0,
-            ],
-            [
-                'locale' => 'en',
-                'group' => 'buttons',
-                'key' => 'cancel',
-                'field' => 'general',
-                'value' => 'Cancel',
-                'translatable_type' => 'general',
-                'translatable_id' => 0,
-            ],
-            [
-                'locale' => 'th',
-                'group' => 'buttons',
-                'key' => 'cancel',
-                'field' => 'general',
-                'value' => 'ยกเลิก',
-                'translatable_type' => 'general',
-                'translatable_id' => 0,
-            ],
-        ];
-        
-        // เพิ่มข้อมูล
-        foreach ($translations as $translation) {
-            try {
-                // ตรวจสอบว่ามีข้อมูลนี้อยู่แล้วหรือไม่โดยใช้เงื่อนไขที่ถูกต้อง
-                $exists = DB::table('translations')
-                    ->where('company_id', $companyId)
-                    ->where('locale', $translation['locale'])
-                    ->where('group', $translation['group'])
-                    ->where('key', $translation['key'])
-                    ->exists();
-                
-                if (!$exists) {
-                    // สร้างข้อมูลใหม่
-                    $data = array_merge(
-                        ['company_id' => $companyId],
-                        $translation,
-                        ['created_at' => now(), 'updated_at' => now()]
-                    );
-                    
-                    // ใช้ raw insert แทนการใช้ model เพื่อข้าม unique constraint
-                    DB::table('translations')->insert($data);
-                    $this->command->info("เพิ่มคำแปล: {$translation['locale']}.{$translation['group']}.{$translation['key']}");
-                } else {
-                    // อัปเดตข้อมูลที่มีอยู่แล้ว
-                    DB::table('translations')
-                        ->where('company_id', $companyId)
-                        ->where('locale', $translation['locale'])
-                        ->where('group', $translation['group'])
-                        ->where('key', $translation['key'])
-                        ->update([
-                            'value' => $translation['value'],
-                            'field' => $translation['field'],
-                            'translatable_type' => $translation['translatable_type'],
-                            'translatable_id' => $translation['translatable_id'],
-                            'updated_at' => now()
-                        ]);
-                    $this->command->info("อัปเดตคำแปล: {$translation['locale']}.{$translation['group']}.{$translation['key']}");
-                }
-            } catch (\Exception $e) {
-                // เก็บข้อความที่เป็นประโยชน์
-                $errorMessage = $e->getMessage();
-                
-                // แสดงรายละเอียดข้อผิดพลาด
-                $this->command->error("เกิดข้อผิดพลาดในการเพิ่ม/อัปเดตคำแปล {$translation['key']}: {$errorMessage}");
-                
-                // ลองใช้อีกวิธีหนึ่งในการแทรกข้อมูล: ลบข้อมูลเดิมก่อนแล้วค่อยเพิ่มใหม่
-                try {
-                    DB::table('translations')
-                        ->where('company_id', $companyId)
-                        ->where('locale', $translation['locale'])
-                        ->where('group', $translation['group'])
-                        ->where('key', $translation['key'])
-                        ->delete();
-                    
-                    $data = array_merge(
-                        ['company_id' => $companyId],
-                        $translation,
-                        ['created_at' => now(), 'updated_at' => now()]
-                    );
-                    
-                    DB::table('translations')->insert($data);
-                    $this->command->info("เพิ่มคำแปลสำเร็จหลังจากลบข้อมูลเดิม: {$translation['locale']}.{$translation['group']}.{$translation['key']}");
-                } catch (\Exception $e2) {
-                    $this->command->error("ล้มเหลวในการเพิ่มคำแปลแม้หลังจากลบข้อมูลเดิม: {$e2->getMessage()}");
-                }
+        try {
+            $company_id = 1; // บริษัทแรก
+            
+            // สร้าง query แบบไดนามิกที่ใช้ชื่อคอลัมน์ที่ถูกต้อง
+            $columnList = ['company_id', 'locale', $groupColumnName, 'key', 'field', 'value', 'translatable_type', 'translatable_id', 'created_at', 'updated_at'];
+            $valueList = [$company_id, "'$locale'", "'$group'", "'$key'", "'general'", "'$value'", "'general'", 0, "'" . now() . "'", "'" . now() . "'"];
+            
+            // ตรวจสอบการมีอยู่ของคำแปล
+            $existingSql = "SELECT id FROM translations WHERE company_id = ? AND locale = ? AND $groupColumnName = ? AND key = ?";
+            $existing = DB::select($existingSql, [$company_id, $locale, $group, $key]);
+            
+            if (!empty($existing)) {
+                // อัพเดทคำแปลที่มีอยู่แล้ว
+                $updateSql = "UPDATE translations SET value = ?, updated_at = ? WHERE id = ?";
+                DB::update($updateSql, [$value, now(), $existing[0]->id]);
+            } else {
+                // เพิ่มคำแปลใหม่
+                $insertSql = "INSERT INTO translations (" . implode(', ', $columnList) . ") VALUES (" . implode(', ', $valueList) . ")";
+                DB::statement($insertSql);
             }
+            
+            echo "เพิ่มคำแปล: {$locale}.{$group}.{$key}\n";
+        } catch (\Exception $e) {
+            echo "เกิดข้อผิดพลาดในการเพิ่ม/อัปเดตคำแปล {$key}: " . $e->getMessage() . "\n";
         }
     }
 }

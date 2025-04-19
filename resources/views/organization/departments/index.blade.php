@@ -64,12 +64,12 @@
                             </div>
 
                             <div>
-                                <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">สถานะ</label>
-                                <select name="status" id="status"
+                                <label for="is_active" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">สถานะ</label>
+                                <select name="is_active" id="is_active"
                                     class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                     <option value="">-- ทั้งหมด --</option>
-                                    <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>ใช้งาน</option>
-                                    <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>ไม่ใช้งาน</option>
+                                    <option value="1" {{ request('is_active') == '1' ? 'selected' : '' }}>ใช้งาน</option>
+                                    <option value="0" {{ request('is_active') == '0' ? 'selected' : '' }}>ไม่ใช้งาน</option>
                                 </select>
                             </div>
                         </div>

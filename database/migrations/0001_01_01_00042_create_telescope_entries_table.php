@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function getConnection(): ?string
     {
+        // ตรวจสอบว่า Telescope ถูกเปิดใช้งานหรือไม่
+        if (config('telescope.enabled', false) === false) {
+            return 'sqlite'; // กำหนดให้ใช้ connection ปัจจุบัน
+        }
         return config('telescope.storage.database.connection');
     }
 
@@ -19,6 +23,19 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // ตรวจสอบว่า Telescope ต้องการถูกเปิดใช้งานหรือไม่
+        if (config('telescope.enabled', false) === false) {
+            echo "Skipping Telescope migrations (telescope.enabled=false).\n";
+            return;
+        }
+        
+        // ถ้าใช้ SQLite ก็ข้ามไป
+        if (config('database.default') === 'sqlite') {
+            echo "Skipping Telescope migrations for SQLite database.\n";
+            return;
+        }
+
+        // โค้ดเดิมที่สร้างตาราง (จะไม่ทำงานถ้าเข้าเงื่อนไขข้างบน)
         $schema = Schema::connection($this->getConnection());
 
         $schema->create('telescope_entries', function (Blueprint $table) {
@@ -61,6 +78,16 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // ตรวจสอบว่า Telescope ถูกเปิดใช้งานหรือไม่
+        if (config('telescope.enabled', false) === false) {
+            return;
+        }
+        
+        // ถ้าใช้ SQLite ก็ข้ามไป
+        if (config('database.default') === 'sqlite') {
+            return;
+        }
+
         $schema = Schema::connection($this->getConnection());
 
         $schema->dropIfExists('telescope_entries_tags');

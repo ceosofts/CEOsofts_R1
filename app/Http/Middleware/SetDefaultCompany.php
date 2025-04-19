@@ -4,28 +4,26 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use App\Models\Company;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response;
 
 class SetDefaultCompany
 {
     /**
      * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     * @return mixed
      */
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
-        // ตรวจสอบว่ามีการ set ค่า default company_id หรือบังคับกรอง company_id หรือไม่
-        // ตรวจสอบว่ามี logic ที่ set หรือบังคับ session('current_company_id') หรือไม่
-        // ถ้ามี ให้คอมเมนต์หรือลบออก
-        if (!session()->has('current_company_id')) {
-            $firstCompany = Company::first();
-            if ($firstCompany) {
-                session(['current_company_id' => $firstCompany->id]);
-                Log::info('Set default company in middleware', ['company_id' => $firstCompany->id]);
+        if (Auth::check() && !session()->has('current_company_id')) {
+            // ดึงบริษัทแรกของผู้ใช้
+            $user = Auth::user();
+            $company = $user->companies()->first();
+            
+            if ($company) {
+                session(['current_company_id' => $company->id]);
+            } else {
+                // ถ้าไม่มีบริษัท ให้ใช้ค่าเริ่มต้น
+                session(['current_company_id' => 1]);
             }
         }
         

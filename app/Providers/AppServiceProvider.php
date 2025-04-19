@@ -3,9 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Company;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -14,7 +13,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // เพิ่มค่า company_id เริ่มต้นใน container
+        $this->app->singleton('company_id', function ($app) {
+            return session('company_id') ?? config('company.default_id', 1);
+        });
     }
 
     /**
@@ -22,15 +24,21 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // บังคับให้ใช้ SQLite กับ path ที่ถูกต้อง
-        $sqlitePath = database_path('ceosofts_db_R1.sqlite');
-
-        // บันทึกค่าเพื่อ debug
-        Log::info("SQLite path: " . $sqlitePath);
-        Log::info("Current DB connection: " . config('database.default'));
-
-        // กำหนดค่า database connection
-        Config::set('database.default', 'sqlite');
-        Config::set('database.connections.sqlite.database', $sqlitePath);
+        // กำหนด company_id เริ่มต้นถ้าไม่มี
+        $this->app->booted(function () {
+            if (Auth::check() && !session()->has('company_id')) {
+                $user = Auth::user();
+                $isAdmin = $user->hasRole(['superadmin', 'admin']);
+                
+                // ดึงบริษัททั้งหมดที่ผู้ใช้มีสิทธิ์เข้าถึง
+                $companies = $isAdmin ? Company::all() : $user->companies;
+                
+                if ($companies->isNotEmpty()) {
+                    $companyId = $companies->first()->id;
+                    session(['company_id' => $companyId]);
+                    config(['company.id' => $companyId]);
+                }
+            }
+        });
     }
 }

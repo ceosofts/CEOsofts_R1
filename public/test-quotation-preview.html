@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ทดสอบฟังก์ชันแสดงตัวอย่างใบเสนอราคา</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        .hidden { display: none; }
+        #preview-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        button {
+            padding: 8px 16px;
+            background: #4299e1;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>ทดสอบฟังก์ชันแสดงตัวอย่างใบเสนอราคา</h1>
+    
+    <button id="preview-button">ดูตัวอย่าง</button>
+    <button id="print-button">พิมพ์</button>
+    
+    <div id="preview-modal" class="hidden">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                <h2>ตัวอย่างใบเสนอราคา</h2>
+                <button id="close-preview" style="background: #e53e3e;">X</button>
+            </div>
+            
+            <div id="preview-content">
+                <h2 style="text-align: center;">บริษัท ทดสอบ จำกัด</h2>
+                <p style="text-align: center;">123 ถ.ทดสอบ ต.ทดสอบ อ.ทดสอบ จ.ทดสอบ 12345</p>
+                <h3 style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px;">ใบเสนอราคา</h3>
+                
+                <div style="display: flex; justify-content: space-between;">
+                    <div>
+                        <p><strong>ลูกค้า:</strong> บริษัท ลูกค้าทดสอบ จำกัด</p>
+                        <p>123/456 ถ.ลูกค้า</p>
+                        <p>โทร: 02-123-4567</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <p><strong>เลขที่:</strong> QT20250001</p>
+                        <p><strong>วันที่:</strong> 25/04/2025</p>
+                        <p><strong>วันที่หมดอายุ:</strong> 25/05/2025</p>
+                    </div>
+                </div>
+                
+                <table border="1" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                    <thead>
+                        <tr>
+                            <th>ลำดับ</th>
+                            <th>รายการ</th>
+                            <th>จำนวน</th>
+                            <th>ราคา/หน่วย</th>
+                            <th>จำนวนเงิน</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>สินค้าทดสอบ 1</td>
+                            <td style="text-align: right;">10</td>
+                            <td style="text-align: right;">500.00</td>
+                            <td style="text-align: right;">5,000.00</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>สินค้าทดสอบ 2</td>
+                            <td style="text-align: right;">5</td>
+                            <td style="text-align: right;">1,000.00</td>
+                            <td style="text-align: right;">5,000.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div style="margin-top: 20px; width: 300px; margin-left: auto;">
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #ddd; padding: 5px 0;">
+                        <span>ยอดรวมก่อนภาษี</span>
+                        <span>10,000.00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #ddd; padding: 5px 0;">
+                        <span>ภาษีมูลค่าเพิ่ม 7%</span>
+                        <span>700.00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 10px 0; font-weight: bold;">
+                        <span>ยอดรวมสุทธิ</span>
+                        <span>10,700.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/quotation-preview.js"></script>
+</body>
+</html>

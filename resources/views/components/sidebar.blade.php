@@ -112,6 +112,9 @@
                     <a href="{{ route('orders.index') }}" class="{{ request()->routeIs('orders.*') ? 'bg-secondary-900 text-white' : 'text-secondary-300 hover:bg-secondary-700' }} flex items-center px-4 py-2 text-sm rounded-md">
                         ใบสั่งขาย
                     </a>
+                    <a href="{{ route('delivery-orders.index') }}" class="{{ request()->routeIs('delivery-orders.*') ? 'bg-secondary-900 text-white' : 'text-secondary-300 hover:bg-secondary-700' }} flex items-center px-4 py-2 text-sm rounded-md">
+                        ใบส่งสินค้า
+                    </a>
                 </div>
             </div>
         </nav>

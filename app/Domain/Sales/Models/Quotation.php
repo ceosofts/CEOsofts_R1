@@ -17,44 +17,44 @@ class Quotation extends Model
         'company_id',
         'customer_id',
         'quotation_number',
-        'quotation_date',
-        'valid_until',
-        'reference',
+        'issue_date',
+        'expiry_date',
+        'total_amount',
         'status',
-        'currency',
-        'exchange_rate',
-        'discount_type',
+        'notes',
         'discount_amount',
-        'tax_inclusive',
+        'discount_type',
         'tax_rate',
         'tax_amount',
         'subtotal',
-        'total_discount',
-        'total',
-        'notes',
-        'terms',
+        'reference_number',
         'created_by',
         'approved_by',
         'approved_at',
-        'cancelled_by',
-        'cancelled_at',
+        'sales_person_id',
+        'payment_term_id',
+        'shipping_method',
+        'shipping_cost',
+        'currency',
+        'currency_rate',
         'metadata'
     ];
 
     protected $casts = [
-        'quotation_date' => 'date',
-        'valid_until' => 'date',
-        'exchange_rate' => 'float',
-        'discount_amount' => 'float',
-        'tax_inclusive' => 'boolean',
+        'issue_date' => 'date',
+        'expiry_date' => 'date',
         'tax_rate' => 'float',
         'tax_amount' => 'float',
+        'discount_amount' => 'float',
         'subtotal' => 'float',
-        'total_discount' => 'float',
-        'total' => 'float',
+        'total_amount' => 'float',
+        'shipping_cost' => 'float',
+        'currency_rate' => 'float',
         'approved_at' => 'datetime',
-        'cancelled_at' => 'datetime',
-        'metadata' => 'json'
+        'metadata' => 'json',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     public function company()
@@ -114,13 +114,13 @@ class Quotation extends Model
 
     public function scopeExpired($query)
     {
-        return $query->where('valid_until', '<', now())
+        return $query->where('expiry_date', '<', now())
                      ->where('status', 'active');
     }
     
     public function isExpired()
     {
-        return $this->valid_until < now();
+        return $this->expiry_date < now();
     }
 
     public function approve($userId)

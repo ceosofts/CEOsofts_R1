@@ -7,10 +7,10 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use App\Models\Company;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     /**
@@ -59,7 +59,7 @@ class User extends Authenticatable
      */
     public function companies()
     {
-        return $this->belongsToMany(Company::class, 'company_user');
+        return $this->belongsToMany(Company::class);
     }
     
     /**
@@ -75,5 +75,39 @@ class User extends Authenticatable
         
         // ถ้าไม่มีบริษัทในเซสชัน ให้ใช้บริษัทแรก (ถ้ามี)
         return $this->companies->first();
+    }
+
+    /**
+     * ตรวจสอบว่าผู้ใช้มีบทบาทเป็น admin หรือ superadmin
+     *
+     * @return bool
+     */
+    public function isAdministrator()
+    {
+        return $this->hasRole(['superadmin', 'admin']);
+    }
+
+    /**
+     * Get all companies accessible by the user
+     */
+    public function getAccessibleCompanies()
+    {
+        // Admin and superadmin can access all companies
+        if ($this->isAdministrator()) {
+            return Company::all();
+        }
+        
+        // Regular users can only access their associated companies
+        return $this->companies;
+    }
+
+    /**
+     * Check if user has admin roles
+     *
+     * @return bool
+     */
+    public function hasAdminRole()
+    {
+        return $this->hasRole(['admin', 'superadmin']);
     }
 }

@@ -2,43 +2,29 @@
 
 namespace App\Shared\Traits;
 
-use Illuminate\Support\Facades\Auth;
-use App\Models\Company;
-use App\Scopes\CompanyScope;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
+use App\Models\Company;
 
 trait HasCompanyScope
 {
-    /**
-     * Boot the trait.
-     */
+    // ยกเลิกการเพิ่ม global scope โดยสิ้นเชิง
+    // ฟังก์ชันนี้จะไม่ทำอะไร - ปิดการใช้งาน scope
     protected static function bootHasCompanyScope()
     {
-        // เพิ่ม CompanyScope ที่เราเพิ่งสร้าง
-        static::addGlobalScope(new CompanyScope);
-
-        // ตรวจสอบ scope ที่เพิ่มเติมใน query และเพิ่ม method ยกเลิก scope ถ้าจำเป็น
-        static::addGlobalScope('company', function (Builder $builder) {
-            if (Auth::check()) {
-                $companyId = session('selected_company_id', Auth::user()->current_company_id);
-                if ($companyId && $companyId !== 'all') { // เพิ่มการเช็ค 'all'
-                    $builder->where('company_id', $companyId);
-                }
-            }
-        });
+        // ไม่มีการเพิ่ม global scope
     }
 
-    /**
-     * Method สำหรับข้ามการกรอง company_id (ใช้สำหรับดูข้อมูลทั้งหมด)
-     */
+    // คงไว้เพื่อความเข้ากันได้กับโค้ดที่เรียกใช้ method นี้
     public function scopeAllCompanies($query)
     {
-        return $query->withoutGlobalScope('company')->withoutGlobalScope(CompanyScope::class);
+        return $query;
     }
 
-    /**
-     * Get the company that owns the model.
-     */
+    // คงไว้เพื่อความเข้ากันได้กับโค้ดที่เรียกใช้ relationship นี้
     public function company()
     {
         return $this->belongsTo(Company::class);

@@ -4,11 +4,14 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
     /**
      * Run the migration.
+     * รวมการทำงานจากไฟล์:
+     * - 0001_01_01_00037_create_document_sendings_table_if_not_exists.php
      */
     public function up(): void
     {
@@ -85,6 +88,80 @@ return new class extends Migration
                     $table->index('is_sent');
                 }
             });
+        }
+
+        // เพิ่มตรวจสอบความสมบูรณ์ของข้อมูล (จากไฟล์ _if_not_exists)
+        try {
+            // ตรวจสอบการเชื่อมต่อระหว่างเอกสารที่สร้างและการส่งเอกสาร
+            if (Schema::hasTable('document_sendings') && Schema::hasTable('generated_documents')) {
+                // ตรวจสอบความสัมพันธ์ระหว่างตาราง
+                $isSQLite = DB::connection()->getPdo()->getAttribute(\PDO::ATTR_DRIVER_NAME) === 'sqlite';
+
+                // หากมีรายการใน document_sendings ที่ไม่มี generated_document_id ที่ถูกต้อง
+                // ให้ปรับสถานะเป็น 'error' พร้อมระบุข้อผิดพลาด
+                if ($isSQLite) {
+                    DB::update("
+                        UPDATE document_sendings
+                        SET status = 'error',
+                            error = 'Generated document not found'
+                        WHERE generated_document_id NOT IN (SELECT id FROM generated_documents)
+                    ");
+                } else {
+                    DB::table('document_sendings')
+                        ->whereNotIn('generated_document_id', function($query) {
+                            $query->select('id')->from('generated_documents');
+                        })
+                        ->update([
+                            'status' => 'error',
+                            'error' => 'Generated document not found'
+                        ]);
+                }
+
+                // อัปเดตสถานะในตาราง generated_documents ตามข้อมูลใน document_sendings
+                if (
+                    Schema::hasColumn('generated_documents', 'is_sent') &&
+                    Schema::hasColumn('generated_documents', 'sent_at')
+                ) {
+                    if ($isSQLite) {
+                        DB::statement("
+                            UPDATE generated_documents
+                            SET is_sent = 1,
+                                sent_at = (
+                                    SELECT MAX(sent_at)
+                                    FROM document_sendings 
+                                    WHERE document_sendings.generated_document_id = generated_documents.id
+                                    AND document_sendings.status = 'sent'
+                                )
+                            WHERE id IN (
+                                SELECT generated_document_id 
+                                FROM document_sendings
+                                WHERE status = 'sent'
+                            )
+                        ");
+                    } else {
+                        // สำหรับฐานข้อมูลอื่น ๆ ที่ไม่ใช่ SQLite
+                        DB::table('generated_documents')
+                            ->whereIn('id', function($query) {
+                                $query->select('generated_document_id')
+                                    ->from('document_sendings')
+                                    ->where('status', 'sent');
+                            })
+                            ->update([
+                                'is_sent' => true,
+                                'sent_at' => DB::raw("(
+                                    SELECT MAX(sent_at)
+                                    FROM document_sendings
+                                    WHERE document_sendings.generated_document_id = generated_documents.id
+                                    AND document_sendings.status = 'sent'
+                                )")
+                            ]);
+                    }
+                }
+
+                Log::info('อัปเดตความสัมพันธ์ระหว่างเอกสารที่สร้างและการส่งเอกสารเรียบร้อยแล้ว');
+            }
+        } catch (\Exception $e) {
+            Log::error('เกิดข้อผิดพลาดในการอัปเดตความสัมพันธ์ของเอกสาร: ' . $e->getMessage());
         }
     }
 

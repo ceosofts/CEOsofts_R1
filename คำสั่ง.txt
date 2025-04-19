@@ -15,6 +15,12 @@ npm run dev
 npm run watch
 npm run build                                       # Build Production Mode
 php artisan migrate:fresh --seed                    # รีเซ็ตฐานข้อมูลและ Seed ข้อมูลใหม่
+
+# หากพบปัญหา "table orders has no column named delivery_date"
+# 1. ตรวจสอบว่ามีการเพิ่มคอลัมน์ delivery_date ในไฟล์ migrations/0001_01_01_00016_create_orders_table.php แล้ว
+# 2. รันคำสั่งต่อไปนี้เพื่อลบและสร้างฐานข้อมูลใหม่
+php artisan migrate:fresh --seed
+
 php artisan db:seed --class=UserSeeder              # Seed ข้อมูลผู้ใช้ทดสอบ
 
 # ดูรายการ site ทั้งหมดที่ link ไว้กับ Valet
@@ -43,7 +49,7 @@ admin@ceosofts.com / password
 testuser@ceosofts.com / password
 
 # คำสั่งสำหรับแสดงโครงสร้างโปรเจค
-php artisan project:structure --output=project_structure_$(date +%Y_%m_%d).txt
+แ
 
 # URL สำคัญ
 http://127.0.0.1:8000
@@ -263,3 +269,26 @@ php artisan optimize:clear
 
 # ล้าง Cache เฉพาะ Route
 php artisan route:clear
+
+## คำสั่งสำหรับการจัดการใบสั่งขาย (Orders)
+
+# สร้าง Model, Controller, Migration สำหรับ Order
+php artisan make:model Order -mcr
+
+# สร้าง Model, Controller, Migration สำหรับ OrderItem
+php artisan make:model OrderItem -mcr
+
+# ดูข้อมูลใบสั่งขายทั้งหมด
+php artisan tinker
+App\Models\Order::all();
+exit
+
+# นำเข้าข้อมูลใบสั่งขายจากไฟล์ JSON
+php artisan orders:import /path/to/orders_data.json
+
+# ตรวจสอบสถิติข้อมูลใบสั่งขาย
+php artisan tinker
+App\Models\Order::count(); // จำนวนใบสั่งขายทั้งหมด
+App\Models\Order::where('status', 'delivered')->count(); // จำนวนใบสั่งขายที่จัดส่งแล้ว
+App\Models\Order::sum('total_amount'); // ยอดรวมมูลค่าใบสั่งขาย
+exit

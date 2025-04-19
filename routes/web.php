@@ -16,14 +16,20 @@ use App\Http\Controllers\DebugCompanyController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuotationController;
 use App\Http\Controllers\OrderController;
-use App\Http\Controllers\OrganizationStructureController; // เพิ่มบรรทัดนี้
-use App\Http\Controllers\ComingSoonController; // เพิ่มบรรทัดนี้
-use App\Http\Controllers\ExecutiveDashboardController; // เพิ่มบรรทัดนี้
-use App\Http\Controllers\ProductController; // เพิ่มการ import นี้
-use App\Http\Controllers\ProductCategoryController; // เพิ่มการ import นี้
-use App\Http\Controllers\UnitController; // import เพิ่มเติม
-use App\Http\Controllers\StockMovementController; // import เพิ่มเติม
-use App\Http\Controllers\BranchOfficeController; // เพิ่ม import สำหรับ BranchOfficeController
+use App\Http\Controllers\OrganizationStructureController;
+use App\Http\Controllers\ComingSoonController;
+use App\Http\Controllers\ExecutiveDashboardController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductCategoryController;
+use App\Http\Controllers\UnitController;
+use App\Http\Controllers\StockMovementController;
+use App\Http\Controllers\BranchOfficeController;
+use App\Http\Controllers\DeliveryOrderController;
+use App\Http\Controllers\NewExecutiveController;
+use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\SystemCheckController;
+use App\Http\Controllers\TestController;
+use App\Http\Controllers\QuotationApiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -70,8 +76,33 @@ Route::resource('customers', CustomerController::class);
 // เพิ่มเส้นทางสำหรับใบเสนอราคา
 Route::resource('quotations', QuotationController::class);
 
+// เพิ่ม route สำหรับ quotations.get-data (API ดึงข้อมูลใบเสนอราคาแบบ JSON)
+Route::get('/quotations/{quotation}/get-data', [\App\Http\Controllers\QuotationApiController::class, 'getData'])
+    ->name('quotations.get-data')
+    ->middleware(['auth']);
+
 // เพิ่มเส้นทางสำหรับใบสั่งขาย
 Route::resource('orders', OrderController::class);
+
+// เพิ่ม route สำหรับการจัดส่งสินค้า (orders.ship)
+Route::post('/orders/{order}/ship', [OrderController::class, 'ship'])
+    ->name('orders.ship')
+    ->middleware(['auth']);
+
+// เพิ่ม route สำหรับยืนยันใบสั่งขาย (orders.confirm)
+Route::post('/orders/{order}/confirm', [OrderController::class, 'confirm'])
+    ->name('orders.confirm')
+    ->middleware(['auth']);
+
+// เพิ่ม route สำหรับการยกเลิกใบสั่งขาย (orders.cancel)
+Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])
+    ->name('orders.cancel')
+    ->middleware(['auth']);
+
+// เพิ่ม route สำหรับเริ่มดำเนินการใบสั่งขาย (orders.process)
+Route::post('/orders/{order}/process', [OrderController::class, 'process'])
+    ->name('orders.process')
+    ->middleware(['auth']);
 
 // ทดสอบเส้นทางเพื่อ debug
 Route::get('/test-companies', function () {
@@ -212,7 +243,7 @@ Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']
     ->middleware('guest')
     ->name('password.update');
 
-// Organization Routes - ตัดส่วนที่ซ้ำซ้อนออกแล้วเก็บไว้เฉพาะอันนี้
+// Organization Routes
 Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -271,62 +302,52 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/customers/{customer}/purchase-history', [CustomerController::class, 'purchaseHistory'])->name('customers.purchase-history');
     
     // Branch Offices Routes
-    // Note: Need to import BranchOfficeController at the top of the file
-    Route::get('/branch-offices/export', [BranchOfficeController::class, 'export'])
-        ->name('branch-offices.export');
+    Route::get('/branch-offices/export', [BranchOfficeController::class, 'export'])->name('branch-offices.export');
     Route::resource('branch-offices', BranchOfficeController::class);
+    
+    // เพิ่ม routes สำหรับ Delivery Orders
+    Route::resource('delivery-orders', DeliveryOrderController::class);
+    Route::get('api/orders/{id}/products', [DeliveryOrderController::class, 'getOrderProducts'])
+          ->name('api.orders.products');
+    
+    // เพิ่ม route สำหรับดึงรายการบริษัทที่ผู้ใช้มีสิทธิ์เข้าถึง
+    Route::get('/companies/accessible', [CompanyController::class, 'listAccessibleCompanies'])
+        ->name('companies.accessible');
 });
 
-// เส้นทางสำหรับจัดการหมวดหมู่สินค้า
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::resource('product-categories', \App\Http\Controllers\ProductCategoryController::class);
+// เปลี่ยน routes ของ Executive Dashboard ให้ใช้เฉพาะ auth เท่านั้นโดยไม่ต้องใช้ middleware เกี่ยวกับ company
+Route::middleware(['auth'])->group(function () {
+    Route::get('/executive/dashboard', [ExecutiveDashboardController::class, 'index'])->name('executive.dashboard');
+    Route::post('/executive/switch-company', [ExecutiveDashboardController::class, 'switchCompany'])->name('executive.switch-company');
+    Route::post('/company/request-access', [CompanyController::class, 'requestAccess'])->name('company.request-access');
 });
 
-// Executive Dashboard Routes
-Route::middleware(['auth', 'verified'])->prefix('executive')->name('executive.')->group(function () {
-    Route::get('/dashboard', [ExecutiveDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/summary', [ExecutiveDashboardController::class, 'executiveSummary'])->name('summary');
+// เพิ่ม Dashboard แบบใหม่ สำหรับผู้บริหาร
+Route::middleware(['auth'])->group(function () {
+    Route::get('/executive/new-dashboard', [NewExecutiveController::class, 'dashboard'])
+        ->name('executive.new-dashboard');
+    Route::post('/executive/new-switch-company', [NewExecutiveController::class, 'switchCompany'])
+        ->name('executive.new-switch-company');
 });
 
 // API Route สำหรับแผนผังองค์กร
 Route::get('/api/organization/{company}/data', [OrganizationStructureController::class, 'getOrganizationData'])
     ->name('api.organization.data');
 
-// เพิ่ม route สำหรับการทดสอบ
-Route::get('/test/employees', [App\Http\Controllers\TestController::class, 'testEmployees']);
-
-// เพิ่มเส้นทางทดสอบ
+// Debug Routes
 Route::get('/test-employee-view', function() {
     return view('test-employee-view');
 })->name('test.employee.view');
 
-// เพิ่ม Debug Route ไว้ด้านล่าง middleware
 Route::get('/debug/employees', function() {
     return view('debug.employee-status');
 })->name('debug.employees');
 
-// เพิ่ม route สำหรับตรวจสอบระบบ
-Route::get('/system-check', [App\Http\Controllers\SystemCheckController::class, 'checkSystem'])->name('system.check');
-
-// เพิ่ม route สำหรับหน้าฟีเจอร์ที่กำลังพัฒนา
-Route::get('/coming-soon/{feature?}', [App\Http\Controllers\ComingSoonController::class, 'index'])
-    ->name('coming-soon');
+Route::get('/system-check', [SystemCheckController::class, 'checkSystem'])->name('system.check');
 
 // Coming Soon Routes
-Route::get('/coming-soon/{feature}', function($feature) {
-    $featureName = str_replace('-', ' ', $feature);
-    $viewPath = 'coming-soon.' . $feature;
-    
-    // ตรวจสอบว่ามีไฟล์ view นี้หรือไม่
-    if (view()->exists($viewPath)) {
-        return view($viewPath);
-    }
-    
-    // ถ้าไม่มีไฟล์เฉพาะ ให้ใช้ view ทั่วไป
-    return view('coming-soon', ['feature' => $featureName]);
-});
+Route::get('/coming-soon/{feature?}', [ComingSoonController::class, 'index'])->name('coming-soon');
 
-// เพิ่ม route สำหรับตรวจสอบข้อมูลสินค้า
 Route::get('/debug/products', function () {
     $products = \App\Models\Product::all();
     $categories = \App\Models\ProductCategory::all();
@@ -343,3 +364,15 @@ Route::get('/debug/products', function () {
 
 // นำเข้าเส้นทาง Authentication จากไฟล์ auth.php
 require __DIR__ . '/auth.php';
+
+// ส่วนเกี่ยวกับการจัดการบริษัท สำหรับ admin/superadmin
+Route::middleware(['auth', 'verified'])->prefix('admin')->group(function () {
+    Route::get('/companies', [CompanyController::class, 'index'])->name('companies.index');
+    Route::get('/companies/create', [CompanyController::class, 'create'])->name('companies.create');
+    Route::post('/companies', [CompanyController::class, 'store'])->name('companies.store');
+});
+
+// สำหรับ user ปกติในการร้องขอสิทธิ์เข้าถึงบริษัท
+Route::post('/company/request-access', [CompanyController::class, 'requestAccess'])
+    ->name('company.request-access')
+    ->middleware(['auth', 'verified']);

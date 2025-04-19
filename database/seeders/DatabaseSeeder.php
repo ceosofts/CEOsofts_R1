@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
             ProductSeeder::class, // ProductSeeder เรียกใช้หลังจาก UnitSeeder
             StockMovementSeeder::class,
             QuotationSeeder::class,
+            QuotationItemSeeder::class, // เพิ่มบรรทัดนี้
             OrderSeeder::class,
             InvoiceSeeder::class,
             ReceiptSeeder::class,
@@ -42,6 +43,7 @@ class DatabaseSeeder extends Seeder
             TranslationSeeder::class,
             FileAttachmentSeeder::class,
             ActivityLogSeeder::class,
+            DeliveryOrderSeeder::class, // เพิ่มการเรียกใช้ DeliveryOrderSeeder
         ]);
     }
 }

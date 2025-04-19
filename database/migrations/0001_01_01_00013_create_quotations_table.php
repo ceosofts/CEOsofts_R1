@@ -113,6 +113,45 @@ return new class extends Migration
                 Log::error('ไม่สามารถนำข้อมูล quotations กลับคืน: ' . $e->getMessage());
             }
         }
+
+        // สร้างตาราง quotation_items
+        if (!Schema::hasTable('quotation_items')) {
+            Schema::create('quotation_items', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('quotation_id')->constrained()->onDelete('cascade');
+                $table->foreignId('product_id')->nullable()->constrained()->nullOnDelete();
+                $table->string('description');
+                $table->decimal('quantity', 15, 2)->default(0);
+                $table->foreignId('unit_id')->nullable()->constrained()->nullOnDelete();
+                $table->decimal('unit_price', 15, 2)->default(0);
+                $table->decimal('discount_percentage', 5, 2)->default(0);
+                $table->decimal('discount_amount', 15, 2)->default(0);
+                $table->decimal('tax_percentage', 5, 2)->default(0);
+                $table->decimal('tax_amount', 15, 2)->default(0);
+                $table->decimal('subtotal', 15, 2)->default(0);
+                $table->decimal('total', 15, 2)->default(0);
+                $table->json('metadata')->nullable();
+                $table->timestamps();
+                $table->softDeletes(); // เพิ่ม column deleted_at สำหรับ soft delete
+            });
+            Log::info('สร้างตาราง quotation_items เรียบร้อยแล้ว');
+        } else {
+            // ตรวจสอบว่ามี column deleted_at หรือไม่ และเพิ่มถ้าไม่มี
+            if (!Schema::hasColumn('quotation_items', 'deleted_at')) {
+                Schema::table('quotation_items', function (Blueprint $table) {
+                    $table->softDeletes();
+                });
+                Log::info('เพิ่ม column deleted_at ในตาราง quotation_items เรียบร้อยแล้ว');
+            }
+            
+            // ตรวจสอบว่ามี column unit_id หรือไม่ และเพิ่มถ้าไม่มี
+            if (!Schema::hasColumn('quotation_items', 'unit_id')) {
+                Schema::table('quotation_items', function (Blueprint $table) {
+                    $table->foreignId('unit_id')->nullable()->constrained()->nullOnDelete();
+                });
+                Log::info('เพิ่ม column unit_id ในตาราง quotation_items เรียบร้อยแล้ว');
+            }
+        }
     }
 
     /**
@@ -120,6 +159,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('quotation_items');
         Schema::dropIfExists('quotations');
     }
 };
