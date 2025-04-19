@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Auth;
 
                     @auth
                     <!-- รวม Dashboard เป็นเมนูเดียว -->
-                    <a href="{{ route('executive.dashboard') }}" class="inline-flex items-center px-2 py-2 border-b-2 {{ request()->routeIs('dashboard') || request()->routeIs('executive.*') ? 'border-accent-400' : 'border-transparent' }} text-sm font-medium leading-5 text-white hover:text-gray-200 hover:border-accent-300 focus:outline-none focus:text-gray-200 focus:border-accent-400 transition duration-150 ease-in-out">
+                    <a href="{{ route('executive.new-dashboard') }}" class="inline-flex items-center px-2 py-2 border-b-2 {{ request()->routeIs('dashboard') || request()->routeIs('executive.*') ? 'border-accent-400' : 'border-transparent' }} text-sm font-medium leading-5 text-white hover:text-gray-200 hover:border-accent-300 focus:outline-none focus:text-gray-200 focus:border-accent-400 transition duration-150 ease-in-out">
                         DashBoard
                     </a>
 

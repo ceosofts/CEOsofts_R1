@@ -36,14 +36,21 @@ class Kernel extends HttpKernel
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            \App\Http\Middleware\SetDefaultCompany::class,
-            \App\Http\Middleware\LogFormSubmissions::class,
+            // \App\Http\Middleware\SetCompanyContext::class,
         ],
 
         'api' => [
             \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
+        
+        /*
+        'company' => [
+            'auth',
+            'verified',
+            'ensure.company',
+        ],
+        */
     ];
 
     /**
@@ -66,6 +73,7 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'company.default' => \App\Http\Middleware\SetDefaultCompany::class,
+        // 'ensure-company' => \App\Http\Middleware\EnsureCompanyAccess::class,
     ];
 
     /**
@@ -88,5 +96,7 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'company' => \App\Http\Middleware\SetDefaultCompany::class,
+        'ensure.company' => \App\Http\Middleware\EnsureCompanyAccess::class,
+        'ensure-company' => \App\Http\Middleware\EnsureCompanyAccess::class,
     ];
 }

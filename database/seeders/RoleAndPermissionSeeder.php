@@ -103,6 +103,37 @@ class RoleAndPermissionSeeder extends Seeder
             'manage_users',
             'view_users',
         ]);
+
+        // ในส่วนที่สร้าง roles ให้เพิ่มตรวจสอบว่ามีการสร้าง roles ของ admin และ superadmin
+        $roles = [
+            'admin' => 'เข้าถึงได้ทุกฟังก์ชัน',
+            'superadmin' => 'เข้าถึงและจัดการระบบทั้งหมด',
+            'manager' => 'จัดการข้อมูลในขอบเขตที่กำหนด',
+            'employee' => 'เข้าถึงข้อมูลพื้นฐาน',
+            'hr' => 'จัดการข้อมูลบุคลากร',
+            'sales' => 'จัดการข้อมูลการขาย',
+            'finance' => 'จัดการข้อมูลการเงิน',
+        ];
+
+        foreach ($roles as $key => $description) {
+            Role::firstOrCreate(
+                ['name' => $key],
+                ['description' => $description, 'guard_name' => 'web']
+            );
+        }
+
+        // ให้สิทธิ์ superadmin ทั้งหมด
+        $superadminRole = Role::findByName('superadmin');
+        $superadminRole->givePermissionTo(Permission::all());
+
+        // ให้สิทธิ์ admin เกือบทั้งหมด (ยกเว้นบาง system permissions)
+        $adminRole = Role::findByName('admin');
+        $adminPermissions = Permission::whereNotIn('name', [
+            'manage-system-settings',
+            'view-logs',
+            'reset-system'
+        ])->get();
+        $adminRole->givePermissionTo($adminPermissions);
     }
 
     private function createCompanyRoles($companyId)
