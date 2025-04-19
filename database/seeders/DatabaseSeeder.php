@@ -43,6 +43,7 @@ class DatabaseSeeder extends Seeder
             TranslationSeeder::class,
             FileAttachmentSeeder::class,
             ActivityLogSeeder::class,
+            DeliveryOrderSeeder::class, // เพิ่มการเรียกใช้ DeliveryOrderSeeder
         ]);
     }
 }

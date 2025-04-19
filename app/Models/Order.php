@@ -131,6 +131,14 @@ class Order extends Model
         return $this->belongsTo(User::class, 'cancelled_by');
     }
 
+    /**
+     * Get the delivery orders associated with the order.
+     */
+    public function deliveryOrders()
+    {
+        return $this->hasMany(DeliveryOrder::class);
+    }
+
     // Accessor สำหรับสถานะแบบอ่านง่าย
     public function getStatusTextAttribute()
     {

@@ -274,7 +274,7 @@ update 2025-04-17
 ├── project_structure_2025_04_15.txt (28.27 KB)
 ├── project_structure_2025_04_16.txt (28.12 KB)
 ├── project_structure_2025_04_17.txt (30.45 KB)
-├── project_structure_2025_04_18.txt (30.3 KB)
+├── project_structure_2025_04_18.txt (28.56 KB)
 ├── repair-system.sh (2.21 KB)
 ├── runfix.sh (274 B)
 ├── tailwind.config.js (3.36 KB)
@@ -282,10 +282,10 @@ update 2025-04-17
 ├── tinker-commands.php (1.38 KB)
 ├── vite.config.js (2.26 KB)
 ├── vscode-settings.json (352 B)
-├── คำสั่ง.txt (14.46 KB)
+├── คำสั่ง.txt (14.9 KB)
 ├── Note/
 ├── X_Project_Info/
-│   ├── Roadmap.md (45.4 KB)
+│   ├── Roadmap.md (43.62 KB)
 │   ├── product_management_guide.md (6.29 KB)
 │   └── BIN/
 │       ├── Next_Actions.md (3.73 KB)
@@ -323,6 +323,7 @@ update 2025-04-17
 │   │       ├── ClearViewCacheCommand.php (1.89 KB)
 │   │       ├── DebugCompaniesCommand.php (3.4 KB)
 │   │       ├── DebugQuotations.php (3.98 KB)
+│   │       ├── DebugUserCompanyRelations.php (4.02 KB)
 │   │       ├── FixDuplicateEmployeeFields.php (3.86 KB)
 │   │       ├── FixDuplicateEmployeeRecords.php (6.91 KB)
 │   │       ├── FixDuplicateImportsCommand.php (4.39 KB)
@@ -428,7 +429,7 @@ update 2025-04-17
 │   │   ├── Employee.php (9.54 KB)
 │   │   ├── LeaveType.php (2.19 KB)
 │   │   ├── Order.php (4.76 KB)
-│   │   ├── OrderItem.php (1.28 KB)
+│   │   ├── OrderItem.php (1.34 KB)
 │   │   ├── Position.php (1.47 KB)
 │   │   ├── Product.php (2.27 KB)
 │   │   ├── ProductCategory.php (2.19 KB)
@@ -495,7 +496,7 @@ update 2025-04-17
 │   └── telescope.php (6.67 KB)
 ├── database/
 │   ├── ceosofts_db_R1 (0 B)
-│   ├── ceosofts_db_R1.sqlite (1.42 MB)
+│   ├── ceosofts_db_R1.sqlite (1.38 MB)
 │   ├── check-companies.php (2.17 KB)
 │   ├── check-db-connection.php (3.58 KB)
 │   ├── create-database.sh (928 B)
@@ -528,15 +529,15 @@ update 2025-04-17
 │   │   ├── 0001_01_01_00013_create_quotations_table.php (8.53 KB)
 │   │   ├── 0001_01_01_00014_create_employee_work_shifts_table.php (5.54 KB)
 │   │   ├── 0001_01_01_00015_create_document_templates_table.php (6.63 KB)
-│   │   ├── 0001_01_01_00016_create_orders_table.php (6.3 KB)
+│   │   ├── 0001_01_01_00016_create_orders_table.php (14.8 KB)
 │   │   ├── 0001_01_01_00017_create_generated_documents_table.php (5.09 KB)
 │   │   ├── 0001_01_01_00018_create_invoices_table.php (1.57 KB)
-│   │   ├── 0001_01_01_00019_create_products_table.php (12.57 KB)
+│   │   ├── 0001_01_01_00019_create_products_table.php (16.75 KB)
 │   │   ├── 0001_01_01_00020_create_receipts_table.php (6.26 KB)
 │   │   ├── 0001_01_01_00021_create_permissions_tables.php (7.94 KB)
 │   │   ├── 0001_01_01_00022_create_roles_tables.php (2.49 KB)
 │   │   ├── 0001_01_01_00023_create_stock_movements_table.php (9.33 KB)
-│   │   ├── 0001_01_01_00024_create_translations_table.php (1.89 KB)
+│   │   ├── 0001_01_01_00024_create_translations_table.php (13.73 KB)
 │   │   ├── 0001_01_01_00025_create_units_table.php (4.96 KB)
 │   │   ├── 0001_01_01_00026_create_document_sendings_table.php (5.72 KB)
 │   │   ├── 0001_01_01_00027_create_file_attachments_table.php (5.27 KB)
@@ -545,12 +546,11 @@ update 2025-04-17
 │   │   ├── 0001_01_01_00030_create_taxes_table.php (1.52 KB)
 │   │   ├── 0001_01_01_00031_create_scheduled_events_table.php (7.86 KB)
 │   │   ├── 0001_01_01_00032_update_company_user_table.php (3.86 KB)
-│   │   ├── 0001_01_01_00033_add_missing_columns_to_product_categories_table.php (1.54 KB)
 │   │   ├── 0001_01_01_00034_modify_orders_quotation_constraint.php (5.11 KB)
 │   │   ├── 0001_01_01_00037_create_document_sendings_table_if_not_exists.php (1.8 KB)
-│   │   ├── 0001_01_01_00038_create_translations_table_clean.php (3.83 KB)
 │   │   ├── 0001_01_01_00040_create_missing_tables.php (1.68 KB)
-│   │   └── 0001_01_01_00042_create_telescope_entries_table.php (3.34 KB)
+│   │   ├── 0001_01_01_00042_create_telescope_entries_table.php (3.34 KB)
+│   │   └── {timestamp}_fix_product_categories_columns.php (7.08 KB)
 │   ├── seeders/
 │   │   ├── ActivityLogSeeder.php (2.16 KB)
 │   │   ├── AdminUserSeeder.php (1.69 KB)
@@ -569,11 +569,11 @@ update 2025-04-17
 │   │   ├── InvoiceSeeder.php (3.59 KB)
 │   │   ├── JobSeeder.php (1.85 KB)
 │   │   ├── LeaveTypeSeeder.php (3.43 KB)
-│   │   ├── OrderSeeder.php (12.51 KB)
+│   │   ├── OrderSeeder.php (7.06 KB)
 │   │   ├── OrganizationSeeder.php (0 B)
 │   │   ├── PermissionSeeder.php (444 B)
 │   │   ├── PositionSeeder.php (4.28 KB)
-│   │   ├── ProductCategorySeeder.php (4.33 KB)
+│   │   ├── ProductCategorySeeder.php (5.45 KB)
 │   │   ├── ProductSeeder.php (21.69 KB)
 │   │   ├── QuotationItemSeeder.php (5.3 KB)
 │   │   ├── QuotationSeeder.php (9.76 KB)
@@ -588,7 +588,7 @@ update 2025-04-17
 │   │   ├── SystemSettingSeeder.php (3.65 KB)
 │   │   ├── TaxSeeder.php (1.96 KB)
 │   │   ├── TestCompanySeeder.php (5.8 KB)
-│   │   ├── TranslationSeeder.php (7.29 KB)
+│   │   ├── TranslationSeeder.php (5.44 KB)
 │   │   ├── UnitSeeder.php (5.85 KB)
 │   │   ├── UserSeeder.php (1.08 KB)
 │   │   └── WorkShiftSeeder.php (6.1 KB)
@@ -614,6 +614,7 @@ update 2025-04-17
 │   ├── check-db.php (1.86 KB)
 │   ├── db-check.php (2.84 KB)
 │   ├── favicon.ico (0 B)
+│   ├── hot (17 B)
 │   ├── index.php (543 B)
 │   ├── robots.txt (24 B)
 │   ├── test-quotation-preview.html (5.28 KB)
@@ -728,6 +729,11 @@ update 2025-04-17
 │       ├── debug/
 │       │   ├── company-debug.blade.php (2.46 KB)
 │       │   └── employee-status.blade.php (5.87 KB)
+│       ├── delivery-notes/
+│       ├── delivery-orders/
+│       ├── delivery_orders/
+│       ├── documentation/
+│       │   └── ai-explanation.blade.php (13.65 KB)
 │       ├── errors/
 │       │   └── company-required.blade.php (0 B)
 │       ├── executive/
@@ -807,13 +813,14 @@ update 2025-04-17
 │   │   ├── cache/
 │   │   │   └── data/
 │   │   ├── sessions/
-│   │   │   └── SD8WYZWQu743u70OplbgNi5BuVhEXraQgUi086Jj (321 B)
+│   │   │   ├── 4lVZdWFuGIsLJMqIPfs8PfFW27fuBiCv7fDYDoTl (351 B)
+│   │   │   └── mblRxVKfvVrDnANvBZiou2hfpA0YNYGWpNqr6BiZ (314 B)
 │   │   ├── testing/
 │   │   └── views/
 │   └── logs/
 │       ├── encryption-debug.log (704 B)
 │       ├── encryption-error.log (0 B)
-│       ├── laravel.log (484.58 KB)
+│       ├── laravel.log (6.27 MB)
 │       ├── laravel.log.backup-2025-04-17-093427 (24.84 MB)
 │       └── laravel.log.backup-2025-04-18-114410 (10.66 MB)
 ├── tests/
