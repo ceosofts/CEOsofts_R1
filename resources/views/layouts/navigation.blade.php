@@ -48,7 +48,7 @@ use Illuminate\Support\Facades\Auth;
                                 <x-dropdown-link :href="route('orders.index')">
                                     ใบสั่งขาย
                                 </x-dropdown-link>
-                                <x-dropdown-link href="{{ route('coming-soon', ['feature' => 'delivery-notes']) }}">
+                                <x-dropdown-link :href="route('delivery-orders.index')">
                                     ใบส่งของ
                                 </x-dropdown-link>
                                 <x-dropdown-link href="{{ route('coming-soon', ['feature' => 'invoices']) }}">

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\HasCompanyScope;
+use Illuminate\Support\Facades\Auth;
 
 class DeliveryOrder extends Model
 {
@@ -44,6 +45,21 @@ class DeliveryOrder extends Model
         'approved_at' => 'datetime',
         'metadata' => 'json',
     ];
+
+    // บูทโมเดลเพื่อกำหนดค่า company_id อัตโนมัติ
+    protected static function boot()
+    {
+        parent::boot();
+        
+        static::creating(function ($model) {
+            if (!$model->company_id && Auth::check()) {
+                $model->company_id = session('current_company_id') ?? Auth::user()->company_id ?? 1;
+            }
+            if (!$model->created_by && Auth::check()) {
+                $model->created_by = Auth::id();
+            }
+        });
+    }
 
     /**
      * Get the order associated with the delivery order.
@@ -91,5 +107,39 @@ class DeliveryOrder extends Model
     public function company()
     {
         return $this->belongsTo(Company::class);
+    }
+
+    /**
+     * Get status text with proper formatting for display.
+     */
+    public function getStatusTextAttribute()
+    {
+        $statuses = [
+            'pending' => 'รอดำเนินการ',
+            'processing' => 'กำลังดำเนินการ',
+            'shipped' => 'จัดส่งแล้ว',
+            'delivered' => 'ส่งมอบแล้ว',
+            'partial_delivered' => 'ส่งมอบบางส่วน',
+            'cancelled' => 'ยกเลิก',
+        ];
+        
+        return $statuses[$this->delivery_status] ?? $this->delivery_status;
+    }
+    
+    /**
+     * Get status color for display.
+     */
+    public function getStatusColorAttribute()
+    {
+        $colors = [
+            'pending' => 'gray',
+            'processing' => 'blue',
+            'shipped' => 'purple',
+            'delivered' => 'green',
+            'partial_delivered' => 'yellow',
+            'cancelled' => 'red',
+        ];
+        
+        return $colors[$this->delivery_status] ?? 'gray';
     }
 }

@@ -24,6 +24,7 @@ use App\Http\Controllers\ProductCategoryController; // เพิ่มการ 
 use App\Http\Controllers\UnitController; // import เพิ่มเติม
 use App\Http\Controllers\StockMovementController; // import เพิ่มเติม
 use App\Http\Controllers\BranchOfficeController; // เพิ่ม import สำหรับ BranchOfficeController
+use App\Http\Controllers\DeliveryOrderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -300,6 +301,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/branch-offices/export', [BranchOfficeController::class, 'export'])
         ->name('branch-offices.export');
     Route::resource('branch-offices', BranchOfficeController::class);
+    
+    // เพิ่ม routes สำหรับ Delivery Orders
+    // เปลี่ยนจาก setcompany เป็น auth ซึ่งใช้งานได้แน่นอน
+    Route::middleware(['auth'])->group(function () {
+        Route::resource('delivery-orders', DeliveryOrderController::class);
+        Route::get('api/orders/{id}/products', [DeliveryOrderController::class, 'getOrderProducts'])
+              ->name('api.orders.products');
+    });
 });
 
 // เส้นทางสำหรับจัดการหมวดหมู่สินค้า

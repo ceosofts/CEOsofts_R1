@@ -59,4 +59,18 @@ class DeliveryOrderItem extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    /**
+     * Get status text with proper formatting for display.
+     */
+    public function getStatusTextAttribute()
+    {
+        $statuses = [
+            'pending' => 'รอดำเนินการ',
+            'delivered' => 'ส่งมอบแล้ว',
+            'partial' => 'ส่งมอบบางส่วน',
+        ];
+        
+        return $statuses[$this->status] ?? $this->status;
+    }
 }
