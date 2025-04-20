@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Carbon\Carbon;
 
 class Customer extends Model
 {
@@ -216,5 +217,34 @@ class Customer extends Model
         }
         
         return $this->social_media ?: [];
+    }
+
+    /**
+     * สร้างรหัสลูกค้าอัตโนมัติตามรูปแบบ CUSyyyyMMxxxx
+     *
+     * @return string
+     */
+    public static function generateCustomerCode(): string
+    {
+        $prefix = 'CUS';
+        $now = Carbon::now();
+        $year = $now->format('Y');
+        $month = $now->format('m');
+        
+        // ดึงลูกค้าล่าสุดในเดือนและปีนี้
+        $latestCustomer = self::where('code', 'like', $prefix . $year . $month . '%')
+            ->orderBy('code', 'desc')
+            ->first();
+            
+        // หากไม่มีลูกค้าในเดือนนี้ เริ่มที่ 0001
+        if (!$latestCustomer) {
+            $nextNumber = '0001';
+        } else {
+            // ตัดเอาเฉพาะตัวเลข 4 ตัวสุดท้าย และเพิ่มอีก 1
+            $lastNumber = (int) substr($latestCustomer->code, -4);
+            $nextNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+        }
+        
+        return $prefix . $year . $month . $nextNumber;
     }
 }

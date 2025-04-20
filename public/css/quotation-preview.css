@@ -12,7 +12,7 @@
     justify-content: center;
 }
 
-#preview-modal.hidden {
+#preview-modal.modal-hidden {
     display: none;
 }
 
@@ -20,10 +20,10 @@
     background-color: white;
     border-radius: 0.5rem;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-    padding: 1.5rem;
+    padding: 3rem 4rem; /* เพิ่มขอบด้านข้างจาก 5rem เป็น 3rem 4rem (บน/ล่าง 3rem, ซ้าย/ขวา 4rem) */
     width: 100%;
     max-width: 80rem;
-    max-height: 83.333333%;
+    max-height: 90vh; /* เพิ่มความสูงสูงสุดจาก 83.333333% เป็น 90vh */
     overflow-y: auto;
 }
 
@@ -33,6 +33,7 @@
     color: black !important;
     font-family: 'Sarabun', sans-serif;
     line-height: 1.6;
+    padding: 20px 40px; /* เพิ่ม padding เพื่อขยายขอบด้านข้าง */
 }
 
 #preview-content * {
@@ -117,6 +118,33 @@
     width: 38%;
     text-align: right;
     padding-right: 5px;
+}
+
+/* ปรับปรุงสำหรับส่วนข้อมูลชุดบน */
+.grid-cols-2 {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.grid-cols-2 > div {
+    width: 48%; /* ปรับให้แคบลงเล็กน้อยเพื่อให้พอดีกับตาราง */
+    box-sizing: border-box;
+}
+
+.grid-cols-2 > div.text-right {
+    text-align: right;
+    padding-right: 0; /* ลบ padding ด้านขวาออก */
+}
+
+/* ปรับระยะห่างของตารางให้สอดคล้องกับข้อความ */
+table {
+    width: 100%;
+    margin: 20px 0;
+    border-collapse: collapse;
+    box-sizing: border-box;
 }
 
 /* สไตล์สำหรับส่วนลงนาม */

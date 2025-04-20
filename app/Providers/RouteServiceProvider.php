@@ -40,6 +40,11 @@ class RouteServiceProvider extends ServiceProvider
             // โหลด Domain Routes
             $this->mapDomainRoutes();
         });
+
+        // ล้าง route cache ในโหมด local เพื่อให้การเปลี่ยนแปลง routes มีผลทันที
+        if (app()->environment('local')) {
+            $this->clearRouteCache();
+        }
     }
 
     /**
@@ -67,6 +72,23 @@ class RouteServiceProvider extends ServiceProvider
                 Log::debug("Successfully loaded route file: {$file}");
             } catch (\Throwable $e) {
                 Log::error("Error loading route file {$file}: " . $e->getMessage());
+            }
+        }
+    }
+
+    /**
+     * ล้าง route cache
+     */
+    protected function clearRouteCache(): void
+    {
+        // ล้าง route cache เฉพาะเมื่อไม่ได้รันคำสั่งผ่าน Artisan
+        if (!app()->runningInConsole()) {
+            try {
+                if (file_exists(app()->getCachedRoutesPath())) {
+                    @unlink(app()->getCachedRoutesPath());
+                }
+            } catch (\Exception $e) {
+                // ไม่ต้องทำอะไร จับ exception เพื่อไม่ให้เกิด error
             }
         }
     }

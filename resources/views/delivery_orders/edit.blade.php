@@ -50,15 +50,37 @@
                             <div>
                                 <p class="text-sm text-gray-600">สถานะใบสั่งขาย</p>
                                 <p>
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                        @if($deliveryOrder->order->status == 'confirmed') bg-green-100 text-green-800
-                                        @elseif($deliveryOrder->order->status == 'processing') bg-blue-100 text-blue-800
-                                        @elseif($deliveryOrder->order->status == 'delivered') bg-purple-100 text-purple-800
-                                        @elseif($deliveryOrder->order->status == 'shipped') bg-indigo-100 text-indigo-800
-                                        @elseif($deliveryOrder->order->status == 'partial_delivered') bg-yellow-100 text-yellow-800
-                                        @elseif($deliveryOrder->order->status == 'cancelled') bg-red-100 text-red-800
-                                        @else bg-gray-100 text-gray-800 @endif">
-                                        {{ ucfirst($deliveryOrder->order->status) }}
+                                    @php
+                                        // กำหนด status classes เพื่อแก้ปัญหา CSS conflict
+                                        $statusClasses = [
+                                            'confirmed' => 'bg-emerald-100 text-emerald-800',
+                                            'processing' => 'bg-blue-500 text-white',
+                                            'delivered' => 'bg-teal-100 text-teal-800',
+                                            'shipped' => 'bg-indigo-500 text-white',
+                                            'partial_delivered' => 'bg-amber-200 text-amber-900',
+                                            'cancelled' => 'bg-slate-100 text-slate-800',
+                                            'pending' => 'bg-amber-100 text-amber-800',
+                                            'draft' => 'bg-gray-300 text-gray-700',
+                                        ];
+                                        
+                                        // ใช้ status ปัจจุบันหรือค่าเริ่มต้น
+                                        $currentStatus = $deliveryOrder->order->status ?? 'pending';
+                                        $statusClass = $statusClasses[$currentStatus] ?? $statusClasses['pending'];
+                                        
+                                        $statusMap = [
+                                            'confirmed' => 'ยืนยันแล้ว',
+                                            'processing' => 'กำลังดำเนินการ',
+                                            'delivered' => 'ส่งมอบแล้ว',
+                                            'shipped' => 'จัดส่งแล้ว',
+                                            'partial_delivered' => 'ส่งมอบบางส่วน',
+                                            'cancelled' => 'ยกเลิก',
+                                            'pending' => 'รอดำเนินการ',
+                                            'draft' => 'ร่าง'
+                                        ];
+                                        $statusText = $statusMap[$currentStatus] ?? ucfirst($currentStatus);
+                                    @endphp
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusClass }}">
+                                        {{ $statusText }}
                                     </span>
                                 </p>
                             </div>
@@ -303,15 +325,17 @@
                             @enderror
                         </div>
 
-                        <!-- ผู้อนุมัติ -->
+                        <!-- ผู้อนุมัติ - แก้เป็นใช้ผู้ใช้งานปัจจุบัน -->
                         <div class="mb-6">
                             <x-input-label for="approved_by" :value="__('ผู้อนุมัติ')" />
-                            <select id="approved_by" name="approved_by" class="w-full md:w-1/3 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
-                                <option value="">-- เลือกผู้อนุมัติ --</option>
-                                @foreach($users as $user)
-                                    <option value="{{ $user->id }}" {{ old('approved_by', $deliveryOrder->approved_by) == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
-                                @endforeach
-                            </select>
+                            <div class="w-full md:w-1/3 px-3 py-2 border border-gray-300 rounded-md bg-gray-50">
+                                <input type="hidden" name="approved_by" value="{{ auth()->id() }}">
+                                {{ auth()->user()->name }}
+                                @if($deliveryOrder->approved_by && $deliveryOrder->approved_by != auth()->id())
+                                    <p class="text-xs text-amber-600 mt-1">เดิม: {{ $users->where('id', $deliveryOrder->approved_by)->first()->name ?? 'ไม่ระบุ' }}</p>
+                                @endif
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">ใช้ผู้ใช้งานปัจจุบันเป็นผู้อนุมัติโดยอัตโนมัติ</p>
                             @error('approved_by')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror

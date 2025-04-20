@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 use App\Traits\HasCompanyScope;
+use Carbon\Carbon;
 
 class Order extends Model
 {
@@ -26,7 +27,7 @@ class Order extends Model
         'status', 
         'metadata', 
         'subtotal',
-        'discount_type', 
+        'discount_type', // เพิ่มฟิลด์นี้
         'discount_amount', 
         'tax_rate', 
         'tax_amount', 
@@ -191,5 +192,45 @@ class Order extends Model
     public function scopeConfirmed($query)
     {
         return $query->where('status', 'confirmed');
+    }
+
+    /**
+     * สร้างเลขที่ใบสั่งขายอัตโนมัติในรูปแบบ SO{YYYY}{MM}{NNNN}
+     * 
+     * @param int|null $companyId รหัสบริษัท
+     * @param string|null $date วันที่ต้องการสร้างเลขที่ (Y-m-d format)
+     * @return string
+     */
+    public static function generateOrderNumber(?int $companyId = null, ?string $date = null): string
+    {
+        if (!$companyId) {
+            $companyId = session('company_id', 1);
+        }
+        
+        $now = $date ? Carbon::parse($date) : Carbon::now();
+        $year = $now->format('Y');
+        $month = $now->format('m');
+        
+        // ดึงเลขที่ล่าสุดของเดือนและปีที่กำหนด
+        $latestOrder = self::query()
+            ->where('company_id', $companyId)
+            ->where('order_number', 'like', "SO{$year}{$month}%")
+            ->orderByRaw('LENGTH(order_number) DESC')
+            ->orderBy('order_number', 'desc')
+            ->first();
+        
+        if ($latestOrder) {
+            // ถ้ามีเลขที่ใบสั่งขายในเดือนนี้แล้ว จะดึงตัวเลขที่ต่อจาก SO{YYYY}{MM} และเพิ่มขึ้น 1
+            $lastNumber = (int) substr($latestOrder->order_number, 8);
+            $nextNumber = $lastNumber + 1;
+        } else {
+            // ถ้าไม่มีเลขที่ใบสั่งขายในเดือนนี้ จะเริ่มที่ 0001
+            $nextNumber = 1;
+        }
+        
+        // สร้างเลขที่ใบสั่งขายรูปแบบ SO{YYYY}{MM}{NNNN}
+        $orderNumber = 'SO' . $year . $month . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+        
+        return $orderNumber;
     }
 }

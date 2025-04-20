@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\HasCompanyScope;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class DeliveryOrder extends Model
 {
@@ -23,6 +24,7 @@ class DeliveryOrder extends Model
         'customer_id',
         'delivery_number',
         'delivery_date',
+        'expected_delivery_date',
         'delivery_status',
         'shipping_address',
         'shipping_contact',
@@ -42,6 +44,7 @@ class DeliveryOrder extends Model
      */
     protected $casts = [
         'delivery_date' => 'date',
+        'expected_delivery_date' => 'date',
         'approved_at' => 'datetime',
         'metadata' => 'json',
     ];
@@ -59,6 +62,44 @@ class DeliveryOrder extends Model
                 $model->created_by = Auth::id();
             }
         });
+    }
+
+    /**
+     * สร้างเลขที่ใบส่งสินค้าอัตโนมัติในรูปแบบ DO+ปี+เดือน+running number 4 หลัก
+     * ตัวอย่าง: DO2025040001
+     */
+    public static function generateDeliveryNumber()
+    {
+        $prefix = 'DO';
+        $currentDate = Carbon::now();
+        $year = $currentDate->format('Y');
+        $month = $currentDate->format('m');
+        
+        // หาเลขที่ใบส่งสินค้าล่าสุดของเดือนนี้
+        $latestDeliveryOrder = self::where('delivery_number', 'like', $prefix . $year . $month . '%')
+            ->orderBy('delivery_number', 'desc')
+            ->first();
+            
+        // ถ้ามีเลขที่ใบส่งสินค้าของเดือนนี้อยู่แล้ว ให้เพิ่มเลขลำดับต่อไป
+        if ($latestDeliveryOrder) {
+            $lastNumber = (int) substr($latestDeliveryOrder->delivery_number, -4);
+            $newNumber = $lastNumber + 1;
+        } else {
+            // ถ้ายังไม่มีเลขที่ใบส่งสินค้าของเดือนนี้ ให้เริ่มต้นที่ 1
+            $newNumber = 1;
+        }
+        
+        // สร้างเลขที่ใบส่งสินค้าใหม่
+        $formattedNumber = str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+        return $prefix . $year . $month . $formattedNumber;
+    }
+
+    /**
+     * ตรวจสอบว่าเลขที่ใบส่งสินค้ามีอยู่ในระบบแล้วหรือไม่
+     */
+    public static function isDeliveryNumberExists($deliveryNumber)
+    {
+        return self::where('delivery_number', $deliveryNumber)->exists();
     }
 
     /**

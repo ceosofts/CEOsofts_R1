@@ -94,8 +94,17 @@
                             <h3 class="text-lg font-semibold">รายการลูกค้า</h3>
                             <div class="flex items-center">
                                 <span class="text-sm text-gray-600 dark:text-gray-400 mr-2">เรียงตาม:</span>
+                                <!-- เพิ่มตัวเลือกเรียงตามรหัสลูกค้า -->
+                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'code', 'direction' => 'asc']) }}"
+                                    class="{{ request('sort') == 'code' && request('direction') == 'asc' ? 'text-blue-600 font-medium' : 'text-gray-600' }} text-sm mx-1">
+                                    รหัส ↑
+                                </a>
+                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'code', 'direction' => 'desc']) }}"
+                                    class="{{ (!request()->has('sort') && !request()->has('direction')) || (request('sort') == 'code' && request('direction') == 'desc') ? 'text-blue-600 font-medium' : 'text-gray-600' }} text-sm mx-1">
+                                    รหัส ↓
+                                </a>
                                 <a href="{{ request()->fullUrlWithQuery(['sort' => 'id', 'direction' => 'asc']) }}"
-                                    class="{{ (!request()->has('sort') && !request()->has('direction')) || (request('sort') == 'id' && request('direction') == 'asc') ? 'text-blue-600 font-medium' : 'text-gray-600' }} text-sm mx-1">
+                                    class="{{ request('sort') == 'id' && request('direction') == 'asc' ? 'text-blue-600 font-medium' : 'text-gray-600' }} text-sm mx-1">
                                     ID ↑
                                 </a>
                                 <a href="{{ request()->fullUrlWithQuery(['sort' => 'id', 'direction' => 'desc']) }}"

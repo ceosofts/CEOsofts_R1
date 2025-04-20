@@ -72,7 +72,7 @@
                                     </div>
                                     
                                     <!-- Modal สำหรับส่งคำขอเข้าถึงบริษัท -->
-                                    <div id="accessRequestModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+                                    <div id="accessRequestModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-75 items-center justify-center z-50">
                                         <div class="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
                                             <h3 class="text-lg font-medium mb-4">ส่งคำขอสิทธิ์เข้าถึงบริษัท</h3>
                                             <form id="accessRequestForm" action="{{ route('company.request-access') }}" method="POST">
@@ -101,17 +101,22 @@
                                             const closeModalBtn = document.getElementById('closeModalBtn');
                                             
                                             requestAccessBtn.addEventListener('click', function() {
+                                                // แก้ไขการสลับคลาส - ลบ hidden และเพิ่ม flex เมื่อแสดง modal
                                                 accessRequestModal.classList.remove('hidden');
+                                                accessRequestModal.classList.add('flex');
                                             });
                                             
                                             closeModalBtn.addEventListener('click', function() {
+                                                // แก้ไขการสลับคลาส - เพิ่ม hidden และลบ flex เมื่อซ่อน modal
                                                 accessRequestModal.classList.add('hidden');
+                                                accessRequestModal.classList.remove('flex');
                                             });
                                             
                                             // ปิด modal เมื่อคลิกภายนอก
                                             accessRequestModal.addEventListener('click', function(e) {
                                                 if (e.target === accessRequestModal) {
                                                     accessRequestModal.classList.add('hidden');
+                                                    accessRequestModal.classList.remove('flex');
                                                 }
                                             });
                                         });

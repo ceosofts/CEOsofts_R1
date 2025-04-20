@@ -58,12 +58,15 @@ class DeliveryOrderSeeder extends Seeder
                     continue;
                 }
 
-                // สร้างเลขที่เอกสารใบส่งสินค้า
-                $deliveryNumber = 'DN' . date('Y') . str_pad(rand(1000, 9999), 4, '0', STR_PAD_LEFT);
+                // สร้างเลขที่เอกสารใบส่งสินค้าตามรูปแบบใหม่ DO2025040001
+                $currentDate = Carbon::now();
+                $year = $currentDate->format('Y');
+                $month = $currentDate->format('m');
+                $number = str_pad($index + 1, 4, '0', STR_PAD_LEFT); // เริ่มที่ 0001
+                $deliveryNumber = 'DO' . $year . $month . $number;
                 
-                // สุ่มเลือกผู้ใช้ที่เป็นผู้สร้างและอนุมัติ
+                // สุ่มเลือกผู้ใช้ที่เป็นผู้สร้าง
                 $createdBy = $users->random()->id;
-                $approvedBy = rand(0, 1) ? $users->random()->id : null; // บางใบอาจยังไม่ได้รับการอนุมัติ
                 
                 // สุ่มวันที่ส่งสินค้า (อยู่ในช่วง 1-7 วันหลังจากวันที่สร้างใบสั่งขาย)
                 $orderDate = $order->order_date ?? now()->format('Y-m-d');
@@ -73,11 +76,10 @@ class DeliveryOrderSeeder extends Seeder
                 $statuses = ['pending', 'delivered', 'partial_delivered'];
                 $deliveryStatus = $statuses[array_rand($statuses)];
                 
-                // กำหนดค่า shipping_contact ที่ไม่เป็น null
-                $shippingContact = $customer->contact_name ?? $customer->name ?? 'ติดต่อแผนกขาย';
+                // กำหนดค่า shipping_address ที่ไม่เป็น null
                 $shippingAddress = $order->shipping_address ?? $customer->address ?? 'ที่อยู่ตามเอกสาร';
                 
-                // สร้างข้อมูลใบส่งสินค้า
+                // สร้างข้อมูลใบส่งสินค้า - ลบ shipping_contact ออกเพราะไม่มีในตาราง
                 $deliveryOrderId = DB::table('delivery_orders')->insertGetId([
                     'company_id' => $order->company_id,
                     'order_id' => $order->id,
@@ -86,18 +88,10 @@ class DeliveryOrderSeeder extends Seeder
                     'delivery_date' => $deliveryDate,
                     'delivery_status' => $deliveryStatus,
                     'shipping_address' => $shippingAddress,
-                    'shipping_contact' => $shippingContact,
                     'shipping_method' => ['ขนส่งบริษัท', 'ไปรษณีย์ไทย', 'Kerry Express', 'Flash Express'][rand(0, 3)],
                     'tracking_number' => 'TRK' . str_pad(rand(100000, 999999), 6, '0', STR_PAD_LEFT),
                     'notes' => rand(0, 1) ? 'ส่งในเวลาทำการ 9:00-17:00 น.' : null,
                     'created_by' => $createdBy,
-                    'approved_by' => $approvedBy,
-                    'approved_at' => $approvedBy ? now() : null,
-                    'metadata' => json_encode([
-                        'source' => 'seeder',
-                        'related_order_number' => $order->order_number ?? "ORDER-{$order->id}",
-                        'timestamp' => now()->timestamp
-                    ]),
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);

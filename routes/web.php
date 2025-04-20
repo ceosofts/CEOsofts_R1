@@ -81,6 +81,16 @@ Route::get('/quotations/{quotation}/get-data', [\App\Http\Controllers\QuotationA
     ->name('quotations.get-data')
     ->middleware(['auth']);
 
+Route::get('/quotations/{quotation}/pdf', [App\Http\Controllers\QuotationController::class, 'viewAsPdf'])->name('quotations.pdf');
+
+// เพิ่ม route สำหรับการอนุมัติและปฏิเสธใบเสนอราคา
+Route::post('/quotations/{quotation}/approve', [App\Http\Controllers\QuotationController::class, 'approve'])
+    ->name('quotations.approve')
+    ->middleware(['auth']);
+Route::post('/quotations/{quotation}/reject', [App\Http\Controllers\QuotationController::class, 'reject'])
+    ->name('quotations.reject')
+    ->middleware(['auth']);
+
 // เพิ่มเส้นทางสำหรับใบสั่งขาย
 Route::resource('orders', OrderController::class);
 
@@ -307,12 +317,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // เพิ่ม routes สำหรับ Delivery Orders
     Route::resource('delivery-orders', DeliveryOrderController::class);
-    Route::get('api/orders/{id}/products', [DeliveryOrderController::class, 'getOrderProducts'])
+    Route::get('api/orders/{id}/products', [OrderController::class, 'getOrderProducts'])
           ->name('api.orders.products');
     
     // เพิ่ม route สำหรับดึงรายการบริษัทที่ผู้ใช้มีสิทธิ์เข้าถึง
     Route::get('/companies/accessible', [CompanyController::class, 'listAccessibleCompanies'])
         ->name('companies.accessible');
+    
+    // เพิ่ม route แบบเจาะจงสำหรับ API เรียกข้อมูลใบสั่งขาย (โดยเอาไว้ด้านบนสุดเพื่อป้องกันการ conflict)
+    Route::get('/api/order-products/{id}', [App\Http\Controllers\OrderController::class, 'getOrderProducts'])
+        ->name('api.orders.products');
 });
 
 // เปลี่ยน routes ของ Executive Dashboard ให้ใช้เฉพาะ auth เท่านั้นโดยไม่ต้องใช้ middleware เกี่ยวกับ company

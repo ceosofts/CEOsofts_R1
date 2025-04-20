@@ -99,98 +99,80 @@ class DeliveryOrderController extends Controller
      */
     public function store(Request $request)
     {
+        // Validate request
         $validated = $request->validate([
             'order_id' => 'required|exists:orders,id',
-            'delivery_number' => 'required|string|unique:delivery_orders,delivery_number',
             'delivery_date' => 'required|date',
+            'expected_delivery_date' => 'nullable|date',
             'delivery_status' => 'required|string',
             'shipping_address' => 'required|string',
-            'shipping_contact' => 'required|string',
-            'shipping_method' => 'nullable|string',
+            'shipping_method' => 'required|string',
             'tracking_number' => 'nullable|string',
             'notes' => 'nullable|string',
-            'product_id' => 'array',
-            'description' => 'array',
-            'quantity' => 'array',
-            'unit' => 'array',
-            'status' => 'array',
-            'item_notes' => 'array',
+            'product_ids' => 'required|array',
+            'product_ids.*' => 'exists:products,id',
+            'quantities' => 'required|array',
+            'quantities.*' => 'numeric|min:1',
         ]);
 
         try {
             DB::beginTransaction();
-            
-            $order = Order::findOrFail($request->input('order_id'));
-            
+
+            // Get order and customer details
+            $order = Order::findOrFail($request->order_id);
+            $customerId = $order->customer_id;
+            $companyId = $order->company_id;
+
+            // Generate delivery number using the new format
+            $deliveryNumber = DeliveryOrder::generateDeliveryNumber();
+
+            // Create delivery order
             $deliveryOrder = DeliveryOrder::create([
-                'company_id' => $order->company_id,
-                'order_id' => $order->id,
-                'customer_id' => $order->customer_id,
-                'delivery_number' => $request->input('delivery_number'),
-                'delivery_date' => $request->input('delivery_date'),
-                'delivery_status' => $request->input('delivery_status'),
-                'shipping_address' => $request->input('shipping_address'),
-                'shipping_contact' => $request->input('shipping_contact'),
-                'shipping_method' => $request->input('shipping_method'),
-                'tracking_number' => $request->input('tracking_number'),
-                'notes' => $request->input('notes'),
+                'company_id' => $companyId,
+                'order_id' => $request->order_id,
+                'customer_id' => $customerId,
+                'delivery_number' => $deliveryNumber,
+                'delivery_date' => $request->delivery_date,
+                'expected_delivery_date' => $request->expected_delivery_date,
+                'delivery_status' => $request->delivery_status,
+                'shipping_address' => $request->shipping_address,
+                'shipping_method' => $request->shipping_method,
+                'tracking_number' => $request->tracking_number,
+                'notes' => $request->notes,
                 'created_by' => Auth::id(),
-                'approved_by' => $request->input('approved_by'),
-                'approved_at' => $request->filled('approved_by') ? now() : null,
-                'metadata' => [
-                    'source' => 'web_form',
-                    'timestamp' => now()->timestamp
-                ],
             ]);
-            
-            // สร้างรายการสินค้า
-            if ($request->has('product_id')) {
-                for ($i = 0; $i < count($request->input('product_id')); $i++) {
-                    if ($request->input('product_id')[$i]) {
-                        DeliveryOrderItem::create([
-                            'delivery_order_id' => $deliveryOrder->id,
-                            'order_item_id' => $request->input('order_item_id')[$i] ?? null,
-                            'product_id' => $request->input('product_id')[$i],
-                            'description' => $request->input('description')[$i],
-                            'quantity' => $request->input('quantity')[$i],
-                            'unit' => $request->input('unit')[$i],
-                            'status' => $request->input('status')[$i] ?? 'pending',
-                            'notes' => $request->input('item_notes')[$i] ?? null,
-                            'metadata' => [
-                                'source' => 'web_form',
-                                'timestamp' => now()->timestamp
-                            ],
-                        ]);
-                    }
+
+            // Create delivery order items
+            $productIds = $request->product_ids;
+            $quantities = $request->quantities;
+
+            for ($i = 0; $i < count($productIds); $i++) {
+                if (isset($productIds[$i]) && isset($quantities[$i]) && $quantities[$i] > 0) {
+                    $product = Product::findOrFail($productIds[$i]);
+                    
+                    DeliveryOrderItem::create([
+                        'delivery_order_id' => $deliveryOrder->id,
+                        'product_id' => $productIds[$i],
+                        'quantity' => $quantities[$i],
+                        'unit_price' => $product->selling_price,
+                    ]);
                 }
             }
-            
-            // อัพเดทสถานะใบสั่งขาย
-            if ($deliveryOrder->delivery_status === 'delivered') {
-                $order->update([
-                    'status' => 'delivered', 
-                    'delivery_date' => $deliveryOrder->delivery_date,
-                    'delivered_at' => now(),
-                    'delivered_by' => Auth::id()
-                ]);
-            } elseif ($deliveryOrder->delivery_status === 'partial_delivered') {
-                $order->update(['status' => 'partial_delivered']);
-            } else if ($deliveryOrder->delivery_status === 'shipped') {
-                $order->update([
-                    'status' => 'shipped',
-                    'shipped_at' => now(),
-                    'shipped_by' => Auth::id()
-                ]);
+
+            // Update order status if needed
+            if ($request->delivery_status == 'shipped' || $request->delivery_status == 'delivered') {
+                $order->update(['status' => 'processing']);
             }
-            
+
             DB::commit();
-            
+
             return redirect()->route('delivery-orders.show', $deliveryOrder)
-                ->with('success', 'สร้างใบส่งสินค้าเลขที่ ' . $deliveryOrder->delivery_number . ' สำเร็จ');
-                
+                ->with('success', "ใบส่งสินค้าเลขที่ $deliveryNumber ถูกสร้างเรียบร้อยแล้ว");
+
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withInput()->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+            return back()->withInput()
+                ->with('error', 'เกิดข้อผิดพลาดในการสร้างใบส่งสินค้า: ' . $e->getMessage());
         }
     }
 

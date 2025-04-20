@@ -83,21 +83,25 @@ class QuotationSeeder extends Seeder
 
         $this->command->info("กำลังสร้างใบเสนอราคาสำหรับบริษัท: {$company->name}");
 
-        foreach ($customers as $index => $customer) {
-            // สร้าง microtime เพื่อให้มั่นใจว่าเลขที่ไม่ซ้ำกัน
-            $timestamp = now()->format('YmdHis');
-            $randomSuffix1 = str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
-            $randomSuffix2 = str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
+        // สร้างตัวแปรที่จำเป็นสำหรับการสร้างเลขที่เอกสาร
+        $timestamp = date('YmdHis');
+        $randomSuffix1 = rand(100, 999);
+        $randomSuffix2 = rand(100, 999);
+        $year = date('Y');
+        $month = date('m');
 
-            // สร้างใบเสนอราคา #1 (draft)
+        foreach ($customers as $index => $customer) {
             try {
-                // แยกเป็นขั้นตอนเพื่อหาจุดที่ error
+                // สร้างเลขที่เอกสารตามรูปแบบใหม่
+                $seqNumber = str_pad($index + 1, 4, '0', STR_PAD_LEFT);
+                $quotationNumber = "QT{$year}{$month}{$seqNumber}";
+                
                 $quotationData = [
                     'company_id' => $company->id,
                     'customer_id' => $customer->id,
-                    'quotation_number' => 'QT' . date('Ym') . $randomSuffix1 . $index,
-                    'issue_date' => now(),
-                    'expiry_date' => now()->addDays(30),
+                    'quotation_number' => $quotationNumber,
+                    'issue_date' => now()->format('Y-m-d'),
+                    'expiry_date' => now()->addDays(30)->format('Y-m-d'),
                     'status' => 'draft',
                     'currency' => 'THB',
                     'discount_type' => 'fixed',
@@ -141,11 +145,15 @@ class QuotationSeeder extends Seeder
 
             // สร้างใบเสนอราคา #2 (approved)
             try {
+                // สร้างเลขที่ใบเสนอราคาสำหรับใบที่ 2
+                $seqNumber = str_pad($index + 1 + count($customers), 4, '0', STR_PAD_LEFT);
+                $approvedQuotationNumber = "QT{$year}{$month}{$seqNumber}";
+                
                 // แยกเป็นขั้นตอนเพื่อหาจุดที่ error
                 $quotationData = [
                     'company_id' => $company->id,
                     'customer_id' => $customer->id,
-                    'quotation_number' => 'QT' . date('Ym') . $randomSuffix2 . $index,
+                    'quotation_number' => $approvedQuotationNumber,
                     'issue_date' => now()->subDays(15),
                     'expiry_date' => now()->addDays(15),
                     'status' => 'approved',

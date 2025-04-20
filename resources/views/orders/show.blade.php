@@ -12,6 +12,23 @@
                     กลับไปรายการ
                 </a>
                 
+                <!-- ปุ่มดูตัวอย่าง -->
+                <button id="preview-button" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="-ml-1 mr-2 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    ดูตัวอย่าง
+                </button>
+                
+                <!-- ปุ่มพิมพ์ -->
+                <button id="print-button" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="-ml-1 mr-2 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    </svg>
+                    พิมพ์
+                </button>
+                
                 @if(!in_array($order->status, ['shipped', 'delivered', 'cancelled']))
                     <a href="{{ route('orders.edit', $order) }}" class="inline-flex items-center px-4 py-2 bg-yellow-500 border border-transparent rounded-md font-semibold text-xs text-white tracking-widest hover:bg-yellow-600">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -398,7 +415,7 @@
     </div>
 
     <!-- Modal จัดส่งสินค้า -->
-    <div id="shipModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div id="shipModal" class="{{ in_array($order->status, ['confirmed', 'processing']) ? 'hidden' : 'hidden' }} items-center justify-between">
         <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
             <h3 class="text-lg font-bold mb-4">จัดส่งสินค้า</h3>
             
@@ -428,7 +445,7 @@
     </div>
 
     <!-- Modal ยกเลิกใบสั่งขาย -->
-    <div id="cancelModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div id="cancelModal" class="{{ !in_array($order->status, ['shipped', 'delivered', 'cancelled']) ? 'hidden' : 'hidden' }} items-center justify-between">
         <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
             <h3 class="text-lg font-bold mb-4">ยกเลิกใบสั่งขาย</h3>
             
@@ -452,8 +469,145 @@
         </div>
     </div>
 
+    <!-- Modal สำหรับดูตัวอย่างใบสั่งขาย -->
+    <div id="preview-modal" class="modal-hidden fixed inset-0 z-50 overflow-auto bg-black bg-opacity-50">
+        <div class="modal-content bg-white rounded-lg shadow-xl mx-auto my-8 p-6 max-w-5xl w-11/12">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">ตัวอย่างก่อนพิมพ์</h3>
+                <button type="button" id="close-preview" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div id="preview-content" class="print-section bg-white text-black p-8">
+                <!-- ข้อมูลบริษัท -->
+                <div class="text-center mb-6">
+                    <h1 class="text-xl font-bold">{{ $order->company->name ?? 'บริษัท ซีอีโอซอฟต์ จำกัด' }}</h1>
+                    <p>{{ $order->company->address ?? '123 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110' }}</p>
+                    <p>โทร: {{ $order->company->phone ?? '02-123-4567' }}, อีเมล: {{ $order->company->email ?? 'info@ceosofts.com' }}</p>
+                </div>
+
+                <!-- หัวข้อเอกสาร -->
+                <div class="border-b-2 border-gray-800 mb-6">
+                    <h2 class="text-center text-2xl font-bold">ใบสั่งขาย</h2>
+                </div>
+
+                <!-- ข้อมูลลูกค้าและเลขที่เอกสาร -->
+                <div class="grid-cols-2 mb-6">
+                    <div>
+                        <p><strong>ลูกค้า:</strong> {{ $order->customer->name }}</p>
+                        <p>{{ $order->customer->address }}</p>
+                        <p>โทร: {{ $order->customer->phone }}</p>
+                        <p>อีเมล: {{ $order->customer->email }}</p>
+                    </div>
+                    <div class="text-right">
+                        <p><strong>เลขที่:</strong> {{ $order->order_number }}</p>
+                        <p><strong>วันที่:</strong> {{ $order->order_date->format('d/m/Y') }}</p>
+                        <p><strong>วันที่จัดส่ง:</strong> {{ $order->delivery_date ? $order->delivery_date->format('d/m/Y') : '-' }}</p>
+                        <p><strong>อ้างอิง:</strong> {{ $order->customer_po_number ?: '-' }}</p>
+                    </div>
+                </div>
+
+                <!-- รายการสินค้า -->
+                <table class="min-w-full border border-gray-300 mb-6">
+                    <thead>
+                        <tr class="bg-gray-200">
+                            <th class="py-2 px-4 border text-left">ลำดับ</th>
+                            <th class="py-2 px-4 border text-left">รายการ</th>
+                            <th class="py-2 px-4 border text-right">จำนวน</th>
+                            <th class="py-2 px-4 border text-right">ราคาต่อหน่วย</th>
+                            <th class="py-2 px-4 border text-right">ส่วนลด</th>
+                            <th class="py-2 px-4 border text-right">จำนวนเงิน</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($order->items as $index => $item)
+                        <tr>
+                            <td class="py-2 px-4 border">{{ $index + 1 }}</td>
+                            <td class="py-2 px-4 border">{{ $item->description ?? $item->product->name }}</td>
+                            <td class="py-2 px-4 border text-right">{{ number_format($item->quantity, 2) }} {{ $item->unit->name ?? '' }}</td>
+                            <td class="py-2 px-4 border text-right">{{ number_format($item->unit_price, 2) }}</td>
+                            <td class="py-2 px-4 border text-right">
+                                @if(isset($item->discount_percentage) && $item->discount_percentage > 0)
+                                    {{ number_format($item->discount_percentage, 2) }}% 
+                                @else
+                                    -
+                                @endif
+                            </td>
+                            <td class="py-2 px-4 border text-right">{{ number_format($item->total, 2) }}</td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="6" class="py-2 px-4 border text-center">ไม่มีรายการสินค้า</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+
+                <!-- สรุปยอดรวม -->
+                <div class="flex justify-end mb-6">
+                    <div class="w-1/3">
+                        <div class="flex justify-between py-2 border-b">
+                            <span>ยอดรวมก่อนภาษี</span>
+                            <span>{{ number_format($order->subtotal, 2) }}</span>
+                        </div>
+                        @if($order->discount_amount > 0)
+                        <div class="flex justify-between py-2 border-b">
+                            <span>ส่วนลด
+                                @if($order->discount_type == 'percentage')
+                                ({{ $order->discount_amount }}%)
+                                @endif
+                            </span>
+                            <span>{{ number_format($order->discount_amount, 2) }}</span>
+                        </div>
+                        @endif
+                        @if($order->tax_amount > 0)
+                        <div class="flex justify-between py-2 border-b">
+                            <span>ภาษีมูลค่าเพิ่ม ({{ $order->tax_rate }}%)</span>
+                            <span>{{ number_format($order->tax_amount, 2) }}</span>
+                        </div>
+                        @endif
+                        <div class="flex justify-between py-3 font-bold">
+                            <span>ยอดรวมทั้งสิ้น</span>
+                            <span>{{ number_format($order->total_amount, 2) }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- หมายเหตุ -->
+                @if($order->notes)
+                <div class="mb-6">
+                    <h4 class="font-semibold mb-2">หมายเหตุ</h4>
+                    <p class="p-3 border rounded">{{ $order->notes }}</p>
+                </div>
+                @endif
+
+                <!-- ส่วนลงนาม -->
+                <div class="grid grid-cols-2 gap-6 mt-12">
+                    <div class="text-center">
+                        <div class="border-t border-gray-400 pt-2 mt-12 inline-block w-48">
+                            <p>ผู้สั่งซื้อ</p>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <div class="border-t border-gray-400 pt-2 mt-12 inline-block w-48">
+                            <p>ผู้มีอำนาจลงนาม</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- เรียกใช้ไฟล์ CSS สำหรับการแสดงตัวอย่างก่อนพิมพ์ -->
+    <link rel="stylesheet" href="{{ asset('css/quotation-preview.css') }}">
+
+    <!-- เรียกใช้ไฟล์ JavaScript สำหรับการแสดงตัวอย่างและพิมพ์ -->
+    <script src="{{ asset('js/quotation-preview.js') }}"></script>
+
     <script>
-        // Modal จัดส่งสินค้า
+        // ฟังก์ชันสำหรับ Modal จัดส่งและยกเลิกใบสั่งขาย
         function showShipModal() {
             document.getElementById('shipModal').classList.remove('hidden');
         }
@@ -462,7 +616,6 @@
             document.getElementById('shipModal').classList.add('hidden');
         }
         
-        // Modal ยกเลิกใบสั่งขาย
         function showCancelModal() {
             document.getElementById('cancelModal').classList.remove('hidden');
         }
@@ -471,11 +624,175 @@
             document.getElementById('cancelModal').classList.add('hidden');
         }
         
-        // ยืนยันการลบใบสั่งขาย
         function confirmDelete() {
             if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบใบสั่งขายนี้?')) {
                 document.getElementById('delete-form').submit();
             }
         }
+
+        // กรณีที่ไฟล์ JS ภายนอกไม่ทำงาน ใช้โค้ดนี้แทน
+        document.addEventListener('DOMContentLoaded', function() {
+            const previewModal = document.getElementById('preview-modal');
+            
+            // ปุ่มดูตัวอย่าง
+            document.getElementById('preview-button').addEventListener('click', function() {
+                previewModal.classList.remove('modal-hidden');
+                previewModal.classList.add('flex');
+            });
+            
+            // ปุ่มปิดตัวอย่าง
+            document.getElementById('close-preview').addEventListener('click', function() {
+                previewModal.classList.add('modal-hidden');
+                previewModal.classList.remove('flex');
+            });
+            
+            // ปิด modal เมื่อคลิกนอกพื้นที่
+            previewModal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.add('modal-hidden');
+                    this.classList.remove('flex');
+                }
+            });
+            
+            // Escape key สำหรับปิด modal
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && !previewModal.classList.contains('modal-hidden')) {
+                    previewModal.classList.add('modal-hidden');
+                    previewModal.classList.remove('flex');
+                }
+            });
+            
+            // ปุ่มพิมพ์
+            document.getElementById('print-button').addEventListener('click', function() {
+                const printWindow = window.open('', '_blank');
+                const printContent = document.getElementById('preview-content').cloneNode(true);
+                
+                printWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>พิมพ์ใบสั่งขาย</title>
+                        <meta charset="utf-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
+                        <style>
+                            @page {
+                                size: A4;
+                                margin: 10mm;
+                            }
+                            body {
+                                font-family: 'Sarabun', sans-serif;
+                                margin: 0;
+                                padding: 0;
+                                font-size: 10pt;
+                                line-height: 1.3;
+                            }
+                            .container {
+                                max-width: 190mm;
+                                margin: 0 auto;
+                                padding: 0;
+                            }
+                            .grid-cols-2 {
+                                display: flex;
+                                justify-content: space-between;
+                                width: 100%;
+                                margin-bottom: 15px;
+                            }
+                            .grid-cols-2 > div {
+                                width: 48%;
+                            }
+                            .text-right {
+                                text-align: right;
+                            }
+                            .text-center {
+                                text-align: center;
+                            }
+                            .font-bold {
+                                font-weight: bold;
+                            }
+                            .mb-6 {
+                                margin-bottom: 15px;
+                            }
+                            .border-b-2 {
+                                border-bottom: 2px solid #000;
+                                margin-bottom: 15px;
+                                padding-bottom: 5px;
+                            }
+                            table {
+                                width: 100%;
+                                border-collapse: collapse;
+                            }
+                            th, td {
+                                border: 1px solid #ddd;
+                                padding: 4px 6px;
+                                font-size: 9pt;
+                            }
+                            th {
+                                background-color: #f0f0f0;
+                                font-weight: bold;
+                            }
+                            .mt-12 {
+                                margin-top: 30px;
+                            }
+                            .w-48 {
+                                width: 48mm;
+                            }
+                            .border-t {
+                                border-top: 1px solid #ddd;
+                            }
+                            .pt-2 {
+                                padding-top: 5px;
+                            }
+                            .inline-block {
+                                display: inline-block;
+                            }
+                            h1 { font-size: 14pt; margin-bottom: 5px; }
+                            h2 { font-size: 12pt; margin-bottom: 5px; }
+                            p { margin: 1px 0; font-size: 9pt; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container">
+                            ${printContent.outerHTML}
+                        </div>
+                        <script>
+                            window.onload = function() {
+                                window.print();
+                                setTimeout(function() { window.close(); }, 500);
+                            };
+                        </script>
+                    </body>
+                    </html>
+                `);
+                
+                printWindow.document.close();
+            });
+        });
     </script>
+
+    <style>
+        /* สไตล์สำหรับ Modal Preview กรณีที่ไฟล์ CSS ภายนอกไม่ทำงาน */
+        #preview-modal.modal-hidden {
+            display: none;
+        }
+        
+        #preview-content {
+            width: 100%;
+            max-width: 210mm;
+            margin: 0 auto;
+            font-family: 'Sarabun', sans-serif;
+        }
+        
+        .grid-cols-2 {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin: 0 0 20px 0;
+            padding: 0;
+        }
+        
+        .grid-cols-2 > div {
+            width: 48%;
+        }
+    </style>
 </x-app-layout>

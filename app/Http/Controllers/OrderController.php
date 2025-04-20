@@ -64,7 +64,7 @@ class OrderController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
         
-        $orderNumber = $this->generateOrderNumber();
+        $orderNumber = Order::generateOrderNumber(session('company_id'));
         
         return view('orders.create', compact('customers', 'products', 'orderNumber', 'quotation', 'approvedQuotations'));
     }
@@ -610,5 +610,88 @@ class OrderController extends Controller
         }
         
         return $prefix . $number;
+    }
+
+    /**
+     * ดึงข้อมูลสินค้าในใบสั่งขายสำหรับใช้ในการสร้างใบส่งสินค้า
+     *
+     * @param int $id รหัสใบสั่งขาย
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getOrderProducts($id)
+    {
+        \Log::info('API getOrderProducts ถูกเรียกใช้', [
+            'id' => $id,
+            'type' => gettype($id)
+        ]);
+
+        try {
+            // ตรวจสอบว่า ID มีค่าหรือไม่
+            if (!$id) {
+                return response()->json(['error' => 'Order ID is required'], 400);
+            }
+
+            // ใช้ findOrFail เพื่อให้เกิด 404 ถ้าไม่พบ
+            $order = Order::findOrFail($id);
+            
+            // โหลดข้อมูลที่เกี่ยวข้อง
+            $order->load(['items.product', 'customer']);
+            
+            \Log::info('พบใบสั่งขาย', [
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'customer' => $order->customer ? $order->customer->name : 'ไม่มีข้อมูลลูกค้า',
+                'items_count' => $order->items->count()
+            ]);
+
+            // ตรวจสอบว่ามีข้อมูลลูกค้าหรือไม่
+            if (!$order->customer) {
+                return response()->json(['error' => 'ไม่พบข้อมูลลูกค้าในใบสั่งขาย'], 400);
+            }
+
+            // สร้างข้อมูลสำหรับส่งกลับ
+            $response = [
+                'order' => [
+                    'id' => $order->id,
+                    'order_number' => $order->order_number,
+                    'status' => $order->status,
+                    'customer_id' => $order->customer_id,
+                    'shipping_address' => $order->shipping_address ?? '',
+                    'shipping_method' => $order->shipping_method ?? '',
+                    'delivery_date' => $order->delivery_date ? $order->delivery_date->format('Y-m-d') : null,
+                    'notes' => $order->notes ?? '',
+                ],
+                'customer' => $order->customer,
+                'items' => $order->items->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'product_id' => $item->product_id,
+                        'description' => $item->description ?? '',
+                        'quantity' => $item->quantity,
+                        'unit_price' => $item->unit_price,
+                        'unit_name' => optional($item->product)->unit ?? '',
+                        'product' => $item->product ? [
+                            'id' => $item->product->id,
+                            'name' => $item->product->name,
+                            'sku' => $item->product->sku ?? '',
+                        ] : null,
+                    ];
+                }),
+            ];
+
+            return response()->json($response);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            \Log::error('ไม่พบใบสั่งขาย ID: ' . $id);
+            return response()->json(['error' => 'ไม่พบใบสั่งขาย'], 404);
+        } catch (\Exception $e) {
+            \Log::error('เกิดข้อผิดพลาดในการดึงข้อมูลใบสั่งขาย', [
+                'id' => $id,
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['error' => 'เกิดข้อผิดพลาดในการดึงข้อมูล: ' . $e->getMessage()], 500);
+        }
     }
 }

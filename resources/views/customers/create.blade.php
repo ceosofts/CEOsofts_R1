@@ -56,8 +56,20 @@
                                 <div class="grid grid-cols-1 gap-4">
                                     <div>
                                         <label for="code" class="block text-sm font-medium text-gray-700 dark:text-gray-300">รหัสลูกค้า</label>
-                                        <input type="text" name="code" id="code" value="{{ old('code') }}" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md">
-                                        <p class="mt-1 text-xs text-gray-500">หากไม่ระบุ ระบบจะสร้างรหัสให้อัตโนมัติ</p>
+                                        <div class="mt-1 relative rounded-md shadow-sm">
+                                            <input type="text" name="code" id="code" value="{{ old('code') }}" 
+                                                class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                                                placeholder="CUSyyyyMMxxxx">
+                                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                                <svg class="h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        <p class="mt-1 text-xs text-blue-600 dark:text-blue-400">
+                                            <span class="font-medium">ระบบจะสร้างรหัสให้อัตโนมัติ</span> ในรูปแบบ CUS + ปี(4หลัก) + เดือน(2หลัก) + running number (4หลัก)
+                                            <br>ตัวอย่าง: CUS2025040001
+                                        </p>
                                     </div>
                                     <div>
                                         <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">ชื่อลูกค้า <span class="text-red-600">*</span></label>
