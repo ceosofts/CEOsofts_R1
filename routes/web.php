@@ -81,6 +81,16 @@ Route::get('/quotations/{quotation}/get-data', [\App\Http\Controllers\QuotationA
     ->name('quotations.get-data')
     ->middleware(['auth']);
 
+Route::get('/quotations/{quotation}/pdf', [App\Http\Controllers\QuotationController::class, 'viewAsPdf'])->name('quotations.pdf');
+
+// เพิ่ม route สำหรับการอนุมัติและปฏิเสธใบเสนอราคา
+Route::post('/quotations/{quotation}/approve', [App\Http\Controllers\QuotationController::class, 'approve'])
+    ->name('quotations.approve')
+    ->middleware(['auth']);
+Route::post('/quotations/{quotation}/reject', [App\Http\Controllers\QuotationController::class, 'reject'])
+    ->name('quotations.reject')
+    ->middleware(['auth']);
+
 // เพิ่มเส้นทางสำหรับใบสั่งขาย
 Route::resource('orders', OrderController::class);
 

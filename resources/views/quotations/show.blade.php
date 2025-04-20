@@ -280,7 +280,7 @@
                 </div>
 
                 <!-- ข้อมูลใบเสนอราคาและลูกค้า -->
-                <div class="grid grid-cols-2 gap-6 mb-6">
+                <div class="grid-cols-2 mb-6">
                     <div>
                         <p><strong>ลูกค้า:</strong> {{ $quotation->customer->name }}</p>
                         <p>{{ $quotation->customer->address }}</p>
@@ -404,6 +404,38 @@
         
         #preview-modal.modal-hidden {
             display: none;
+        }
+        
+        /* เพิ่ม CSS สำหรับ modal-content เพื่อปรับความกว้าง */
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 1000px; /* เพิ่มความกว้างสูงสุด */
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        /* ปรับขอบกระดาษในส่วน preview content */
+        #preview-content {
+            padding: 25px 40px; /* เพิ่มความกว้างของขอบด้านข้าง */
+            background-color: white;
+            margin: 0 auto;
+        }
+        
+        /* ปรับปรุงส่วนแสดงข้อมูลฝั่งขวา */
+        .grid-cols-2 {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            padding: 0;
+            margin: 0 0 20px 0;
+        }
+        
+        .grid-cols-2 > div {
+            width: 48%;
         }
         
         /* เพิ่ม CSS สำหรับ modal การปฏิเสธ */

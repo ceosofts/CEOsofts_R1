@@ -50,6 +50,8 @@
             display: flex;
             justify-content: space-between;
             margin-bottom: 30px;
+            width: 100%;
+            padding: 0;
         }
         
         .left {
@@ -59,6 +61,7 @@
         .right {
             width: 48%;
             text-align: right;
+            padding-right: 0; /* ลบ padding ขวา */
         }
         
         /* แก้ไขตารางให้เหมือนกับ "ดูตัวอย่าง" */
@@ -66,6 +69,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;
+            box-sizing: border-box;
         }
         
         th, td {

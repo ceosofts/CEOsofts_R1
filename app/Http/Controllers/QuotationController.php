@@ -441,100 +441,45 @@ class QuotationController extends Controller
     /**
      * อนุมัติใบเสนอราคา
      *
-     * @param int $id
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  \App\Models\Quotation  $quotation
+     * @return \Illuminate\Http\Response
      */
-    public function approve($id)
+    public function approve(Quotation $quotation)
     {
-        try {
-            // ค้นหาใบเสนอราคา
-            $quotation = Quotation::findOrFail($id);
-            
-            // ตรวจสอบว่าสามารถอนุมัติได้หรือไม่ (ต้องเป็นสถานะ draft)
-            if ($quotation->status !== 'draft') {
-                return redirect()->route('quotations.show', $quotation)
-                    ->with('error', 'ไม่สามารถอนุมัติใบเสนอราคาที่ไม่ได้อยู่ในสถานะร่างได้');
-            }
-            
-            // อนุมัติใบเสนอราคา
-            $quotation->status = 'approved';
-            $quotation->approved_by = Auth::id();
-            $quotation->approved_at = now();
-            $quotation->save();
-            
-            // บันทึกล็อก
-            Log::info("อนุมัติใบเสนอราคาเลขที่ {$quotation->quotation_number} สำเร็จแล้ว", [
-                'quotation_id' => $quotation->id,
-                'approved_by' => Auth::id(),
-                'approved_at' => now()
-            ]);
-            
-            return redirect()->route('quotations.show', $quotation)
-                ->with('success', 'อนุมัติใบเสนอราคาเลขที่ ' . $quotation->quotation_number . ' เรียบร้อยแล้ว');
-        } catch (\Exception $e) {
-            Log::error("เกิดข้อผิดพลาดในการอนุมัติใบเสนอราคา: " . $e->getMessage(), [
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ]);
-            
-            return redirect()->back()
-                ->with('error', 'เกิดข้อผิดพลาดในการอนุมัติใบเสนอราคา: ' . $e->getMessage());
+        // ตรวจสอบว่าใบเสนอราคาอยู่ในสถานะ draft หรือไม่
+        if ($quotation->status !== 'draft') {
+            return redirect()->route('quotations.show', $quotation)->with('error', 'ไม่สามารถอนุมัติใบเสนอราคานี้ได้ เนื่องจากไม่อยู่ในสถานะ "กำลังเสนอลูกค้า"');
         }
+        
+        // อัพเดทสถานะเป็น approved
+        $quotation->status = 'approved';
+        $quotation->approved_at = now();
+        $quotation->save();
+        
+        return redirect()->route('quotations.show', $quotation)->with('success', 'อนุมัติใบเสนอราคาเรียบร้อยแล้ว');
     }
 
     /**
      * ปฏิเสธใบเสนอราคา
      *
-     * @param \Illuminate\Http\Request $request
-     * @param int $id
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  \App\Models\Quotation  $quotation
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
      */
-    public function reject(Request $request, $id)
+    public function reject(Request $request, Quotation $quotation)
     {
-        try {
-            // ค้นหาใบเสนอราคา
-            $quotation = Quotation::findOrFail($id);
-            
-            // ตรวจสอบว่าสามารถปฏิเสธได้หรือไม่ (ต้องเป็นสถานะ draft)
-            if ($quotation->status !== 'draft') {
-                return redirect()->route('quotations.show', $quotation)
-                    ->with('error', 'ไม่สามารถปฏิเสธใบเสนอราคาที่ไม่ได้อยู่ในสถานะร่างได้');
-            }
-            
-            // ปฏิเสธใบเสนอราคา
-            $quotation->status = 'rejected';
-            $quotation->approved_by = Auth::id(); // ใช้ approved_by เก็บผู้ปฏิเสธ
-            $quotation->approved_at = now(); // ใช้ approved_at เก็บเวลาที่ปฏิเสธ
-            
-            // เก็บเหตุผลในการปฏิเสธ (ถ้ามี)
-            if ($request->has('rejection_reason')) {
-                $metadata = $quotation->metadata ?: [];
-                $metadata['rejection_reason'] = $request->rejection_reason;
-                $quotation->metadata = $metadata;
-            }
-            
-            $quotation->save();
-            
-            // บันทึกล็อก
-            Log::info("ปฏิเสธใบเสนอราคาเลขที่ {$quotation->quotation_number} สำเร็จแล้ว", [
-                'quotation_id' => $quotation->id,
-                'rejected_by' => Auth::id(),
-                'rejection_reason' => $request->rejection_reason ?? null
-            ]);
-            
-            return redirect()->route('quotations.show', $quotation)
-                ->with('success', 'ปฏิเสธใบเสนอราคาเลขที่ ' . $quotation->quotation_number . ' เรียบร้อยแล้ว');
-        } catch (\Exception $e) {
-            Log::error("เกิดข้อผิดพลาดในการปฏิเสธใบเสนอราคา: " . $e->getMessage(), [
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ]);
-            
-            return redirect()->back()
-                ->with('error', 'เกิดข้อผิดพลาดในการปฏิเสธใบเสนอราคา: ' . $e->getMessage());
+        // ตรวจสอบว่าใบเสนอราคาอยู่ในสถานะ draft หรือไม่
+        if ($quotation->status !== 'draft') {
+            return redirect()->route('quotations.show', $quotation)->with('error', 'ไม่สามารถปฏิเสธใบเสนอราคานี้ได้ เนื่องจากไม่อยู่ในสถานะ "กำลังเสนอลูกค้า"');
         }
+        
+        // บันทึกเหตุผลการปฏิเสธ (ถ้ามี)
+        $quotation->status = 'rejected';
+        $quotation->rejection_reason = $request->input('rejection_reason');
+        $quotation->rejected_at = now();
+        $quotation->save();
+        
+        return redirect()->route('quotations.show', $quotation)->with('success', 'ปฏิเสธใบเสนอราคาเรียบร้อยแล้ว');
     }
 
     /**
@@ -571,5 +516,26 @@ class QuotationController extends Controller
                 'error' => 'ไม่สามารถดึงข้อมูลใบเสนอราคาได้: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * แสดงใบเสนอราคาในรูปแบบ PDF View
+     *
+     * @param  \App\Models\Quotation  $quotation
+     * @return \Illuminate\Http\Response
+     */
+    public function viewAsPdf(Quotation $quotation)
+    {
+        // โหลดความสัมพันธ์ที่จำเป็น
+        $quotation->load(['customer', 'items.product', 'items.unit']);
+        
+        // หาข้อมูลบริษัท
+        $company = \App\Models\Company::find($quotation->company_id);
+        
+        // ส่ง view pdf-view ที่มีอยู่แล้ว
+        return view('quotations.pdf-view', [
+            'quotation' => $quotation,
+            'company' => $company,
+        ]);
     }
 }
