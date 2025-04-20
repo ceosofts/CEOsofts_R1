@@ -166,11 +166,16 @@
                                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{{ \Carbon\Carbon::parse($order->order_date)->format('d/m/Y') }}</td>
                                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-300">{{ number_format($order->total_amount, 2) }}</td>
                                                         <td class="px-4 py-3 whitespace-nowrap text-center">
-                                                            <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                                                @if($order->status == 'completed') bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 @endif
-                                                                @if($order->status == 'pending') bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 @endif
-                                                                @if($order->status == 'cancelled') bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 @endif
-                                                            ">
+                                                            @php
+                                                                // กำหนดคลาสสีตามสถานะในตัวแปร PHP แทนการใช้ inline conditions
+                                                                $statusClasses = [
+                                                                    'completed' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+                                                                    'pending' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+                                                                    'cancelled' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                                                ];
+                                                                $statusClass = $statusClasses[$order->status] ?? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+                                                            @endphp
+                                                            <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusClass }}">
                                                                 {{ ucfirst($order->status) }}
                                                             </span>
                                                         </td>

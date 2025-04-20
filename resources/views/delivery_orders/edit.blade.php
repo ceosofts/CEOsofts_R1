@@ -58,7 +58,19 @@
                                         @elseif($deliveryOrder->order->status == 'partial_delivered') bg-yellow-100 text-yellow-800
                                         @elseif($deliveryOrder->order->status == 'cancelled') bg-red-100 text-red-800
                                         @else bg-gray-100 text-gray-800 @endif">
-                                        {{ ucfirst($deliveryOrder->order->status) }}
+                                        @php
+                                            $statusMap = [
+                                                'confirmed' => 'ยืนยันแล้ว',
+                                                'processing' => 'กำลังดำเนินการ',
+                                                'delivered' => 'ส่งมอบแล้ว',
+                                                'shipped' => 'จัดส่งแล้ว',
+                                                'partial_delivered' => 'ส่งมอบบางส่วน',
+                                                'cancelled' => 'ยกเลิก',
+                                                'pending' => 'รอดำเนินการ',
+                                                'draft' => 'ร่าง'
+                                            ];
+                                            echo $statusMap[$deliveryOrder->order->status] ?? ucfirst($deliveryOrder->order->status);
+                                        @endphp
                                     </span>
                                 </p>
                             </div>

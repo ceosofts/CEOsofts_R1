@@ -77,10 +77,16 @@
 
                     <!-- Delivery Orders Table -->
                     <div class="overflow-x-auto">
-                        <table class="min-w-full bg-white">
+                        <table class="min-w-full bg-white" id="deliveryOrderTable">
                             <thead class="bg-gray-100">
                                 <tr>
-                                    <th class="py-2 px-4 border-b text-left">เลขที่</th>
+                                    <th class="py-2 px-4 border-b text-left">
+                                        เลขที่
+                                        <span class="text-xs ml-1">(เรียงจากล่าสุด)</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                        </svg>
+                                    </th>
                                     <th class="py-2 px-4 border-b text-left">วันที่ส่งสินค้า</th>
                                     <th class="py-2 px-4 border-b text-left">ลูกค้า</th>
                                     <th class="py-2 px-4 border-b text-left">เลขที่ใบสั่งขาย</th>
@@ -165,5 +171,45 @@
                 document.getElementById('delete-form-' + deliveryOrderId).submit();
             }
         }
+
+        // เรียงลำดับรายการตามเลขที่จากมากไปหาน้อยเมื่อโหลดหน้า
+        document.addEventListener('DOMContentLoaded', function() {
+            const table = document.getElementById('deliveryOrderTable');
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            // ข้ามการเรียงถ้าไม่มีข้อมูล
+            if (rows.length === 1 && rows[0].querySelector('td[colspan]')) {
+                return;
+            }
+            
+            rows.sort((a, b) => {
+                const aNumber = a.querySelector('td:first-child a')?.textContent.trim() || '';
+                const bNumber = b.querySelector('td:first-child a')?.textContent.trim() || '';
+                return bNumber.localeCompare(aNumber, undefined, {numeric: true}); // เรียงจากมากไปน้อย
+            });
+            
+            // ล้างตารางและเพิ่มแถวที่เรียงแล้ว
+            rows.forEach(row => tbody.appendChild(row));
+        });
     </script>
+    
+    <!-- หมายเหตุสำหรับนักพัฒนา -->
+    <!--
+    การเรียงลำดับควรทำที่ Controller จะดีกว่า:
+    
+    public function index(Request $request)
+    {
+        $query = DeliveryOrder::with(['customer', 'order']);
+        
+        // ตัวกรองต่างๆ...
+        
+        // เพิ่มการเรียงลำดับเริ่มต้นตามเลขที่จากมากไปน้อย
+        $query->orderByDesc('delivery_number');
+        
+        $deliveryOrders = $query->paginate(15);
+        
+        return view('delivery_orders.index', compact('deliveryOrders'));
+    }
+    -->
 </x-app-layout>
