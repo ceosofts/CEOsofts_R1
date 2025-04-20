@@ -64,7 +64,7 @@ class OrderController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
         
-        $orderNumber = $this->generateOrderNumber();
+        $orderNumber = Order::generateOrderNumber(session('company_id'));
         
         return view('orders.create', compact('customers', 'products', 'orderNumber', 'quotation', 'approvedQuotations'));
     }
