@@ -237,7 +237,7 @@ database/ceosofts_db_R1.sqlite220μsselect count(*) as aggregate from "departmen
 database/ceosofts_db_R1.sqlite220μsselect count(*) as aggregate from "positions"
 
 
-## Dfile structure
+## file structure
 php artisan project:structure --output=project_structure_$(date +%Y_%m_%d).txt
 หรือ file ที่ export
 update 2025-04-17

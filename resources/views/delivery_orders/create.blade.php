@@ -264,14 +264,14 @@
                             @enderror
                         </div>
 
+                        <!-- ผู้อนุมัติ - แก้เป็นใช้ผู้ใช้งานปัจจุบัน -->
                         <div class="mb-6">
                             <x-input-label for="approved_by" :value="__('ผู้อนุมัติ')" />
-                            <select id="approved_by" name="approved_by" class="w-full md:w-1/3 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
-                                <option value="">-- เลือกผู้อนุมัติ --</option>
-                                @foreach($users as $user)
-                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
-                                @endforeach
-                            </select>
+                            <div class="w-full md:w-1/3 px-3 py-2 border border-gray-300 rounded-md bg-gray-50">
+                                <input type="hidden" name="approved_by" value="{{ auth()->id() }}">
+                                {{ auth()->user()->name }}
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">ใช้ผู้ใช้งานปัจจุบันเป็นผู้อนุมัติโดยอัตโนมัติ</p>
                             @error('approved_by')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
@@ -349,7 +349,7 @@
                             });
                             
                             // โหลดข้อมูลใบสั่งขาย
-                            loadOrderBtn.addEventListener('click', async function() {
+                            loadOrderBtn.addEventListener('click', function() {
                                 const orderId = orderIdSelector.value;
                                 
                                 if (!orderId) {
@@ -357,71 +357,71 @@
                                     return;
                                 }
                                 
+                                console.log('กำลังโหลดข้อมูล Order ID:', orderId);
+                                
                                 // แสดงสถานะกำลังโหลด
                                 this.disabled = true;
+                                loadingIndicator.classList.remove('hidden');
                                 const originalButtonText = this.innerHTML;
                                 this.innerHTML = '<svg class="animate-spin h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> กำลังโหลด...';
-                                loadingIndicator.classList.remove('hidden');
                                 
-                                try {
-                                    // ทำ AJAX request เพื่อดึงข้อมูลใบสั่งขาย
-                                    const response = await fetch(`/api/orders/${orderId}/products`);
+                                // ใช้ URL ใหม่ที่แก้ไขแล้ว
+                                const apiUrl = `/api/order-products/${orderId}`;
+                                
+                                // ดึงข้อมูลจาก API
+                                fetch(apiUrl, {
+                                    method: 'GET',
+                                    headers: {
+                                        'Accept': 'application/json',
+                                        'Content-Type': 'application/json',
+                                        'X-Requested-With': 'XMLHttpRequest'
+                                    },
+                                    credentials: 'same-origin'
+                                })
+                                .then(response => {
+                                    console.log('API Response Status:', response.status);
                                     
                                     if (!response.ok) {
-                                        throw new Error(`ไม่สามารถโหลดข้อมูลได้ (${response.status})`);
+                                        return response.json()
+                                            .then(errorData => {
+                                                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                                            })
+                                            .catch(e => {
+                                                throw new Error(`HTTP error! status: ${response.status}`);
+                                            });
                                     }
+                                    return response.json();
+                                })
+                                .then(data => {
+                                    console.log('API Response Data:', data);
                                     
-                                    const data = await response.json();
-                                    
-                                    // เซ็ตค่า order_id และ customer_id ในฟอร์ม
+                                    // เซ็ตค่าต่างๆ จากข้อมูลที่ได้รับ
                                     orderIdInput.value = data.order.id;
                                     customerIdInput.value = data.order.customer_id;
-                                    
-                                    // เซ็ตชื่อลูกค้าและเลขที่ใบสั่งขาย
                                     customerNameInput.value = data.customer.name;
                                     orderNumberInput.value = data.order.order_number;
                                     
-                                    // เซ็ตที่อยู่จัดส่งและวิธีการจัดส่ง
-                                    shippingAddressInput.value = data.order.shipping_address || data.customer.address || '';
+                                    // กำหนดข้อมูลการจัดส่ง
+                                    shippingAddressInput.value = data.order.shipping_address || (data.customer.address || '');
                                     shippingMethodInput.value = data.order.shipping_method || '';
                                     
-                                    // ถ้ามีวันที่กำหนดส่งมอบในใบสั่งขาย
+                                    // กำหนดวันที่ส่ง
                                     if (data.order.delivery_date) {
-                                        expectedDeliveryDateInput.value = data.order.delivery_date.substr(0, 10); // เอาเฉพาะส่วน YYYY-MM-DD
-                                        
-                                        // กำหนดวันที่ส่งสินค้าให้เป็นวันที่กำหนดส่งมอบโดยอัตโนมัติถ้ายังไม่ได้กำหนด
+                                        expectedDeliveryDateInput.value = data.order.delivery_date;
                                         if (!document.getElementById('delivery_date').value) {
-                                            document.getElementById('delivery_date').value = data.order.delivery_date.substr(0, 10);
+                                            document.getElementById('delivery_date').value = data.order.delivery_date;
                                         }
                                     }
                                     
                                     // อัพเดทแสดงสถานะใบสั่งขาย
-                                    let statusText = '';
-                                    let statusColor = '';
-                                    
-                                    switch (data.order.status) {
-                                        case 'confirmed':
-                                            statusText = 'ยืนยันแล้ว';
-                                            statusColor = 'green';
-                                            break;
-                                        case 'processing':
-                                            statusText = 'กำลังดำเนินการ';
-                                            statusColor = 'blue';
-                                            break;
-                                        default:
-                                            statusText = data.order.status;
-                                            statusColor = 'gray';
-                                    }
-                                    
-                                    orderStatusBadge.textContent = statusText;
-                                    orderStatusBadge.className = `px-2 py-1 rounded text-xs font-medium bg-${statusColor}-100 text-${statusColor}-800`;
+                                    updateOrderStatusBadge(data.order.status);
                                     
                                     // ล้างรายการสินค้าเก่า
                                     while (productsList.firstChild) {
                                         productsList.removeChild(productsList.firstChild);
                                     }
                                     
-                                    // เพิ่มรายการสินค้าจากใบสั่งขาย
+                                    // เพิ่มรายการสินค้าใหม่
                                     if (data.items && data.items.length > 0) {
                                         data.items.forEach((item, index) => {
                                             const newRow = document.createElement('tr');
@@ -435,7 +435,7 @@
                                                     ${item.product && item.product.sku ? item.product.sku : '-'}
                                                 </td>
                                                 <td class="py-2 px-4 border-b">
-                                                    <input type="text" name="description[${index}]" class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" value="${item.description}" required>
+                                                    <input type="text" name="description[${index}]" class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" value="${item.description || ''}" required>
                                                 </td>
                                                 <td class="py-2 px-4 border-b text-center bg-gray-50">
                                                     ${item.quantity} ${item.unit_name || ''}
@@ -461,25 +461,96 @@
                                             productsList.appendChild(newRow);
                                         });
                                     } else {
-                                        // ถ้าไม่มีรายการสินค้า
-                                        const emptyRow = document.createElement('tr');
-                                        emptyRow.innerHTML = `
-                                            <td colspan="7" class="py-4 text-center text-gray-500">
-                                                ไม่พบรายการสินค้าในใบสั่งขายนี้
-                                            </td>
-                                        `;
-                                        productsList.appendChild(emptyRow);
+                                        showNoProductsMessage();
                                     }
-                                } catch (error) {
+                                })
+                                .catch(error => {
                                     console.error('Error:', error);
                                     alert('เกิดข้อผิดพลาดในการโหลดข้อมูล: ' + error.message);
-                                } finally {
-                                    // คืนสถานะปุ่ม
-                                    this.innerHTML = originalButtonText;
+                                })
+                                .finally(() => {
+                                    // คืนสถานะปุ่มเมื่อเสร็จสิ้น
                                     this.disabled = false;
+                                    this.innerHTML = originalButtonText;
                                     loadingIndicator.classList.add('hidden');
-                                }
+                                });
                             });
+                            
+                            // ฟังก์ชันเพิ่มรายการสินค้า
+                            function addProductItems(items) {
+                                items.forEach((item, index) => {
+                                    const newRow = document.createElement('tr');
+                                    newRow.classList.add('product-row');
+                                    
+                                    newRow.innerHTML = `
+                                        <input type="hidden" name="product_id[${index}]" value="${item.product_id}">
+                                        <input type="hidden" name="order_item_id[${index}]" value="${item.id}">
+                                        
+                                        <td class="py-2 px-4 border-b">
+                                            ${item.product && item.product.sku ? item.product.sku : '-'}
+                                        </td>
+                                        <td class="py-2 px-4 border-b">
+                                            <input type="text" name="description[${index}]" class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" value="${item.description || ''}" required>
+                                        </td>
+                                        <td class="py-2 px-4 border-b text-center bg-gray-50">
+                                            ${item.quantity} ${item.unit_name || ''}
+                                        </td>
+                                        <td class="py-2 px-4 border-b text-center">
+                                            <input type="number" name="quantity[${index}]" class="quantity w-full text-center border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" min="0.01" step="any" value="${item.quantity}" required>
+                                        </td>
+                                        <td class="py-2 px-4 border-b text-right">
+                                            <input type="text" name="unit[${index}]" class="w-full text-right border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" value="${item.unit_name || ''}" required>
+                                        </td>
+                                        <td class="py-2 px-4 border-b text-center">
+                                            <select name="status[${index}]" class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                                                <option value="pending">รอดำเนินการ</option>
+                                                <option value="delivered">ส่งมอบแล้ว</option>
+                                                <option value="partial">ส่งมอบบางส่วน</option>
+                                            </select>
+                                        </td>
+                                        <td class="py-2 px-4 border-b">
+                                            <input type="text" name="item_notes[${index}]" class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                                        </td>
+                                    `;
+                                    
+                                    productsList.appendChild(newRow);
+                                });
+                            }
+                            
+                            // ฟังก์ชันแสดงข้อความไม่มีสินค้า
+                            function showNoProductsMessage() {
+                                const emptyRow = document.createElement('tr');
+                                emptyRow.setAttribute('id', 'no-products-row');
+                                emptyRow.innerHTML = `
+                                    <td colspan="7" class="py-4 text-center text-gray-500">
+                                        ไม่พบรายการสินค้าในใบสั่งขายนี้
+                                    </td>
+                                `;
+                                productsList.appendChild(emptyRow);
+                            }
+                            
+                            // ฟังก์ชันอัพเดทสถานะใบสั่งขาย
+                            function updateOrderStatusBadge(status) {
+                                let statusText = '';
+                                let statusColor = '';
+                                
+                                switch (status) {
+                                    case 'confirmed':
+                                        statusText = 'ยืนยันแล้ว';
+                                        statusColor = 'green';
+                                        break;
+                                    case 'processing':
+                                        statusText = 'กำลังดำเนินการ';
+                                        statusColor = 'blue';
+                                        break;
+                                    default:
+                                        statusText = status;
+                                        statusColor = 'gray';
+                                }
+                                
+                                orderStatusBadge.textContent = statusText;
+                                orderStatusBadge.className = `px-2 py-1 rounded text-xs font-medium bg-${statusColor}-100 text-${statusColor}-800`;
+                            }
                             
                             // ป้องกันการส่งฟอร์มซ้ำและตรวจสอบข้อมูล
                             document.getElementById('deliveryOrderForm').addEventListener('submit', function(e) {

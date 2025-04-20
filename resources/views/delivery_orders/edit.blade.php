@@ -325,15 +325,17 @@
                             @enderror
                         </div>
 
-                        <!-- ผู้อนุมัติ -->
+                        <!-- ผู้อนุมัติ - แก้เป็นใช้ผู้ใช้งานปัจจุบัน -->
                         <div class="mb-6">
                             <x-input-label for="approved_by" :value="__('ผู้อนุมัติ')" />
-                            <select id="approved_by" name="approved_by" class="w-full md:w-1/3 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
-                                <option value="">-- เลือกผู้อนุมัติ --</option>
-                                @foreach($users as $user)
-                                    <option value="{{ $user->id }}" {{ old('approved_by', $deliveryOrder->approved_by) == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
-                                @endforeach
-                            </select>
+                            <div class="w-full md:w-1/3 px-3 py-2 border border-gray-300 rounded-md bg-gray-50">
+                                <input type="hidden" name="approved_by" value="{{ auth()->id() }}">
+                                {{ auth()->user()->name }}
+                                @if($deliveryOrder->approved_by && $deliveryOrder->approved_by != auth()->id())
+                                    <p class="text-xs text-amber-600 mt-1">เดิม: {{ $users->where('id', $deliveryOrder->approved_by)->first()->name ?? 'ไม่ระบุ' }}</p>
+                                @endif
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">ใช้ผู้ใช้งานปัจจุบันเป็นผู้อนุมัติโดยอัตโนมัติ</p>
                             @error('approved_by')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
