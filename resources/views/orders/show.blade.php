@@ -398,7 +398,7 @@
     </div>
 
     <!-- Modal จัดส่งสินค้า -->
-    <div id="shipModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div id="shipModal" class="{{ $someCondition ? 'flex' : 'hidden' }} items-center justify-between">
         <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
             <h3 class="text-lg font-bold mb-4">จัดส่งสินค้า</h3>
             
@@ -428,7 +428,7 @@
     </div>
 
     <!-- Modal ยกเลิกใบสั่งขาย -->
-    <div id="cancelModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div id="cancelModal" class="{{ $anotherCondition ? 'flex' : 'hidden' }} items-center justify-between">
         <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
             <h3 class="text-lg font-bold mb-4">ยกเลิกใบสั่งขาย</h3>
             

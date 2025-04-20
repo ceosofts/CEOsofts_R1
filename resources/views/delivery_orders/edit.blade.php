@@ -50,27 +50,37 @@
                             <div>
                                 <p class="text-sm text-gray-600">สถานะใบสั่งขาย</p>
                                 <p>
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                        @if($deliveryOrder->order->status == 'confirmed') bg-green-100 text-green-800
-                                        @elseif($deliveryOrder->order->status == 'processing') bg-blue-100 text-blue-800
-                                        @elseif($deliveryOrder->order->status == 'delivered') bg-purple-100 text-purple-800
-                                        @elseif($deliveryOrder->order->status == 'shipped') bg-indigo-100 text-indigo-800
-                                        @elseif($deliveryOrder->order->status == 'partial_delivered') bg-yellow-100 text-yellow-800
-                                        @elseif($deliveryOrder->order->status == 'cancelled') bg-red-100 text-red-800
-                                        @else bg-gray-100 text-gray-800 @endif">
-                                        @php
-                                            $statusMap = [
-                                                'confirmed' => 'ยืนยันแล้ว',
-                                                'processing' => 'กำลังดำเนินการ',
-                                                'delivered' => 'ส่งมอบแล้ว',
-                                                'shipped' => 'จัดส่งแล้ว',
-                                                'partial_delivered' => 'ส่งมอบบางส่วน',
-                                                'cancelled' => 'ยกเลิก',
-                                                'pending' => 'รอดำเนินการ',
-                                                'draft' => 'ร่าง'
-                                            ];
-                                            echo $statusMap[$deliveryOrder->order->status] ?? ucfirst($deliveryOrder->order->status);
-                                        @endphp
+                                    @php
+                                        // กำหนด status classes เพื่อแก้ปัญหา CSS conflict
+                                        $statusClasses = [
+                                            'confirmed' => 'bg-emerald-100 text-emerald-800',
+                                            'processing' => 'bg-blue-500 text-white',
+                                            'delivered' => 'bg-teal-100 text-teal-800',
+                                            'shipped' => 'bg-indigo-500 text-white',
+                                            'partial_delivered' => 'bg-amber-200 text-amber-900',
+                                            'cancelled' => 'bg-slate-100 text-slate-800',
+                                            'pending' => 'bg-amber-100 text-amber-800',
+                                            'draft' => 'bg-gray-300 text-gray-700',
+                                        ];
+                                        
+                                        // ใช้ status ปัจจุบันหรือค่าเริ่มต้น
+                                        $currentStatus = $deliveryOrder->order->status ?? 'pending';
+                                        $statusClass = $statusClasses[$currentStatus] ?? $statusClasses['pending'];
+                                        
+                                        $statusMap = [
+                                            'confirmed' => 'ยืนยันแล้ว',
+                                            'processing' => 'กำลังดำเนินการ',
+                                            'delivered' => 'ส่งมอบแล้ว',
+                                            'shipped' => 'จัดส่งแล้ว',
+                                            'partial_delivered' => 'ส่งมอบบางส่วน',
+                                            'cancelled' => 'ยกเลิก',
+                                            'pending' => 'รอดำเนินการ',
+                                            'draft' => 'ร่าง'
+                                        ];
+                                        $statusText = $statusMap[$currentStatus] ?? ucfirst($currentStatus);
+                                    @endphp
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusClass }}">
+                                        {{ $statusText }}
                                     </span>
                                 </p>
                             </div>

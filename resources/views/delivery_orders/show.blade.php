@@ -242,11 +242,7 @@
                                             <td class="py-2 px-4 border-b text-center">{{ number_format($item->quantity) }}</td>
                                             <td class="py-2 px-4 border-b text-right">{{ $item->unit }}</td>
                                             <td class="py-2 px-4 border-b text-center">
-                                                <span class="px-2 py-1 rounded-full text-xs font-semibold
-                                                    @if($item->status == 'delivered') bg-green-100 text-green-800 
-                                                    @elseif($item->status == 'partial') bg-yellow-100 text-yellow-800 
-                                                    @elseif($item->status == 'pending') bg-gray-100 text-gray-800 
-                                                    @else bg-blue-100 text-blue-800 @endif">
+                                                <span class="px-2 py-1 rounded-full text-xs font-semibold {{ getStatusClass($item->status) }}">
                                                     {{ ucfirst($item->status) }}
                                                 </span>
                                             </td>
@@ -289,6 +285,60 @@
                             </div>
                         </div>
                     </div>
+
+                    @php
+                        // กำหนด status classes เพื่อแก้ปัญหา CSS conflict
+                        $statusClasses = [
+                            // สถานะของใบส่งสินค้า
+                            'pending' => 'bg-amber-100 text-amber-800',
+                            'processing' => 'bg-blue-500 text-white',
+                            'shipped' => 'bg-emerald-100 text-emerald-800',
+                            'delivered' => 'bg-teal-100 text-teal-800',
+                            'returned' => 'bg-rose-100 text-rose-800',
+                            'cancelled' => 'bg-slate-100 text-slate-800',
+                            
+                            // สถานะของรายการในใบส่งสินค้า
+                            'partial' => 'bg-amber-200 text-amber-900',
+                        ];
+                        
+                        // ฟังก์ชั่นสำหรับดึงคลาสที่เหมาะสมสำหรับแต่ละสถานะ
+                        function getStatusClass($status) {
+                            global $statusClasses;
+                            return $statusClasses[$status] ?? $statusClasses['pending'];
+                        }
+                        
+                        // ใช้ status ปัจจุบันหรือค่าเริ่มต้น
+                        $currentStatus = $deliveryOrder->status ?? 'pending';
+                        $statusClass = getStatusClass($currentStatus);
+                    @endphp
+
+                    {{-- แก้ไขส่วนที่มีการชนกันของ CSS classes (บริเวณบรรทัด 262-265) --}}
+                    <div class="mt-6">
+                        <h3 class="text-lg font-medium text-gray-900">สถานะการส่งสินค้า</h3>
+                        <div class="mt-2">
+                            <span class="px-2 py-1 text-sm rounded-full {{ $statusClass }}">
+                                {{ ucfirst($currentStatus) }}
+                            </span>
+                        </div>
+                    </div>
+
+                    {{-- ส่วนอื่นๆ ที่อาจมีการใช้คลาสเหล่านี้ควรได้รับการแก้ไขเช่นกัน --}}
+                    {{-- เช่น ส่วนของการแสดงประวัติการเปลี่ยนสถานะ (ถ้ามี) --}}
+                    @if(isset($deliveryOrder->status_history) && count($deliveryOrder->status_history) > 0)
+                        <div class="mt-6">
+                            <h4 class="font-medium text-gray-700">ประวัติสถานะ</h4>
+                            <ul class="mt-2 space-y-2">
+                                @foreach($deliveryOrder->status_history as $history)
+                                    <li class="flex items-center space-x-2">
+                                        <span class="px-2 py-1 text-xs rounded-full {{ $statusClasses[$history->status] ?? $statusClasses['pending'] }}">
+                                            {{ ucfirst($history->status) }}
+                                        </span>
+                                        <span class="text-sm text-gray-500">{{ $history->created_at->format('d/m/Y H:i') }}</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
