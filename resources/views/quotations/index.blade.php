@@ -152,11 +152,11 @@
                             <div class="flex items-center">
                                 <span class="text-sm text-gray-600 dark:text-gray-400 mr-2">เรียงตาม:</span>
                                 <a href="{{ request()->fullUrlWithQuery(['sort' => 'quotation_number', 'direction' => 'asc']) }}"
-                                    class="{{ (!request()->has('sort') && !request()->has('direction')) || (request('sort') == 'quotation_number' && request('direction') == 'asc') ? 'text-blue-600 font-medium' : 'text-gray-600' }} text-sm mx-1">
+                                    class="{{ request('sort') == 'quotation_number' && request('direction') == 'asc' ? 'text-blue-600 font-medium' : 'text-gray-600' }} text-sm mx-1">
                                     เลขที่ ↑
                                 </a>
                                 <a href="{{ request()->fullUrlWithQuery(['sort' => 'quotation_number', 'direction' => 'desc']) }}"
-                                    class="{{ request('sort') == 'quotation_number' && request('direction') == 'desc' ? 'text-blue-600 font-medium' : 'text-gray-600' }} text-sm mx-1">
+                                    class="{{ (!request()->has('sort') && !request()->has('direction')) || (request('sort') == 'quotation_number' && request('direction') == 'desc') ? 'text-blue-600 font-medium' : 'text-gray-600' }} text-sm mx-1">
                                     เลขที่ ↓
                                 </a>
                                 <a href="{{ request()->fullUrlWithQuery(['sort' => 'issue_date', 'direction' => 'desc']) }}"

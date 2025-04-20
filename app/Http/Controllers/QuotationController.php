@@ -109,16 +109,23 @@ class QuotationController extends Controller
         $products = Product::where('company_id', $companyId)->orderBy('name')->get();
         $units = Unit::all();
 
-        // สร้างเลขที่เอกสารอัตโนมัติ
-        $latestQuotation = Quotation::where('company_id', $companyId)
-            ->orderBy('id', 'desc')
+        // สร้างเลขที่เอกสารอัตโนมัติตามรูปแบบใหม่: QT + ปี + เดือน + 4 หลัก
+        $currentYear = date('Y');
+        $currentMonth = date('m');
+        
+        // หาเลขที่ล่าสุดที่ขึ้นต้นด้วยรหัสเดือนปีปัจจุบัน
+        $prefix = "QT{$currentYear}{$currentMonth}";
+        $latestQuotation = Quotation::where('quotation_number', 'like', $prefix.'%')
+            ->orderBy('quotation_number', 'desc')
             ->first();
         
-        // รูปแบบ: QT + ปีเดือน (YYMM) + เลขลำดับ 4 หลัก
-        $nextNumber = 'QT' . date('Ym') . '0001';
         if ($latestQuotation) {
+            // ดึงเลขลำดับล่าสุดและเพิ่มอีก 1
             $lastNumber = intval(substr($latestQuotation->quotation_number, -4));
-            $nextNumber = 'QT' . date('Ym') . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+            $nextNumber = $prefix . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+        } else {
+            // ถ้าไม่มีเลขที่ในเดือนนี้ เริ่มที่ 0001
+            $nextNumber = $prefix . '0001';
         }
 
         return view('quotations.create', compact('customers', 'products', 'units', 'nextNumber'));
