@@ -5,141 +5,95 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\Customer;
 use App\Models\Company;
+use Carbon\Carbon;
+use Faker\Factory as Faker;
 
 class CustomerSeeder extends Seeder
 {
     /**
      * Run the database seeds.
+     *
+     * @return void
      */
-    public function run(): void
+    public function run()
     {
-        $companies = Company::all();
-
-        foreach ($companies as $company) {
-            $this->createCustomersForCompany($company->id);
+        $faker = Faker::create('th_TH');
+        
+        // Get all available company IDs or use default ID 1
+        $companyIds = Company::pluck('id')->toArray();
+        
+        // If no companies exist, stop seeding to prevent errors
+        if (empty($companyIds)) {
+            $this->command->warn('No companies found. Please run CompanySeeder first.');
+            return;
         }
-    }
-
-    private function createCustomersForCompany($companyId)
-    {
-        $customers = [
-            [
-                'company_id' => $companyId,
-                'name' => 'บริษัท ABC จำกัด',
-                'code' => 'CUST-' . $companyId . '-001',
-                'email' => 'contact@abc.co.th',
-                'phone' => '02-123-4567',
-                'address' => '123/45 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110',
-                'tax_id' => '0105555123456',
-                'status' => 'active',
-                'type' => 'company',
-                'contact_person' => 'คุณประเสริฐ มั่งมี',
-                'contact_person_position' => 'ผู้จัดการฝ่ายจัดซื้อ',
-                'contact_person_email' => 'prasert@abc.co.th',
-                'contact_person_phone' => '081-234-5678',
-                'contact_person_line_id' => 'prasert_abc',
-                'payment_term_type' => 'credit',
-                'discount_rate' => 5.00,
-                'reference_id' => 'CUS-ABC-2023',
-                'social_media' => json_encode([
-                    'facebook' => 'abcthailand',
-                    'line_official' => '@abc',
-                ]),
-                'customer_group' => 'A',
-                'customer_rating' => 5,
-                'metadata' => json_encode([
-                    'industry' => 'Manufacturing',
-                    'credit_term' => 30,
-                    'sales_region' => 'Bangkok'
-                ])
-            ],
-            [
-                'company_id' => $companyId,
-                'name' => 'ร้าน XYZ การค้า',
-                'code' => 'CUST-' . $companyId . '-002',
-                'email' => 'xyz@trading.com',
-                'phone' => '02-987-6543',
-                'address' => '789 ถนนรัชดาภิเษก แขวงดินแดง เขตดินแดง กรุงเทพฯ 10400',
-                'tax_id' => '0105555789012',
-                'status' => 'active',
-                'type' => 'company',
-                'contact_person' => 'คุณสมศรี วงศ์พาณิชย์',
-                'contact_person_position' => 'เจ้าของกิจการ',
-                'contact_person_email' => 'somsri@xyztrading.com',
-                'contact_person_phone' => '089-876-5432',
-                'payment_term_type' => 'cash',
-                'discount_rate' => 2.00,
-                'reference_id' => 'CUS-XYZ-2023',
-                'customer_group' => 'B',
-                'customer_rating' => 3,
-                'bank_account_name' => 'ร้าน XYZ การค้า',
-                'bank_account_number' => '123-4-56789-0',
-                'bank_name' => 'กสิกรไทย',
-                'bank_branch' => 'รัชดาภิเษก',
-                'metadata' => json_encode([
-                    'industry' => 'Retail',
-                    'credit_term' => 15,
-                    'sales_region' => 'Bangkok'
-                ])
-            ],
-            [
-                'company_id' => $companyId,
-                'name' => 'ห้างหุ้นส่วนจำกัด ชัยพัฒนา',
-                'code' => 'CUST-' . $companyId . '-003',
-                'email' => 'info@chaipat.co.th',
-                'phone' => '02-345-6789',
-                'address' => '456 ถนนพระราม 9 แขวงห้วยขวาง เขตห้วยขวาง กรุงเทพฯ 10310',
-                'tax_id' => '0113555456789',
-                'status' => 'active',
-                'type' => 'company',
-                'contact_person' => 'คุณวิชัย ธนกิจ',
-                'contact_person_position' => 'กรรมการผู้จัดการ',
-                'contact_person_email' => 'vichai@chaipat.co.th',
-                'contact_person_phone' => '086-123-4567',
-                'contact_person_line_id' => 'vichai_chaipat',
-                'payment_term_type' => 'credit',
-                'reference_id' => 'CUS-CHP-2023',
-                'social_media' => json_encode([
-                    'facebook' => 'chaipatpartnership',
-                    'website' => 'www.chaipat.co.th'
-                ]),
-                'customer_group' => 'A',
-                'customer_rating' => 4,
-                'is_supplier' => true,
-                'last_contacted_date' => now()->subDays(15),
-                'metadata' => json_encode([
-                    'industry' => 'Wholesale',
-                    'credit_term' => 45,
-                    'sales_region' => 'Central'
-                ])
-            ],
-            [
-                'company_id' => $companyId,
-                'name' => 'คุณสมชาย ใจดี',
-                'code' => 'CUST-' . $companyId . '-004',
-                'email' => 'somchai@example.com',
-                'phone' => '089-123-4567',
-                'address' => '123 หมู่ 4 ต.บางรัก อ.เมือง จ.สงขลา 90000',
-                'status' => 'active',
-                'type' => 'individual',
-                'payment_term_type' => 'cash',
-                'customer_group' => 'C',
-                'customer_rating' => 3,
-                'last_contacted_date' => now()->subDays(30),
-                'metadata' => json_encode([
-                    'sales_region' => 'Southern'
-                ])
-            ]
-        ];
-
-        foreach ($customers as $customer) {
-            Customer::firstOrCreate(
-                [
-                    'company_id' => $companyId,
-                    'email' => $customer['email']
-                ],
-                $customer
-            );
+        
+        // สร้างลูกค้าโดยใช้รหัสอัตโนมัติ
+        for ($i = 1; $i <= 20; $i++) {
+            $type = $faker->randomElement(['company', 'person']);
+            $customerGroup = $faker->randomElement(['A', 'B', 'C', null]);
+            $paymentTermType = $faker->randomElement(['credit', 'cash', 'cheque', 'transfer']);
+            
+            // สำหรับการทดสอบ ให้จำลองวันที่เป็นย้อนหลังเพื่อให้ได้รหัสที่หลากหลาย
+            $date = Carbon::now()->subDays(rand(0, 30));
+            $prefix = 'CUS';
+            $year = $date->format('Y');
+            $month = $date->format('m');
+            
+            // นับจำนวนลูกค้าในเดือนที่กำหนด
+            $count = Customer::where('code', 'like', $prefix . $year . $month . '%')->count();
+            $nextNumber = str_pad($count + 1, 4, '0', STR_PAD_LEFT);
+            $code = $prefix . $year . $month . $nextNumber;
+            
+            $metadata = [
+                'industry' => $faker->randomElement(['ผลิตอาหาร', 'อสังหาริมทรัพย์', 'การเงิน', 'เทคโนโลยี', 'การศึกษา', 'สุขภาพ']),
+                'sales_region' => $faker->randomElement(['กรุงเทพฯ', 'ภาคเหนือ', 'ภาคใต้', 'ภาคตะวันออก', 'ภาคตะวันออกเฉียงเหนือ']),
+                'credit_term' => $faker->randomElement([7, 15, 30, 45, 60])
+            ];
+            
+            $social_media = [
+                'facebook' => $type === 'company' ? $faker->domainName : $faker->userName,
+                'line' => $faker->userName,
+                'instagram' => $faker->userName
+            ];
+            
+            // ใช้ company_id จากรายการที่มีอยู่จริง
+            $company_id = $faker->randomElement($companyIds);
+            
+            Customer::create([
+                'code' => $code,
+                'name' => $type === 'company' ? $faker->company : $faker->name,
+                'type' => $type,
+                'status' => $faker->randomElement(['active', 'inactive']),
+                'email' => $faker->email,
+                'phone' => $faker->phoneNumber,
+                'address' => $faker->address,
+                'website' => $type === 'company' ? 'https://' . $faker->domainName : null,
+                'tax_id' => $type === 'company' ? $faker->numerify('###########') : null,
+                'reference_id' => $faker->bothify('REF-####-????'),
+                'contact_person' => $faker->name,
+                'contact_person_position' => $faker->jobTitle,
+                'contact_person_email' => $faker->email,
+                'contact_person_phone' => $faker->phoneNumber,
+                'contact_person_line_id' => $faker->userName,
+                'social_media' => json_encode($social_media),
+                'is_supplier' => $faker->boolean(20), // 20% chance of being a supplier
+                'customer_group' => $customerGroup,
+                'customer_rating' => $faker->numberBetween(1, 5),
+                'payment_term_type' => $paymentTermType,
+                'credit_limit' => $paymentTermType === 'credit' ? $faker->randomFloat(2, 10000, 1000000) : null,
+                'discount_rate' => $faker->randomFloat(2, 0, 20),
+                'bank_name' => $faker->randomElement(['ไทยพาณิชย์', 'กสิกรไทย', 'กรุงเทพ', 'กรุงไทย', 'กรุงศรีอยุธยา']),
+                'bank_branch' => $faker->city,
+                'bank_account_name' => $type === 'company' ? $faker->company : $faker->name,
+                'bank_account_number' => $faker->numerify('##########'),
+                'last_contacted_date' => $faker->dateTimeBetween('-6 months', 'now'),
+                'note' => $faker->paragraph,
+                'metadata' => json_encode($metadata),
+                'company_id' => $company_id,
+                'created_at' => $date,
+                'updated_at' => $date
+            ]);
         }
     }
 }

@@ -6,51 +6,55 @@ use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CustomerController extends Controller
 {
     /**
-     * Display a listing of the customers.
+     * แสดงรายการลูกค้าทั้งหมด
      */
     public function index(Request $request)
     {
-        $query = Customer::query();
-        
-        // Apply search filters
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('tax_id', 'like', "%{$search}%");
-            });
-        }
-        
-        // Apply status filter
-        if ($request->filled('status')) {
-            $query->where('status', $request->input('status'));
-        }
-        
-        // Apply type filter
-        if ($request->filled('type')) {
-            $query->where('type', $request->input('type'));
-        }
-        
-        // Apply industry filter
-        if ($request->filled('industry')) {
-            $industry = $request->input('industry');
-            $query->whereRaw("JSON_EXTRACT(metadata, '$.industry') LIKE ?", ["%{$industry}%"]);
-        }
-        
-        // เรียงลำดับ (เปลี่ยนค่าเริ่มต้นเป็น 'id')
-        $sortField = $request->get('sort', 'id');
-        $sortDirection = $request->get('direction', 'asc');
-        $query->orderBy($sortField, $sortDirection);
+        try {
+            $query = Customer::query();
 
-        $customers = $query->paginate(15)->withQueryString();
-        
-        return view('customers.index', compact('customers'));
+            // ค้นหาและกรอง
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%")
+                      ->orWhere('code', 'LIKE', "%{$search}%")
+                      ->orWhere('email', 'LIKE', "%{$search}%")
+                      ->orWhere('phone', 'LIKE', "%{$search}%");
+                });
+            }
+
+            if ($request->filled('type')) {
+                $query->where('type', $request->type);
+            }
+
+            if ($request->filled('status')) {
+                $query->where('status', $request->status);
+            }
+
+            if ($request->filled('group')) {
+                $query->where('customer_group', $request->group);
+            }
+
+            // การเรียงลำดับ (กำหนดค่าเริ่มต้นให้เรียงตามรหัสลูกค้าจากมากไปน้อย)
+            $sortField = $request->input('sort', 'code');
+            $sortDirection = $request->input('direction', 'desc');
+            
+            $query->orderBy($sortField, $sortDirection);
+
+            $customers = $query->paginate(10)->withQueryString();
+            
+            return view('customers.index', compact('customers'));
+            
+        } catch (\Exception $e) {
+            Log::error('Error in customer index: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'เกิดข้อผิดพลาดในการแสดงรายการลูกค้า');
+        }
     }
 
     /**
@@ -66,79 +70,99 @@ class CustomerController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:50',
-            'address' => 'nullable|string',
-            'tax_id' => 'nullable|string|max:20',
-            'status' => 'required|in:active,inactive',
-            'contact_person' => 'nullable|string|max:255',
-            'website' => 'nullable|string|max:255',
-            'note' => 'nullable|string',
-            'type' => 'nullable|string|in:individual,company',
-            'code' => 'nullable|string|max:50|unique:customers',
-            'credit_limit' => 'nullable|numeric|min:0',
-            'industry' => 'nullable|string|max:100',
-            'credit_term' => 'nullable|integer|min:0',
-            'sales_region' => 'nullable|string|max:100',
-            // ฟิลด์ใหม่
-            'contact_person_position' => 'nullable|string|max:100',
-            'contact_person_email' => 'nullable|email|max:255',
-            'contact_person_phone' => 'nullable|string|max:50',
-            'contact_person_line_id' => 'nullable|string|max:100',
-            'payment_term_type' => 'nullable|string|in:cash,credit,cheque,transfer',
-            'discount_rate' => 'nullable|numeric|min:0|max:100',
-            'reference_id' => 'nullable|string|max:100',
-            'customer_group' => 'nullable|string|max:10',
-            'customer_rating' => 'nullable|integer|min:1|max:5',
-            'bank_account_name' => 'nullable|string|max:255',
-            'bank_account_number' => 'nullable|string|max:20',
-            'bank_name' => 'nullable|string|max:100',
-            'bank_branch' => 'nullable|string|max:100',
-            'is_supplier' => 'nullable|boolean',
-        ]);
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'nullable|email|max:255',
+                'phone' => 'nullable|string|max:20',
+                'type' => 'required|in:company,person',
+                'status' => 'required|in:active,inactive',
+                'address' => 'nullable|string',
+                'tax_id' => 'nullable|string|max:20',
+                'contact_person' => 'nullable|string|max:255',
+                'website' => 'nullable|string|max:255',
+                'note' => 'nullable|string',
+                'code' => 'nullable|string|max:50|unique:customers',
+                'credit_limit' => 'nullable|numeric|min:0',
+                'industry' => 'nullable|string|max:100',
+                'credit_term' => 'nullable|integer|min:0',
+                'sales_region' => 'nullable|string|max:100',
+                'contact_person_position' => 'nullable|string|max:100',
+                'contact_person_email' => 'nullable|email|max:255',
+                'contact_person_phone' => 'nullable|string|max:50',
+                'contact_person_line_id' => 'nullable|string|max:100',
+                'payment_term_type' => 'nullable|string|in:cash,credit,cheque,transfer',
+                'discount_rate' => 'nullable|numeric|min:0|max:100',
+                'reference_id' => 'nullable|string|max:100',
+                'customer_group' => 'nullable|string|max:10',
+                'customer_rating' => 'nullable|integer|min:1|max:5',
+                'bank_account_name' => 'nullable|string|max:255',
+                'bank_account_number' => 'nullable|string|max:20',
+                'bank_name' => 'nullable|string|max:100',
+                'bank_branch' => 'nullable|string|max:100',
+                'is_supplier' => 'nullable|boolean',
+            ]);
+            
+            DB::beginTransaction();
+            
+            $data = $request->all();
+            
+            // แปลง metadata จากฟอร์ม
+            $metadata = $this->processMetadata($request);
+            if ($metadata) {
+                $data['metadata'] = json_encode($metadata);
+            }
+            
+            // แปลง social_media เป็น JSON
+            if (isset($data['social_media']) && is_array($data['social_media'])) {
+                $data['social_media'] = json_encode($data['social_media']);
+            }
+            
+            // สร้างรหัสอัตโนมัติหากไม่ได้ระบุ
+            if (empty($data['code'])) {
+                $data['code'] = Customer::generateCustomerCode();
+            }
+            
+            // เพิ่มข้อมูล company_id จาก session หรือค่าเริ่มต้น
+            $data['company_id'] = session('current_company_id', 1);
+            
+            $customer = Customer::create($data);
+            
+            DB::commit();
+            
+            return redirect()->route('customers.show', $customer)
+                ->with('success', 'สร้างลูกค้าใหม่สำเร็จ');
+                
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Customer creation error: ' . $e->getMessage());
+            
+            return redirect()->back()->withInput()
+                ->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * ประมวลผลข้อมูล metadata จากฟอร์ม
+     */
+    private function processMetadata(Request $request)
+    {
+        // เริ่มด้วยข้อมูล metadata ที่มีอยู่แล้ว
+        $metadata = $request->input('metadata', []);
         
-        // Set company_id from session
-        $validated['company_id'] = session('current_company_id', 1); // Default to 1 if not set
-        
-        // Convert is_supplier checkbox to boolean
-        $validated['is_supplier'] = isset($validated['is_supplier']) ? true : false;
-        
-        // Generate customer code if not provided
-        if (empty($validated['code'])) {
-            $validated['code'] = 'CUST-' . str_pad(Customer::max('id') + 1, 5, '0', STR_PAD_LEFT);
+        // เพิ่มข้อมูลจากฟิลด์ custom
+        if ($request->has('metadata_keys') && $request->has('metadata_values')) {
+            $keys = $request->input('metadata_keys');
+            $values = $request->input('metadata_values');
+            
+            for ($i = 0; $i < count($keys); $i++) {
+                if (!empty($keys[$i]) && isset($values[$i])) {
+                    $metadata[$keys[$i]] = $values[$i];
+                }
+            }
         }
         
-        // Prepare metadata
-        $metadata = [
-            'industry' => $validated['industry'] ?? null,
-            'credit_term' => $validated['credit_term'] ?? null,
-            'sales_region' => $validated['sales_region'] ?? null,
-        ];
-        
-        // Prepare social media data as json
-        $socialMedia = [];
-        if (!empty($request->facebook)) $socialMedia['facebook'] = $request->facebook;
-        if (!empty($request->line_official)) $socialMedia['line_official'] = $request->line_official;
-        if (!empty($request->instagram)) $socialMedia['instagram'] = $request->instagram;
-        if (!empty($request->twitter)) $socialMedia['twitter'] = $request->twitter;
-        
-        $validated['social_media'] = !empty($socialMedia) ? json_encode($socialMedia) : null;
-        
-        // Remove keys from validated data that go into metadata
-        unset($validated['industry']);
-        unset($validated['credit_term']);
-        unset($validated['sales_region']);
-        
-        // Add metadata to validated data
-        $validated['metadata'] = json_encode($metadata);
-        
-        // Create customer
-        $customer = Customer::create($validated);
-        
-        return redirect()->route('customers.show', $customer)
-            ->with('success', 'ลูกค้าถูกสร้างเรียบร้อยแล้ว');
+        return $metadata;
     }
 
     /**

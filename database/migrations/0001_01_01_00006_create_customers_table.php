@@ -31,7 +31,7 @@ return new class extends Migration
         Schema::create('customers', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
-            $table->string('code')->nullable();
+            $table->string('code')->unique()->nullable();
             $table->string('name');
             $table->string('email')->nullable();
             $table->string('phone', 20)->nullable();
@@ -71,6 +71,7 @@ return new class extends Migration
             $table->index('name');
             $table->index('email'); // ยังคง index สำหรับการค้นหา
             $table->index('status');
+            $table->index(['company_id', 'code']);
 
             // เพิ่ม unique constraint แบบ compound key สำหรับ email ในแต่ละ company
             // (จาก modify_customers_email_unique_constraint.php)

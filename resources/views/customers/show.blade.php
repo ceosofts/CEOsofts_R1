@@ -513,8 +513,8 @@
                                             <td class="py-3 px-4 text-sm truncate">
                                                 <a href="#" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">{{ $quotation->quotation_number }}</a>
                                             </td>
-                                            <td class="py-3 px-4 text-sm">{{ $quotation->quotation_date->format('d/m/Y') }}</td>
-                                            <td class="py-3 px-4 text-sm">{{ $quotation->expiration_date->format('d/m/Y') }}</td>
+                                            <td class="py-3 px-4 text-sm">{{ $quotation->issue_date ? $quotation->issue_date->format('d/m/Y') : 'ไม่ระบุ' }}</td>
+                                            <td class="py-3 px-4 text-sm">{{ $quotation->expiry_date ? $quotation->expiry_date->format('d/m/Y') : 'ไม่ระบุ' }}</td>
                                             <td class="py-3 px-4 text-sm">
                                                 <span class="inline-flex px-2.5 py-1 rounded-full text-sm font-semibold border-2 shadow-sm text-white"
                                                     style="background-color: {{ 
