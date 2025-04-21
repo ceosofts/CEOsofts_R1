@@ -620,7 +620,7 @@ class OrderController extends Controller
      */
     public function getOrderProducts($id)
     {
-        \Log::info('API getOrderProducts ถูกเรียกใช้', [
+        Log::info('API getOrderProducts ถูกเรียกใช้', [
             'id' => $id,
             'type' => gettype($id)
         ]);
@@ -637,7 +637,7 @@ class OrderController extends Controller
             // โหลดข้อมูลที่เกี่ยวข้อง
             $order->load(['items.product', 'customer']);
             
-            \Log::info('พบใบสั่งขาย', [
+            Log::info('พบใบสั่งขาย', [
                 'order_id' => $order->id,
                 'order_number' => $order->order_number,
                 'customer' => $order->customer ? $order->customer->name : 'ไม่มีข้อมูลลูกค้า',
@@ -681,10 +681,10 @@ class OrderController extends Controller
 
             return response()->json($response);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            \Log::error('ไม่พบใบสั่งขาย ID: ' . $id);
+            Log::error('ไม่พบใบสั่งขาย ID: ' . $id);
             return response()->json(['error' => 'ไม่พบใบสั่งขาย'], 404);
         } catch (\Exception $e) {
-            \Log::error('เกิดข้อผิดพลาดในการดึงข้อมูลใบสั่งขาย', [
+            Log::error('เกิดข้อผิดพลาดในการดึงข้อมูลใบสั่งขาย', [
                 'id' => $id,
                 'message' => $e->getMessage(),
                 'file' => $e->getFile(),
