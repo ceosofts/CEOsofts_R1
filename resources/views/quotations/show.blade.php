@@ -120,6 +120,7 @@
                         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                             <thead>
                                 <tr class="bg-gray-50 dark:bg-gray-700">
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">รหัส</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">รายการ</th>
                                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">จำนวน</th>
                                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ราคาต่อหน่วย</th>
@@ -130,6 +131,11 @@
                             <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                 @forelse($quotation->items as $item)
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    <td class="px-6 py-4 whitespace-normal">
+                                        <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                            {{ $item->product->code ?? 'N/A' }}
+                                        </div>
+                                    </td>
                                     <td class="px-6 py-4 whitespace-normal">
                                         <div class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $item->description }}</div>
                                     </td>
@@ -300,6 +306,7 @@
                     <thead>
                         <tr class="bg-gray-200">
                             <th class="py-2 px-4 border text-left">ลำดับ</th>
+                            <th class="py-2 px-4 border text-left">รหัสสินค้า</th>
                             <th class="py-2 px-4 border text-left">รายการ</th>
                             <th class="py-2 px-4 border text-right">จำนวน</th>
                             <th class="py-2 px-4 border text-right">ราคาต่อหน่วย</th>
@@ -311,6 +318,7 @@
                         @forelse($quotation->items as $index => $item)
                         <tr>
                             <td class="py-2 px-4 border">{{ $index + 1 }}</td>
+                            <td class="py-2 px-4 border">{{ $item->product->code ?? '-' }}</td>
                             <td class="py-2 px-4 border">{{ $item->description }}</td>
                             <td class="py-2 px-4 border text-right">{{ number_format($item->quantity, 2) }} {{ $item->unit->name ?? '' }}</td>
                             <td class="py-2 px-4 border text-right">{{ number_format($item->unit_price, 2) }}</td>
@@ -325,7 +333,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="py-2 px-4 border text-center">ไม่มีรายการสินค้า</td>
+                            <td colspan="7" class="py-2 px-4 border text-center">ไม่มีรายการสินค้า</td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -457,4 +465,74 @@
     <!-- นำเข้า CSS และ JavaScript ที่แยกออกมา -->
     <link rel="stylesheet" href="{{ asset('css/quotation-preview.css') }}">
     <script src="{{ asset('js/quotation-preview.js') }}"></script>
+    
+    <!-- เพิ่ม JavaScript สำหรับปุ่มดูตัวอย่างและพิมพ์ -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // ควบคุมปุ่ม "ดูตัวอย่าง" (Preview)
+            const previewButton = document.getElementById('preview-button');
+            const previewModal = document.getElementById('preview-modal');
+            const closePreview = document.getElementById('close-preview');
+            
+            if (previewButton) {
+                previewButton.addEventListener('click', function() {
+                    previewModal.classList.remove('modal-hidden');
+                });
+            }
+            
+            if (closePreview) {
+                closePreview.addEventListener('click', function() {
+                    previewModal.classList.add('modal-hidden');
+                });
+            }
+            
+            // ปุ่ม "พิมพ์" (Print) - ใช้ฟังก์ชัน printQuotation() เพื่อได้รูปแบบที่สวยงาม
+            const printButton = document.getElementById('print-button');
+            if (printButton) {
+                // ลบ event listener เดิมทั้งหมดก่อน (ป้องกันซ้ำซ้อน)
+                printButton.replaceWith(printButton.cloneNode(true));
+                const newPrintButton = document.getElementById('print-button');
+                newPrintButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const title = 'ใบเสนอราคาเลขที่ {{ $quotation->quotation_number }}';
+                    document.title = title; // ตั้งชื่อเอกสารในหน้าปัจจุบัน
+                    // ส่ง title เป็น parameter ไปยังฟังก์ชัน printQuotation
+                    printQuotation(title);
+                });
+            }
+
+            // ซ่อน modal เมื่อกดปุ่ม Escape
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    previewModal.classList.add('modal-hidden');
+                }
+            });
+            
+            // ซ่อน modal เมื่อคลิกพื้นหลัง
+            previewModal.addEventListener('click', function(event) {
+                if (event.target === previewModal) {
+                    previewModal.classList.add('modal-hidden');
+                }
+            });
+            
+            // เพิ่ม event listener สำหรับการพิมพ์เพื่อกำหนดชื่อเอกสาร
+            window.addEventListener('beforeprint', function() {
+                document.title = 'ใบเสนอราคาเลขที่ {{ $quotation->quotation_number }}';
+            });
+        });
+    </script>
+    
+    <!-- เพิ่ม CSS สำหรับการพิมพ์ -->
+    <style>
+        @media print {
+            /* ซ่อน modal preview และปุ่มที่ไม่ต้องการพิมพ์ */
+            #preview-modal, #preview-modal *, .toolbar, #print-button, #preview-button {
+                display: none !important;
+            }
+            /* ให้เนื้อหาใบเสนอราคาหลักแสดงผลเต็มที่ */
+            body * {
+                visibility: visible;
+            }
+        }
+    </style>
 </x-app-layout>

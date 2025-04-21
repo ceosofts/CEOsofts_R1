@@ -248,6 +248,7 @@ class QuotationController extends Controller
                     'tax_amount' => ($request->tax_rate / 100) * $itemSubtotal,
                     'subtotal' => $itemSubtotal,
                     'total' => $itemSubtotal * (1 + (($request->tax_rate ?? 0) / 100)),
+                    'metadata' => json_encode(['product_code' => $productModel->code ?? null])
                 ]);
                 
                 Log::info('สร้างรายการสินค้า', ['item_id' => $item->id, 'product_name' => $productModel->name]);
@@ -398,6 +399,7 @@ class QuotationController extends Controller
                 'tax_amount' => ($request->tax_rate / 100) * $itemSubtotal,
                 'subtotal' => $itemSubtotal,
                 'total' => $itemSubtotal * (1 + ($request->tax_rate / 100)),
+                'metadata' => json_encode(['product_code' => $productModel->code ?? null])
             ]);
         }
         

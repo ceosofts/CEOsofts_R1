@@ -215,11 +215,14 @@
                 <select name="products[INDEX][product_id]" class="product-select block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
                     <option value="">-- เลือกสินค้า --</option>
                     @foreach($products as $product)
-                    <option value="{{ $product->id }}" data-price="{{ $product->price }}" data-unit="{{ $product->unit_id }}">
-                        {{ $product->name }}
+                    <option value="{{ $product->id }}" data-price="{{ $product->price }}" data-unit="{{ $product->unit_id }}" data-code="{{ $product->code }}">
+                        {{ $product->code ? "[$product->code] " : "" }}{{ $product->name }}
                     </option>
                     @endforeach
                 </select>
+            </td>
+            <td class="py-2 px-4 border-b dark:border-gray-700">
+                <input type="text" name="products[INDEX][code]" class="product-code-display block w-full bg-gray-100 rounded-md border-gray-300 shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white text-center" readonly>
             </td>
             <td class="py-2 px-4 border-b dark:border-gray-700">
                 <input type="number" name="products[INDEX][quantity]" class="quantity-input block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-right" value="1" min="0.01" step="0.01" required>
@@ -281,8 +284,10 @@
                     const option = e.target.options[e.target.selectedIndex];
                     const priceInput = row.querySelector('.price-input');
                     const unitSelect = row.querySelector('.unit-select');
+                    const productCodeDisplay = row.querySelector('.product-code-display');
                     const price = option.getAttribute('data-price');
                     const unitId = option.getAttribute('data-unit');
+                    const productCode = option.getAttribute('data-code') || '';
                     
                     if (price) {
                         priceInput.value = price;
@@ -291,6 +296,9 @@
                     if (unitId) {
                         unitSelect.value = unitId;
                     }
+                    
+                    // เพิ่มการแสดงรหัสสินค้า
+                    productCodeDisplay.value = productCode;
                     
                     calculateRowTotal(row);
                     calculateTotals();
@@ -397,8 +405,12 @@
                 const products = [];
                 
                 productRows.forEach(function(row) {
+                    const productSelect = row.querySelector('.product-select');
+                    const selectedOption = productSelect.options[productSelect.selectedIndex];
+                    
                     const product = {
-                        product_id: row.querySelector('.product-select').value,
+                        product_id: productSelect.value,
+                        product_code: selectedOption.getAttribute('data-code') || '',
                         quantity: row.querySelector('.quantity-input').value,
                         unit_id: row.querySelector('.unit-select').value,
                         unit_price: row.querySelector('.price-input').value,
