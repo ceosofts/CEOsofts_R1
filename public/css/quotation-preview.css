@@ -164,6 +164,17 @@ table {
     box-sizing: border-box;
 }
 
+/* สไตล์สำหรับแสดงพนักงานขาย */
+.sales-person-info {
+    display: block;
+    margin-top: 8px;
+    line-height: 1.4;
+}
+
+.bold-label {
+    font-weight: bold;
+}
+
 /* สไตล์สำหรับส่วนลงนาม */
 .grid-cols-2 {
     display: flex;

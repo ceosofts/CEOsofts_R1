@@ -48,7 +48,8 @@ class Order extends Model
         'delivered_at', 
         'cancelled_by', 
         'cancelled_at',
-        'cancellation_reason'
+        'cancellation_reason',
+        'sales_person_id', // เพิ่มฟิลด์พนักงานขาย
     ];
 
     /**
@@ -130,6 +131,14 @@ class Order extends Model
     public function cancelledBy()
     {
         return $this->belongsTo(User::class, 'cancelled_by');
+    }
+
+    /**
+     * Get the sales person associated with the order.
+     */
+    public function salesPerson()
+    {
+        return $this->belongsTo(Employee::class, 'sales_person_id');
     }
 
     /**

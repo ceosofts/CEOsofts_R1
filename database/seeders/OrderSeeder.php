@@ -9,6 +9,7 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Quotation;
 use App\Models\User;
+use App\Models\Employee;
 use Carbon\Carbon;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -58,6 +59,24 @@ class OrderSeeder extends Seeder
                     continue; // ข้ามถ้าไม่มีสินค้า
                 }
                 
+                // ดึงพนักงานขายของบริษัท
+                $salesPersons = Employee::where('company_id', $company->id)
+                    ->whereIn('position_id', [3, 4, 5]) // สมมุติว่า position_id 3, 4, 5 เป็นตำแหน่งพนักงานขาย หรือปรับตามข้อมูลจริง
+                    ->orWhere(function($query) use ($company) {
+                        $query->where('company_id', $company->id)
+                            ->where('employee_code', 'like', 'EMP-%'); // ใช้พนักงานทั่วไปเป็นพนักงานขายได้
+                    })
+                    ->get();
+                
+                if ($salesPersons->isEmpty()) {
+                    echo "  ไม่พบพนักงานขายสำหรับบริษัท {$company->name} จะใช้พนักงานคนแรกแทน\n";
+                    $salesPersons = Employee::where('company_id', $company->id)->take(1)->get();
+                    
+                    if ($salesPersons->isEmpty()) {
+                        echo "  ไม่พบพนักงานสำหรับบริษัท {$company->name} จะสร้างใบสั่งขายโดยไม่มีพนักงานขาย\n";
+                    }
+                }
+                
                 // ตรวจสอบว่ามีคอลัมน์ที่จำเป็นในฐานข้อมูลหรือไม่
                 $hasConfirmedFields = Schema::hasColumn('orders', 'confirmed_by') && Schema::hasColumn('orders', 'confirmed_at');
                 $hasProcessedFields = Schema::hasColumn('orders', 'processed_by') && Schema::hasColumn('orders', 'processed_at');
@@ -69,6 +88,13 @@ class OrderSeeder extends Seeder
                 for ($i = 0; $i < $orderCount; $i++) {
                     $customer = $customers->random();
                     $creator = $users->random();
+                    
+                    // กำหนดพนักงานขาย (ถ้ามี)
+                    $salesPersonId = null;
+                    if ($salesPersons->isNotEmpty()) {
+                        $salesPerson = $salesPersons->random();
+                        $salesPersonId = $salesPerson->id;
+                    }
                     
                     // สุ่มวันที่สั่งซื้อในช่วง 3 เดือนที่ผ่านมา
                     $orderDate = Carbon::now()->subDays(rand(0, 90));
@@ -130,6 +156,7 @@ class OrderSeeder extends Seeder
                             'shipping_address' => $customer->address,
                             'shipping_method' => rand(0, 1) ? $faker->randomElement(['ขนส่งบริษัท', 'ไปรษณีย์ไทย', 'Kerry', 'Flash', 'J&T']) : null,
                             'created_by' => $creator->id,
+                            'sales_person_id' => $salesPersonId, // เพิ่มพนักงานขาย
                         ]);
                         
                         $order->save();

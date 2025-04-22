@@ -76,6 +76,20 @@
                                 </select>
                             </div>
 
+                            <!-- ช่อง "พนักงานขาย" เพิ่มในส่วนฟิลเตอร์ -->
+                            <div class="col-span-1">
+                                <label for="sales_person_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">พนักงานขาย</label>
+                                <select name="sales_person_id" id="sales_person_id"
+                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    <option value="">-- ทั้งหมด --</option>
+                                    @foreach(\App\Models\Employee::where('company_id', session('company_id'))->orderBy('first_name')->get() as $employee)
+                                    <option value="{{ $employee->id }}" {{ request('sales_person_id') == $employee->id ? 'selected' : '' }}>
+                                        {{ $employee->employee_code }} - {{ $employee->first_name }} {{ $employee->last_name }}
+                                    </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
                             <!-- ช่วงวันที่ - กินพื้นที่ 2 คอลัมน์ -->
                             <div class="col-span-1 md:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ช่วงวันที่</label>
@@ -176,6 +190,7 @@
                                     <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-left">เลขที่</th>
                                     <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-left">วันที่</th>
                                     <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-left">ลูกค้า</th>
+                                    <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-left">พนักงานขาย</th>
                                     <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-right">ยอดรวม</th>
                                     <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-left">สถานะ</th>
                                     <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-center">จัดการ</th>
@@ -187,6 +202,13 @@
                                     <td class="py-2 px-4">{{ $quotation->quotation_number }}</td>
                                     <td class="py-2 px-4">{{ $quotation->issue_date ? $quotation->issue_date->format('d/m/Y') : '-' }}</td>
                                     <td class="py-2 px-4">{{ $quotation->customer->name ?? 'ไม่ระบุ' }}</td>
+                                    <td class="py-2 px-4">
+                                        @if($quotation->sales_person_id && $salesPerson = \App\Models\Employee::find($quotation->sales_person_id))
+                                            {{ $salesPerson->employee_code }} - {{ $salesPerson->first_name }} {{ $salesPerson->last_name }}
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
                                     <td class="py-2 px-4 text-right">{{ number_format($quotation->total_amount, 2) }}</td>
                                     <td class="py-2 px-4">
                                         @if($quotation->status == 'draft')

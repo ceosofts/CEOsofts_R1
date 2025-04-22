@@ -44,6 +44,9 @@ return new class extends Migration
                 $table->text('notes')->nullable();
                 $table->string('payment_terms')->nullable();
                 
+                // เพิ่มฟิลด์พนักงานขาย
+                $table->foreignId('sales_person_id')->nullable()->constrained('employees')->onDelete('set null');
+                
                 // ข้อมูลผู้ใช้ที่เกี่ยวข้อง
                 $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
                 $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null');
@@ -52,6 +55,11 @@ return new class extends Migration
                 
                 $table->timestamps();
                 $table->softDeletes();
+            });
+        } else if (!Schema::hasColumn('orders', 'sales_person_id')) {
+            // เพิ่มคอลัมน์ sales_person_id ถ้าตารางมีอยู่แล้วแต่ยังไม่มีคอลัมน์นี้
+            Schema::table('orders', function (Blueprint $table) {
+                $table->foreignId('sales_person_id')->nullable()->constrained('employees')->onDelete('set null');
             });
         }
 

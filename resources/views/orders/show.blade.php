@@ -24,9 +24,9 @@
                 <!-- ปุ่มพิมพ์ -->
                 <button id="print-button" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                     <svg class="-ml-1 mr-2 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2z" />
                     </svg>
-                    พิมพ์
+                    {{ __('พิมพ์') }}
                 </button>
                 
                 @if(!in_array($order->status, ['shipped', 'delivered', 'cancelled']))
@@ -181,6 +181,17 @@
                                     <td class="py-1 text-gray-600">หมายเหตุ:</td>
                                     <td class="py-1">{{ $order->notes ?? '-' }}</td>
                                 </tr>
+                                <!-- เพิ่มข้อมูลพนักงานขายในตาราง -->
+                                <tr>
+                                    <td class="py-1 text-gray-600">พนักงานขาย:</td>
+                                    <td class="py-1">
+                                        @if($order->sales_person_id && $salesPerson = \App\Models\Employee::find($order->sales_person_id))
+                                            {{ $salesPerson->employee_code }} - {{ $salesPerson->first_name }} {{ $salesPerson->last_name }}
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
+                                </tr>
                             </table>
                         </div>
 
@@ -243,6 +254,15 @@
                                 <p><span class="font-medium">การจัดส่ง:</span> {{ $order->shipping_method ?? '-' }}</p>
                                 <p><span class="font-medium">ที่อยู่จัดส่ง:</span> {{ $order->shipping_address ?? $order->customer->address }}</p>
                                 <p><span class="font-medium">ค่าจัดส่ง:</span> {{ number_format($order->shipping_cost, 2) }} บาท</p>
+                                
+                                <!-- เพิ่มข้อมูลพนักงานขายในสรุป -->
+                                <p><span class="font-medium">พนักงานขาย:</span> 
+                                    @if($order->sales_person_id && $salesPerson = \App\Models\Employee::find($order->sales_person_id))
+                                        {{ $salesPerson->employee_code }} - {{ $salesPerson->first_name }} {{ $salesPerson->last_name }}
+                                    @else
+                                        -
+                                    @endif
+                                </p>
                                 
                                 @if($order->status == 'shipped' || $order->status == 'delivered')
                                     <p><span class="font-medium">เลขติดตามพัสดุ:</span> {{ $order->tracking_number ?? '-' }}</p>
@@ -506,6 +526,14 @@
                         <p><strong>วันที่:</strong> {{ $order->order_date->format('d/m/Y') }}</p>
                         <p><strong>วันที่จัดส่ง:</strong> {{ $order->delivery_date ? $order->delivery_date->format('d/m/Y') : '-' }}</p>
                         <p><strong>อ้างอิง:</strong> {{ $order->customer_po_number ?: '-' }}</p>
+                        <!-- เพิ่มข้อมูลพนักงานขายในส่วนนี้ -->
+                        <p><strong>พนักงานขาย:</strong> 
+                            @if($order->sales_person_id && $salesPerson = \App\Models\Employee::find($order->sales_person_id))
+                                {{ $salesPerson->employee_code }} - {{ $salesPerson->first_name }} {{ $salesPerson->last_name }}
+                            @else
+                                -
+                            @endif
+                        </p>
                     </div>
                 </div>
 
@@ -793,6 +821,273 @@
         
         .grid-cols-2 > div {
             width: 48%;
+        }
+    </style>
+
+    <!-- เพิ่ม JavaScript สำหรับการจัดการปุ่มพิมพ์และดูตัวอย่าง -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // ตัวแปรสำหรับตรวจสอบสถานะการเปิดโมดอล
+            let previewModalOpen = false;
+
+            // ปุ่มดูตัวอย่าง
+            const previewButton = document.getElementById('preview-button');
+            const previewModal = document.getElementById('preview-modal');
+            const closePreview = document.getElementById('close-preview');
+            
+            if (previewButton && previewModal) {
+                previewButton.addEventListener('click', function() {
+                    if (!previewModalOpen) {
+                        previewModalOpen = true;
+                        previewModal.classList.remove('modal-hidden');
+                        document.body.style.overflow = 'hidden'; // ป้องกันการเลื่อนหน้าเมื่อโมดอลเปิด
+                    }
+                });
+            }
+            
+            if (closePreview && previewModal) {
+                closePreview.addEventListener('click', function() {
+                    previewModal.classList.add('modal-hidden');
+                    previewModalOpen = false;
+                    document.body.style.overflow = ''; // คืนค่าการเลื่อนหน้า
+                });
+            }
+            
+            // ปุ่มพิมพ์ - เรียกฟังก์ชัน window.print() โดยตรง
+            const printButton = document.getElementById('print-button');
+            if (printButton) {
+                // ลบ event listener เดิมและเพิ่มใหม่เพื่อป้องกันการทำงานซ้ำซ้อน
+                const newPrintButton = printButton.cloneNode(true);
+                printButton.parentNode.replaceChild(newPrintButton, printButton);
+                
+                newPrintButton.addEventListener('click', function() {
+                    // ตั้งชื่อเอกสารก่อนพิมพ์
+                    const originalTitle = document.title;
+                    document.title = 'ใบสั่งขายเลขที่ {{ $order->order_number }}';
+                    
+                    // พิมพ์เอกสาร
+                    window.print();
+                    
+                    // คืนค่าชื่อเอกสารเดิม
+                    setTimeout(() => {
+                        document.title = originalTitle;
+                    }, 100);
+                });
+            }
+
+            // ซ่อน modal เมื่อกดปุ่ม Escape
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape' && previewModalOpen) {
+                    previewModal.classList.add('modal-hidden');
+                    previewModalOpen = false;
+                    document.body.style.overflow = '';
+                }
+            });
+            
+            // ซ่อน modal เมื่อคลิกพื้นหลัง
+            if (previewModal) {
+                previewModal.addEventListener('click', function(event) {
+                    if (event.target === previewModal) {
+                        previewModal.classList.add('modal-hidden');
+                        previewModalOpen = false;
+                        document.body.style.overflow = '';
+                    }
+                });
+            }
+        });
+    </script>
+
+    <!-- เพิ่มส่วนที่จะใช้สำหรับการพิมพ์โดยเฉพาะ แต่ซ่อนในการแสดงผลปกติ -->
+    <div id="printable-area" style="display: none;">
+        <div class="print-content">
+            <!-- ข้อมูลบริษัท -->
+            <div style="text-align: center; margin-bottom: 20px;">
+                <h1 style="font-size: 24px; font-weight: bold;">{{ $order->company->name ?? 'บริษัท ซีอีโอซอฟต์ จำกัด' }}</h1>
+                <p>{{ $order->company->address ?? '123 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110' }}</p>
+                <p>โทร: {{ $order->company->phone ?? '02-123-4567' }}, อีเมล: {{ $order->company->email ?? 'info@ceosofts.com' }}</p>
+            </div>
+
+            <div style="border-bottom: 2px solid #000; margin-bottom: 20px;">
+                <h2 style="text-align: center; font-size: 20px; font-weight: bold;">ใบสั่งขาย</h2>
+            </div>
+
+            <!-- ข้อมูลลูกค้าและเลขที่เอกสาร -->
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                <div style="width: 48%;">
+                    <p><strong>ลูกค้า:</strong> {{ $order->customer->name }}</p>
+                    <p>{{ $order->customer->address }}</p>
+                    <p>โทร: {{ $order->customer->phone }}</p>
+                    <p>อีเมล: {{ $order->customer->email }}</p>
+                </div>
+                <div style="width: 48%; text-align: right;">
+                    <p><strong>เลขที่:</strong> {{ $order->order_number }}</p>
+                    <p><strong>วันที่:</strong> {{ $order->order_date->format('d/m/Y') }}</p>
+                    <p><strong>วันที่จัดส่ง:</strong> {{ $order->delivery_date ? $order->delivery_date->format('d/m/Y') : '-' }}</p>
+                    <p><strong>อ้างอิง:</strong> {{ $order->customer_po_number ?: '-' }}</p>
+                    <p><strong>พนักงานขาย:</strong> 
+                        @if($order->sales_person_id && $salesPerson = \App\Models\Employee::find($order->sales_person_id))
+                            {{ $salesPerson->employee_code }} - {{ $salesPerson->first_name }} {{ $salesPerson->last_name }}
+                        @else
+                            -
+                        @endif
+                    </p>
+                </div>
+            </div>
+
+            <!-- รายการสินค้า -->
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                <thead>
+                    <tr style="background-color: #f2f2f2;">
+                        <th style="border: 1px solid #333; padding: 8px; text-align: left;">ลำดับ</th>
+                        <th style="border: 1px solid #333; padding: 8px; text-align: left;">รหัสสินค้า</th>
+                        <th style="border: 1px solid #333; padding: 8px; text-align: left;">รายการ</th>
+                        <th style="border: 1px solid #333; padding: 8px; text-align: right;">จำนวน</th>
+                        <th style="border: 1px solid #333; padding: 8px; text-align: right;">ราคาต่อหน่วย</th>
+                        <th style="border: 1px solid #333; padding: 8px; text-align: right;">จำนวนเงิน</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($order->items as $index => $item)
+                    <tr>
+                        <td style="border: 1px solid #333; padding: 8px;">{{ $index + 1 }}</td>
+                        <td style="border: 1px solid #333; padding: 8px;">{{ $item->product->code ?? '-' }}</td>
+                        <td style="border: 1px solid #333; padding: 8px;">{{ $item->description }}</td>
+                        <td style="border: 1px solid #333; padding: 8px; text-align: right;">{{ number_format($item->quantity, 2) }}</td>
+                        <td style="border: 1px solid #333; padding: 8px; text-align: right;">{{ number_format($item->unit_price, 2) }}</td>
+                        <td style="border: 1px solid #333; padding: 8px; text-align: right;">{{ number_format($item->total, 2) }}</td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="6" style="border: 1px solid #333; padding: 8px; text-align: center;">ไม่พบรายการสินค้า</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+
+            <!-- สรุปยอดเงิน -->
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
+                <div style="width: 300px;">
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #ddd; padding: 5px 0;">
+                        <span>ยอดรวมก่อนภาษี</span>
+                        <span>{{ number_format($order->subtotal, 2) }}</span>
+                    </div>
+                    @if($order->discount_amount > 0)
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #ddd; padding: 5px 0;">
+                        <span>ส่วนลด</span>
+                        <span>{{ number_format($order->discount_amount, 2) }}</span>
+                    </div>
+                    @endif
+                    @if($order->tax_amount > 0)
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #ddd; padding: 5px 0;">
+                        <span>ภาษีมูลค่าเพิ่ม ({{ $order->tax_rate }}%)</span>
+                        <span>{{ number_format($order->tax_amount, 2) }}</span>
+                    </div>
+                    @endif
+                    <div style="display: flex; justify-content: space-between; font-weight: bold; padding: 10px 0;">
+                        <span>ยอดรวมทั้งสิ้น</span>
+                        <span>{{ number_format($order->total_amount, 2) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            @if($order->notes)
+            <div style="margin-top: 20px; padding: 10px; border: 1px solid #ddd; background-color: #f9f9f9; border-radius: 4px;">
+                <strong>หมายเหตุ:</strong>
+                <p>{{ $order->notes }}</p>
+            </div>
+            @endif
+
+            <!-- ส่วนลงนาม -->
+            <div style="display: flex; justify-content: space-between; margin-top: 50px;">
+                <div style="text-align: center; width: 40%;">
+                    <div style="border-top: 1px solid #000; width: 70%; margin: 50px auto 0; padding-top: 10px;">
+                        ผู้สั่งขาย
+                    </div>
+                </div>
+                <div style="text-align: center; width: 40%;">
+                    <div style="border-top: 1px solid #000; width: 70%; margin: 50px auto 0; padding-top: 10px;">
+                        ผู้มีอำนาจลงนาม
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- แก้ไข JavaScript สำหรับการพิมพ์ -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const printButton = document.getElementById('print-button');
+            if (printButton) {
+                // ลบ event listener เดิมและเพิ่มใหม่
+                const newPrintButton = printButton.cloneNode(true);
+                printButton.parentNode.replaceChild(newPrintButton, printButton);
+                
+                newPrintButton.addEventListener('click', function() {
+                    // ใช้วิธีการพิมพ์แบบใหม่ที่แน่ใจว่าข้อมูลจะแสดงบนเอกสารที่พิมพ์
+                    const printWindow = window.open('', '_blank');
+                    if (!printWindow) {
+                        alert("กรุณาอนุญาตให้เปิดหน้าต่างป๊อปอัพ เพื่อพิมพ์เอกสาร");
+                        return;
+                    }
+                    
+                    const printableContent = document.getElementById('printable-area').innerHTML;
+                    const htmlContent = `
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <meta charset="utf-8">
+                            <title>ใบสั่งขายเลขที่ {{ $order->order_number }}</title>
+                            <style>
+                                body {
+                                    font-family: 'Sarabun', 'Prompt', 'THSarabunNew', sans-serif;
+                                    font-size: 14px;
+                                    line-height: 1.5;
+                                    color: #000;
+                                    margin: 0;
+                                    padding: 20px;
+                                }
+                                h1 { font-size: 24px; margin-top: 0; }
+                                h2 { font-size: 20px; margin-top: 0; }
+                                table { width: 100%; border-collapse: collapse; }
+                                th, td { border: 1px solid #333; padding: 8px; }
+                                th { background-color: #f2f2f2; }
+                                @media print {
+                                    body { padding: 0; }
+                                    @page { margin: 1.5cm; }
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="print-content">
+                                ${printableContent}
+                            </div>
+                            <script>
+                                // พิมพ์อัตโนมัติเมื่อโหลดเสร็จ
+                                window.onload = function() {
+                                    setTimeout(function() {
+                                        window.print();
+                                        window.onfocus = function() { window.close(); };
+                                    }, 500);
+                                };
+                            </script>
+                        </body>
+                        </html>
+                    `;
+                    
+                    printWindow.document.open();
+                    printWindow.document.write(htmlContent);
+                    printWindow.document.close();
+                });
+            }
+            
+            // ...existing code...
+        });
+    </script>
+
+    <!-- ปรับปรุง CSS สำหรับการพิมพ์ -->
+    <style>
+        #printable-area {
+            display: none; /* ซ่อนส่วนที่ใช้พิมพ์ในการแสดงผลปกติ */
         }
     </style>
 </x-app-layout>

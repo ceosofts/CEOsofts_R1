@@ -236,7 +236,14 @@
                 <strong>เลขที่:</strong> {{ $quotation->quotation_number }}<br>
                 <strong>วันที่:</strong> {{ $quotation->issue_date->format('d/m/Y') }}<br>
                 <strong>วันที่หมดอายุ:</strong> {{ $quotation->expiry_date->format('d/m/Y') }}<br>
-                <strong>อ้างอิง:</strong> {{ $quotation->reference_number ?: '-' }}
+                <strong>อ้างอิง:</strong> {{ $quotation->reference_number ?: '-' }}<br>
+                <!-- เพิ่มพนักงานขายในส่วน PDF view -->
+                <strong>พนักงานขาย:</strong>
+                @if($quotation->sales_person_id && $salesPerson = \App\Models\Employee::find($quotation->sales_person_id))
+                    {{ $salesPerson->employee_code }} - {{ $salesPerson->first_name }} {{ $salesPerson->last_name }}
+                @else
+                    -
+                @endif
             </div>
         </div>
 

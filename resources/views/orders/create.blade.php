@@ -137,6 +137,22 @@
                                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                     @enderror
                                 </div>
+                                
+                                <!-- ปรับช่องพนักงานขายให้ดึงค่าจากใบเสนอราคา -->
+                                <div class="mb-4">
+                                    <x-input-label for="sales_person_id" :value="__('พนักงานขาย')" />
+                                    <select id="sales_person_id" name="sales_person_id" class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                                        <option value="">-- เลือกพนักงานขาย --</option>
+                                        @foreach(\App\Models\Employee::where('company_id', session('company_id'))->orderBy('first_name')->get() as $employee)
+                                        <option value="{{ $employee->id }}" {{ old('sales_person_id', $quotation ? $quotation->sales_person_id : null) == $employee->id ? 'selected' : '' }}>
+                                            {{ $employee->employee_code }} - {{ $employee->first_name }} {{ $employee->last_name }}
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                    @error('sales_person_id')
+                                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
                             </div>
                         </div>
 
@@ -563,6 +579,12 @@
                                         document.getElementById('discount_type').value = data.discount_type || 'fixed';
                                         document.getElementById('discount_amount').value = data.discount_amount || 0;
                                         document.getElementById('tax_rate').value = data.tax_rate || 7;
+                                        
+                                        // เซ็ตค่าพนักงานขาย
+                                        if (data.sales_person_id) {
+                                            const salesPersonSelect = document.getElementById('sales_person_id');
+                                            salesPersonSelect.value = data.sales_person_id;
+                                        }
                                         
                                         // ล้างรายการสินค้าเก่า
                                         const productsList = document.getElementById('productsList');

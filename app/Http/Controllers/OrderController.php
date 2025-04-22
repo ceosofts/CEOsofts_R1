@@ -58,6 +58,9 @@ class OrderController extends Controller
             $quotation = Quotation::with('items.product', 'customer')->find($quotationId);
         }
         
+        // เพิ่มการโหลดพนักงานขาย
+        $salesPersons = \App\Models\Employee::where('company_id', session('company_id'))->orderBy('first_name')->get();
+        
         // ดึงใบเสนอราคาที่อนุมัติแล้วทั้งหมด
         $approvedQuotations = Quotation::where('status', 'approved')
             ->with('customer')
@@ -66,7 +69,7 @@ class OrderController extends Controller
         
         $orderNumber = Order::generateOrderNumber(session('company_id'));
         
-        return view('orders.create', compact('customers', 'products', 'orderNumber', 'quotation', 'approvedQuotations'));
+        return view('orders.create', compact('customers', 'products', 'orderNumber', 'quotation', 'approvedQuotations', 'salesPersons'));
     }
 
     /**
@@ -130,6 +133,7 @@ class OrderController extends Controller
                 'discount_type' => 'nullable|in:fixed,percentage',
                 'discount_amount' => 'nullable|numeric|min:0',
                 'customer_po_number' => 'nullable|string',
+                'sales_person_id' => 'nullable|exists:employees,id', // เพิ่ม validation rule
                 // ...existing validation rules...
             ], [
                 'customer_id.required' => 'กรุณาเลือกลูกค้า',
@@ -188,6 +192,7 @@ class OrderController extends Controller
                 'customer_po_number' => $validated['customer_po_number'] ?? null,
                 'quotation_id' => $request->quotation_id ?? null,
                 'created_by' => Auth::id(),
+                'sales_person_id' => $request->sales_person_id, // เพิ่มฟิลด์พนักงานขาย
             ];
             
             // กำหนด created_at และ updated_at ให้กับ orderData
@@ -294,8 +299,9 @@ class OrderController extends Controller
         
         $customers = Customer::orderBy('name')->get();
         $products = Product::orderBy('name')->get();
+        $salesPersons = \App\Models\Employee::where('company_id', session('company_id'))->orderBy('first_name')->get();
         
-        return view('orders.edit', compact('order', 'customers', 'products'));
+        return view('orders.edit', compact('order', 'customers', 'products', 'salesPersons'));
     }
 
     /**
@@ -346,6 +352,7 @@ class OrderController extends Controller
                 'discount_type' => 'nullable|in:fixed,percentage',
                 'discount_amount' => 'nullable|numeric|min:0',
                 'customer_po_number' => 'nullable|string', // รองรับ customer_po_number
+                'sales_person_id' => 'nullable|exists:employees,id', // เพิ่ม validation rule
             ]);
             
             Log::info('Starting transaction');
@@ -398,6 +405,7 @@ class OrderController extends Controller
                 'total_amount' => $totalAmount,
                 'payment_terms' => $validated['payment_terms'] ?? null,
                 'customer_po_number' => $validated['customer_po_number'] ?? null,
+                'sales_person_id' => $request->sales_person_id, // เพิ่มฟิลด์พนักงานขาย
             ]);
             
             // ลบรายการสินค้าเก่า (ใช้เทคนิคลบชั่วคราวแทนการลบถาวร)
@@ -660,6 +668,7 @@ class OrderController extends Controller
                     'shipping_method' => $order->shipping_method ?? '',
                     'delivery_date' => $order->delivery_date ? $order->delivery_date->format('Y-m-d') : null,
                     'notes' => $order->notes ?? '',
+                    'sales_person_id' => $order->sales_person_id ?? null,
                 ],
                 'customer' => $order->customer,
                 'items' => $order->items->map(function ($item) {
@@ -677,6 +686,7 @@ class OrderController extends Controller
                         ] : null,
                     ];
                 }),
+                'sales_person' => $order->sales_person_id ? \App\Models\Employee::find($order->sales_person_id) : null,
             ];
 
             return response()->json($response);

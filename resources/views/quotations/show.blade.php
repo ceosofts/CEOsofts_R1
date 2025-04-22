@@ -97,6 +97,17 @@
                                         @endif
                                     </p>
                                 </div>
+                                <!-- เพิ่มการแสดงพนักงานขาย -->
+                                <div class="col-span-2">
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">พนักงานขาย</p>
+                                    <p class="font-medium">
+                                        @if($quotation->sales_person_id && $salesPerson = \App\Models\Employee::find($quotation->sales_person_id))
+                                            {{ $salesPerson->employee_code }} - {{ $salesPerson->first_name }} {{ $salesPerson->last_name }}
+                                        @else
+                                            -
+                                        @endif
+                                    </p>
+                                </div>
                             </div>
                         </div>
                         
@@ -298,6 +309,14 @@
                         <p><strong>วันที่:</strong> {{ $quotation->issue_date->format('d/m/Y') }}</p>
                         <p><strong>วันที่หมดอายุ:</strong> {{ $quotation->expiry_date->format('d/m/Y') }}</p>
                         <p><strong>อ้างอิง:</strong> {{ $quotation->reference_number ?: '-' }}</p>
+                        <!-- เพิ่มแสดงพนักงานขายในส่วน preview -->
+                        <p><strong>พนักงานขาย:</strong> 
+                            @if($quotation->sales_person_id && $salesPerson = \App\Models\Employee::find($quotation->sales_person_id))
+                                {{ $salesPerson->employee_code }} - {{ $salesPerson->first_name }} {{ $salesPerson->last_name }}
+                            @else
+                                -
+                            @endif
+                        </p>
                     </div>
                 </div>
 

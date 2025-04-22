@@ -60,6 +60,19 @@
                                 <x-text-input id="to_date" name="to_date" type="date" class="w-full" value="{{ request('to_date') }}" />
                             </div>
 
+                            <!-- เพิ่มฟิลเตอร์พนักงานขาย -->
+                            <div class="w-64">
+                                <x-input-label for="sales_person_id" :value="__('พนักงานขาย')" />
+                                <select id="sales_person_id" name="sales_person_id" class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                                    <option value="">-- ทั้งหมด --</option>
+                                    @foreach(\App\Models\Employee::where('company_id', session('company_id'))->orderBy('first_name')->get() as $employee)
+                                    <option value="{{ $employee->id }}" {{ request('sales_person_id') == $employee->id ? 'selected' : '' }}>
+                                        {{ $employee->employee_code }} - {{ $employee->first_name }} {{ $employee->last_name }}
+                                    </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
                             <div class="w-auto">
                                 <x-input-label class="invisible" for="filter_button" :value="__('กรอง')" />
                                 <x-primary-button class="h-10">{{ __('กรอง') }}</x-primary-button>
@@ -83,6 +96,7 @@
                                     <th class="py-2 px-4 border-b text-left">เลขที่</th>
                                     <th class="py-2 px-4 border-b text-left">วันที่สั่งซื้อ</th>
                                     <th class="py-2 px-4 border-b text-left">ลูกค้า</th>
+                                    <th class="py-2 px-4 border-b text-left">พนักงานขาย</th>
                                     <th class="py-2 px-4 border-b text-left">มูลค่ารวม</th>
                                     <th class="py-2 px-4 border-b text-left">สถานะ</th>
                                     <th class="py-2 px-4 border-b text-left">กำหนดส่งมอบ</th>
@@ -99,6 +113,14 @@
                                         </td>
                                         <td class="py-2 px-4 border-b">{{ $order->order_date->format('d/m/Y') }}</td>
                                         <td class="py-2 px-4 border-b">{{ $order->customer->name }}</td>
+                                        <!-- เพิ่มคอลัมน์แสดงข้อมูลพนักงานขาย -->
+                                        <td class="py-2 px-4 border-b">
+                                            @if($order->sales_person_id && $salesPerson = \App\Models\Employee::find($order->sales_person_id))
+                                                {{ $salesPerson->first_name }} {{ $salesPerson->last_name }}
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
                                         <td class="py-2 px-4 border-b">{{ number_format($order->total_amount, 2) }}</td>
                                         <td class="py-2 px-4 border-b">
                                             <span class="px-2 py-1 bg-{{ $order->statusColor }}-100 text-{{ $order->statusColor }}-800 rounded-md text-xs">

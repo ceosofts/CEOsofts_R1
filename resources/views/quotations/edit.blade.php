@@ -54,6 +54,22 @@
                                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                     @enderror
                                 </div>
+                                
+                                <!-- เพิ่มฟิลด์พนักงานขาย -->
+                                <div class="mb-4">
+                                    <label for="sales_person_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">พนักงานขาย</label>
+                                    <select id="sales_person_id" name="sales_person_id" class="block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('sales_person_id') border-red-500 @enderror">
+                                        <option value="">-- เลือกพนักงานขาย --</option>
+                                        @foreach(\App\Models\Employee::where('company_id', session('company_id'))->orderBy('first_name')->get() as $employee)
+                                        <option value="{{ $employee->id }}" {{ old('sales_person_id', $quotation->sales_person_id) == $employee->id ? 'selected' : '' }}>
+                                            {{ $employee->employee_code }} - {{ $employee->first_name }} {{ $employee->last_name }}
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                    @error('sales_person_id')
+                                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
                             </div>
 
                             <div>

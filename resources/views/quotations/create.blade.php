@@ -74,6 +74,38 @@
                                     class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             </div>
 
+                            <!-- เพิ่มฟิลด์พนักงานขาย - กรองเฉพาะพนักงานในแผนกการตลาดและขาย -->
+                            <div>
+                                <label for="sales_person_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">พนักงานขาย</label>
+                                @php
+                                // ค้นหาแผนกการตลาดและขาย
+                                $salesDepartmentId = \App\Models\Department::where('company_id', session('company_id'))
+                                    ->where(function($query) {
+                                        $query->where('code', 'SALES')
+                                              ->orWhere('name', 'การตลาดและขาย');
+                                    })
+                                    ->value('id');
+                                
+                                // กรองพนักงานเฉพาะแผนกการตลาดและขาย
+                                $salesPersons = \App\Models\Employee::where('company_id', session('company_id'));
+                                
+                                if ($salesDepartmentId) {
+                                    $salesPersons = $salesPersons->where('department_id', $salesDepartmentId);
+                                }
+                                
+                                $salesPersons = $salesPersons->orderBy('first_name')->get();
+                                @endphp
+                                <select name="sales_person_id" id="sales_person_id"
+                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    <option value="">-- เลือกพนักงานขาย --</option>
+                                    @foreach($salesPersons as $employee)
+                                    <option value="{{ $employee->id }}" {{ old('sales_person_id') == $employee->id ? 'selected' : '' }}>
+                                        {{ $employee->employee_code }} - {{ $employee->first_name }} {{ $employee->last_name }}
+                                    </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
                             <div>
                                 <label for="shipping_method" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">วิธีการจัดส่ง</label>
                                 <input type="text" name="shipping_method" id="shipping_method" value="{{ old('shipping_method') }}"

@@ -306,15 +306,25 @@ function printQuotation(title) {
                 /* ทำให้ข้อความ "ยอดรวมทั้งสิ้น" อยู่ในตำแหน่งเดียวกับข้อความอื่นๆ */
                 span:contains("ยอดรวมทั้งสิ้น"),
                 *:contains("ยอดรวมทั้งสิ้น") {
-                    text-align: left !important;
-                    padding-left: 0 !important;
+                    text-align: left !สำคัญ;
+                    padding-left: 0 !สำคัญ;
                 }
                 
                 /* แก้ไขเพิ่มเติมเพื่อให้แน่ใจว่าการจัดวางถูกต้อง */
                 .total-label,
                 .total-row .total-label {
-                    text-align: left !important;
-                    padding-left: 0 !important;
+                    text-align: left !สำคัญ;
+                    padding-left: 0 !สำคัญ;
+                }
+                
+                /* สไตล์สำหรับแสดงพนักงานขาย */
+                .sales-person-info {
+                    margin-top: 2mm;
+                    font-weight: normal;
+                }
+                
+                .bold-label {
+                    font-weight: bold;
                 }
             </style>
         </head>
