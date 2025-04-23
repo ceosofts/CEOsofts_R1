@@ -205,8 +205,11 @@
                                 <table class="min-w-full bg-white" id="productsTable">
                                     <thead class="bg-gray-100">
                                         <tr>
+                                            <th class="py-2 px-4 border-b text-center" style="width: 50px;">ลำดับ</th>
+                                            <th class="py-2 px-4 border-b text-left">รหัสสินค้า</th>
                                             <th class="py-2 px-4 border-b text-left">สินค้า</th>
                                             <th class="py-2 px-4 border-b text-center" style="width: 120px;">จำนวน</th>
+                                            <th class="py-2 px-4 border-b text-center" style="width: 80px;">หน่วย</th>
                                             <th class="py-2 px-4 border-b text-right" style="width: 150px;">ราคาต่อหน่วย</th>
                                             <th class="py-2 px-4 border-b text-right" style="width: 150px;">จำนวนเงิน</th>
                                             <th class="py-2 px-4 border-b text-center" style="width: 80px;">จัดการ</th>
@@ -216,12 +219,19 @@
                                         @if($quotation && $quotation->items->count() > 0)
                                             @foreach($quotation->items as $index => $item)
                                                 <tr class="product-row">
+                                                    <td class="py-2 px-4 border-b text-center">{{ $index + 1 }}</td>
+                                                    <td class="py-2 px-4 border-b">
+                                                        <span class="product-code">{{ $item->product->code ?? $item->product->sku ?? '-' }}</span>
+                                                    </td>
                                                     <td class="py-2 px-4 border-b">
                                                         <select name="products[{{ $index }}][id]" class="product-select w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
                                                             <option value="">เลือกสินค้า</option>
                                                             @foreach($products as $product)
                                                                 <option value="{{ $product->id }}" 
                                                                     data-price="{{ $product->price }}"
+                                                                    data-code="{{ $product->code ?? $product->sku ?? '-' }}"
+                                                                    data-unit-id="{{ $product->unit_id }}"
+                                                                    data-unit-name="{{ $product->unit ? $product->unit->name : '' }}"
                                                                     @if($item->product_id == $product->id) selected @endif>
                                                                     {{ $product->name }}
                                                                 </option>
@@ -230,6 +240,12 @@
                                                     </td>
                                                     <td class="py-2 px-4 border-b">
                                                         <input type="number" name="products[{{ $index }}][quantity]" class="quantity w-full text-center border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" min="1" step="any" value="{{ $item->quantity }}" required>
+                                                    </td>
+                                                    <td class="py-2 px-4 border-b text-center">
+                                                        <span class="product-unit">
+                                                            {{ $item->unit ? $item->unit->name : ($item->product && $item->product->unit ? $item->product->unit->name : '-') }}
+                                                        </span>
+                                                        <input type="hidden" name="products[{{ $index }}][unit_id]" class="unit-id" value="{{ $item->unit_id ?? ($item->product ? $item->product->unit_id : '') }}">
                                                     </td>
                                                     <td class="py-2 px-4 border-b">
                                                         <input type="number" name="products[{{ $index }}][unit_price]" class="unit-price w-full text-right border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" min="0" step="0.01" value="{{ $item->unit_price }}" required>
@@ -248,16 +264,30 @@
                                             @endforeach
                                         @else
                                             <tr class="product-row">
+                                                <td class="py-2 px-4 border-b text-center">1</td>
+                                                <td class="py-2 px-4 border-b">
+                                                    <span class="product-code">-</span>
+                                                </td>
                                                 <td class="py-2 px-4 border-b">
                                                     <select name="products[0][id]" class="product-select w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
                                                         <option value="">เลือกสินค้า</option>
                                                         @foreach($products as $product)
-                                                            <option value="{{ $product->id }}" data-price="{{ $product->price }}">{{ $product->name }}</option>
+                                                            <option value="{{ $product->id }}" 
+                                                                data-price="{{ $product->price }}"
+                                                                data-code="{{ $product->code ?? $product->sku ?? '-' }}"
+                                                                data-unit-id="{{ $product->unit_id }}"
+                                                                data-unit-name="{{ $product->unit ? $product->unit->name : '' }}">
+                                                                {{ $product->name }}
+                                                            </option>
                                                         @endforeach
                                                     </select>
                                                 </td>
                                                 <td class="py-2 px-4 border-b">
                                                     <input type="number" name="products[0][quantity]" class="quantity w-full text-center border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" min="1" step="any" value="1" required>
+                                                </td>
+                                                <td class="py-2 px-4 border-b text-center">
+                                                    <span class="product-unit">-</span>
+                                                    <input type="hidden" name="products[0][unit_id]" class="unit-id" value="">
                                                 </td>
                                                 <td class="py-2 px-4 border-b">
                                                     <input type="number" name="products[0][unit_price]" class="unit-price w-full text-right border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" min="0" step="0.01" value="0.00" required>
@@ -277,7 +307,7 @@
                                     </tbody>
                                     <tfoot>
                                         <tr class="bg-gray-50">
-                                            <td colspan="3" class="py-2 px-4 text-right font-medium">รวมเป็นเงิน:</td>
+                                            <td colspan="6" class="py-2 px-4 text-right font-medium">รวมเป็นเงิน:</td>
                                             <td class="py-2 px-4 text-right">
                                                 <input type="text" id="subtotalDisplay" class="w-full text-right bg-gray-50 border-gray-300 rounded-md shadow-sm" value="{{ $quotation ? number_format($quotation->subtotal, 2) : '0.00' }}" readonly>
                                                 <input type="hidden" name="subtotal" id="subtotal" value="{{ $quotation ? $quotation->subtotal : '0' }}">
@@ -285,7 +315,7 @@
                                             <td></td>
                                         </tr>
                                         <tr>
-                                            <td colspan="3" class="py-2 px-4 text-right font-medium">
+                                            <td colspan="6" class="py-2 px-4 text-right font-medium">
                                                 <div class="flex justify-end items-center">
                                                     <span class="mr-2">ส่วนลด:</span>
                                                     <select name="discount_type" id="discount_type" class="mr-2 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" style="width:100px;">
@@ -294,28 +324,28 @@
                                                     </select>
                                                 </div>
                                             </td>
-                                            <td class="py-2 px-4">
+                                            <td class="py-2 px-4 text-right">
                                                 <input type="number" name="discount_amount" id="discount_amount" class="w-full text-right border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" min="0" step="0.01" value="{{ old('discount_amount', $quotation ? $quotation->discount_amount : '0') }}">
                                             </td>
                                             <td></td>
                                         </tr>
                                         <tr>
-                                            <td colspan="3" class="py-2 px-4 text-right font-medium">
+                                            <td colspan="6" class="py-2 px-4 text-right font-medium">
                                                 <div class="flex justify-end items-center">
                                                     <span>ภาษีมูลค่าเพิ่ม:</span>
                                                     <input type="number" name="tax_rate" id="tax_rate" class="ml-2 w-24 text-right border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" min="0" max="100" step="0.01" value="{{ old('tax_rate', $quotation ? $quotation->tax_rate : '7') }}">
                                                     <span class="ml-1">%</span>
                                                 </div>
                                             </td>
-                                            <td class="py-2 px-4">
+                                            <td class="py-2 px-4 text-right">
                                                 <input type="text" id="tax_amount_display" class="w-full text-right bg-gray-50 border-gray-300 rounded-md shadow-sm" value="{{ $quotation ? number_format($quotation->tax_amount, 2) : '0.00' }}" readonly>
                                                 <input type="hidden" name="tax_amount" id="tax_amount" value="{{ $quotation ? $quotation->tax_amount : '0' }}">
                                             </td>
                                             <td></td>
                                         </tr>
                                         <tr class="bg-blue-50">
-                                            <td colspan="3" class="py-2 px-4 text-right font-bold">จำนวนเงินรวมทั้งสิ้น:</td>
-                                            <td class="py-2 px-4">
+                                            <td colspan="6" class="py-2 px-4 text-right font-bold">จำนวนเงินรวมทั้งสิ้น:</td>
+                                            <td class="py-2 px-4 text-right">
                                                 <input type="text" id="total_amount_display" class="w-full text-right font-bold bg-blue-50 border-blue-200 rounded-md shadow-sm text-blue-800" value="{{ $quotation ? number_format($quotation->total_amount, 2) : '0.00' }}" readonly>
                                                 <input type="hidden" name="total_amount" id="total_amount" value="{{ $quotation ? $quotation->total_amount : '0' }}">
                                             </td>
@@ -379,6 +409,9 @@
                             const productsList = document.getElementById('productsList');
                             const addProductBtn = document.getElementById('addProductBtn');
                             
+                            // preload units list for JS (unit_id => unit_name)
+                            window.unitsList = @json(\App\Models\Unit::pluck('name', 'id'));
+
                             // เพิ่มรายการสินค้า
                             addProductBtn.addEventListener('click', function() {
                                 const rowCount = productsList.querySelectorAll('tr.product-row').length;
@@ -386,16 +419,24 @@
                                 newRow.classList.add('product-row');
                                 
                                 newRow.innerHTML = `
+                                    <td class="py-2 px-4 border-b text-center">${rowCount + 1}</td>
+                                    <td class="py-2 px-4 border-b">
+                                        <span class="product-code">-</span>
+                                    </td>
                                     <td class="py-2 px-4 border-b">
                                         <select name="products[${rowCount}][id]" class="product-select w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
                                             <option value="">เลือกสินค้า</option>
                                             @foreach($products as $product)
-                                                <option value="{{ $product->id }}" data-price="{{ $product->price }}">{{ $product->name }}</option>
+                                                <option value="{{ $product->id }}" data-price="{{ $product->price }}" data-code="{{ $product->code ?? $product->sku ?? '-' }}" data-unit-id="{{ $product->unit_id }}" data-unit-name="{{ $product->unit ? $product->unit->name : '' }}">{{ $product->name }}</option>
                                             @endforeach
                                         </select>
                                     </td>
                                     <td class="py-2 px-4 border-b">
                                         <input type="number" name="products[${rowCount}][quantity]" class="quantity w-full text-center border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" min="1" step="any" value="1" required>
+                                    </td>
+                                    <td class="py-2 px-4 border-b text-center">
+                                        <span class="product-unit">-</span>
+                                        <input type="hidden" name="products[${rowCount}][unit_id]" class="unit-id" value="">
                                     </td>
                                     <td class="py-2 px-4 border-b">
                                         <input type="number" name="products[${rowCount}][unit_price]" class="unit-price w-full text-right border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" min="0" step="0.01" value="0.00" required>
@@ -460,7 +501,15 @@
                                 productSelect.addEventListener('change', function() {
                                     const selectedOption = this.options[this.selectedIndex];
                                     const price = selectedOption.getAttribute('data-price') || 0;
+                                    const code = selectedOption.getAttribute('data-code') || '-';
+                                    const unitId = selectedOption.getAttribute('data-unit-id') || '';
+                                    const unitName = selectedOption.getAttribute('data-unit-name') || '-';
+                                    
                                     unitPriceInput.value = parseFloat(price).toFixed(2);
+                                    row.querySelector('.product-code').textContent = code;
+                                    row.querySelector('.unit-id').value = unitId;
+                                    row.querySelector('.product-unit').textContent = unitName;
+                                    
                                     updateRowTotal(row);
                                     calculateTotals();
                                 });
@@ -488,6 +537,9 @@
                             function reindexProductRows() {
                                 const rows = productsList.querySelectorAll('.product-row');
                                 rows.forEach((row, index) => {
+                                    // อัพเดทคอลัมน์ลำดับ
+                                    const seqCell = row.querySelector('td:first-child');
+                                    if (seqCell) seqCell.textContent = index + 1;
                                     row.querySelectorAll('[name^="products["]').forEach(input => {
                                         const name = input.getAttribute('name');
                                         const newName = name.replace(/products\[\d+\]/, `products[${index}]`);
@@ -592,22 +644,43 @@
                                             productsList.removeChild(productsList.firstChild);
                                         }
                                         
-                                        // เพิ่มรายการสินค้าจากใบเสนอราคา
+                                        // เพิ่มรายการสินค้าจากใบเสนอราคา (ดึงหน่วยจากใบเสนอราคา)
                                         data.items.forEach((item, index) => {
                                             const newRow = document.createElement('tr');
                                             newRow.classList.add('product-row');
-                                            
+
+                                            // ดึงข้อมูลหน่วยจากใบเสนอราคา (unit_id/unit_name)
+                                            let unitId = '';
+                                            let unitName = '-';
+                                            if (item.unit_id) {
+                                                unitId = item.unit_id;
+                                                // พยายามใช้ unit_name จาก QuotationItem->unit->name หรือจาก unitsList
+                                                if (item.unit && item.unit.name) {
+                                                    unitName = item.unit.name;
+                                                } else if (window.unitsList && window.unitsList[unitId]) {
+                                                    unitName = window.unitsList[unitId];
+                                                }
+                                            }
+
                                             newRow.innerHTML = `
+                                                <td class="py-2 px-4 border-b text-center">${index + 1}</td>
+                                                <td class="py-2 px-4 border-b">
+                                                    <span class="product-code">${item.product ? (item.product.code || item.product.sku || '-') : '-'}</span>
+                                                </td>
                                                 <td class="py-2 px-4 border-b">
                                                     <select name="products[${index}][id]" class="product-select w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
                                                         <option value="">เลือกสินค้า</option>
                                                         @foreach($products as $product)
-                                                            <option value="{{ $product->id }}" data-price="{{ $product->price }}" ${item.product_id == {{ $product->id }} ? 'selected' : ''}>{{ $product->name }}</option>
+                                                            <option value="{{ $product->id }}" data-price="{{ $product->price }}" data-code="{{ $product->code ?? $product->sku ?? '-' }}" data-unit-id="{{ $product->unit_id }}" data-unit-name="{{ $product->unit ? $product->unit->name : '' }}" ${item.product_id == {{ $product->id }} ? 'selected' : ''}>{{ $product->name }}</option>
                                                         @endforeach
                                                     </select>
                                                 </td>
                                                 <td class="py-2 px-4 border-b">
                                                     <input type="number" name="products[${index}][quantity]" class="quantity w-full text-center border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" min="1" step="any" value="${item.quantity}" required>
+                                                </td>
+                                                <td class="py-2 px-4 border-b text-center">
+                                                    <span class="product-unit">${unitName}</span>
+                                                    <input type="hidden" name="products[${index}][unit_id]" class="unit-id" value="${unitId}">
                                                 </td>
                                                 <td class="py-2 px-4 border-b">
                                                     <input type="number" name="products[${index}][unit_price]" class="unit-price w-full text-right border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" min="0" step="0.01" value="${item.unit_price}" required>
@@ -623,10 +696,10 @@
                                                     </button>
                                                 </td>
                                             `;
-                                            
+
                                             productsList.appendChild(newRow);
                                             initializeRowEvents(newRow);
-                                            
+
                                             // เลือกสินค้าในรายการ
                                             const productSelect = newRow.querySelector('.product-select');
                                             Array.from(productSelect.options).forEach(option => {
@@ -654,6 +727,15 @@
                                         this.innerHTML = '<span>โหลดข้อมูล</span>';
                                         this.disabled = false;
                                     });
+
+                                // ขอเลขที่ใบสั่งขายใหม่จากเซิร์ฟเวอร์ (ผ่าน AJAX)
+                                fetch('/orders/generate-order-number')
+                                    .then(res => res.json())
+                                    .then(json => {
+                                        if (json.order_number) {
+                                            document.getElementById('order_number').value = json.order_number;
+                                        }
+                                    });
                             });
                             
                             // JavaScript สำหรับป้องกันการส่งฟอร์มซ้ำ
@@ -673,8 +755,71 @@
                                 // ปิดปุ่ม Submit
                                 document.getElementById('submitBtn').disabled = true;
                             });
+
+                            // ขอเลขที่ใบสั่งขายใหม่ทุกครั้งที่เปิดหน้า หรือหลังโหลดใบเสนอราคา
+                            function refreshOrderNumber() {
+                                fetch('/orders/generate-order-number')
+                                    .then(res => res.json())
+                                    .then(json => {
+                                        if (json.order_number) {
+                                            document.getElementById('order_number').value = json.order_number;
+                                        }
+                                    });
+                            }
+
+                            // เรียกทันทีเมื่อโหลดหน้า (ป้องกันเลขซ้ำ)
+                            refreshOrderNumber();
+
+                            document.getElementById('loadQuotationBtn').addEventListener('click', function() {
+                                // ...existing code...
+                                fetch(`/quotations/${quotationId}/get-data`)
+                                    .then(response => {
+                                        // ...existing code...
+                                    })
+                                    .then(data => {
+                                        // ...existing code...
+                                        // ขอเลขที่ใบสั่งขายใหม่หลังโหลดใบเสนอราคา
+                                        refreshOrderNumber();
+                                        // ...existing code...
+                                    })
+                                    // ...existing code...
+                            });
                         });
                     </script>
+
+                    {{-- คำแนะนำสำหรับการตรวจสอบข้อมูลใน tinker --}}
+                    {{-- 
+                        คุณสามารถตรวจสอบได้ว่า OrderItem ถูกสร้างมาจาก QuotationItem และมีข้อมูล unit_id หรือไม่ ด้วยการใช้ tinker ดังนี้:
+
+                        1. เปิด tinker:
+                            php artisan tinker
+
+                        2. ค้นหา Order ที่ต้องการ (เช่น order ล่าสุด):
+                            $order = \App\Models\Order::latest()->first();
+
+                        3. ดูรายการสินค้าใน order:
+                            $order->items->map(function($item) {
+                                return [
+                                    'product_id' => $item->product_id,
+                                    'product_code' => $item->product ? $item->product->code : null,
+                                    'quantity' => $item->quantity,
+                                    'unit_id' => $item->unit_id,
+                                    'unit_name' => $item->unit ? $item->unit->name : null,
+                                ];
+                            });
+
+                        4. ถ้าต้องการดู QuotationItem ที่เกี่ยวข้อง (ถ้ามีการอ้างอิง quotation):
+                            $order->quotation ? $order->quotation->items->map(function($item) {
+                                return [
+                                    'product_id' => $item->product_id,
+                                    'quantity' => $item->quantity,
+                                    'unit_id' => $item->unit_id,
+                                    'unit_name' => $item->unit ? $item->unit->name : null,
+                                ];
+                            }) : null;
+
+                        5. ตรวจสอบว่าข้อมูล unit_id/unit_name ถูกบันทึกมาจากใบเสนอราคาหรือไม่
+                    --}}
                 </div>
             </div>
         </div>

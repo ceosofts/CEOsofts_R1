@@ -28,6 +28,7 @@ class OrderItem extends Model
         'tax_amount',
         'subtotal',
         'total',
+        'unit_id', // เพิ่มฟิลด์นี้ให้ mass assignable
     ];
 
     /**
@@ -60,5 +61,13 @@ class OrderItem extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    /**
+     * Get the unit for this order item.
+     */
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class);
     }
 }
