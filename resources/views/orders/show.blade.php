@@ -29,7 +29,8 @@
                     {{ __('พิมพ์') }}
                 </button>
                 
-                @if(!in_array($order->status, ['shipped', 'delivered', 'cancelled']))
+                {{-- Edit button hidden as requested
+                @if(!in_array($ order->status, ['shipped', 'delivered', 'cancelled']))
                     <a href="{{ route('orders.edit', $order) }}" class="inline-flex items-center px-4 py-2 bg-yellow-500 border border-transparent rounded-md font-semibold text-xs text-white tracking-widest hover:bg-yellow-600">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -37,6 +38,7 @@
                         แก้ไข
                     </a>
                 @endif
+                --}}
             </div>
         </div>
     </x-slot>
@@ -287,6 +289,7 @@
                             <table class="min-w-full bg-white">
                                 <thead class="bg-gray-100">
                                     <tr>
+                                        <th class="py-2 px-3 border-b text-center" style="width: 50px;">ลำดับ</th>
                                         <th class="py-2 px-4 border-b text-left">รหัสสินค้า</th>
                                         <th class="py-2 px-4 border-b text-left">รายการ</th>
                                         <th class="py-2 px-4 border-b text-center">จำนวน</th>
@@ -296,9 +299,32 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($order->items as $item)
+                                    @foreach($order->items as $index => $item)
                                         <tr class="hover:bg-gray-50">
-                                            <td class="py-2 px-4 border-b">{{ $item->product->sku ?? '-' }}</td>
+                                            <td class="py-2 px-3 border-b text-center">{{ $index + 1 }}</td>
+                                            <td class="py-2 px-4 border-b">
+                                                @php
+                                                    // Try to get product code from quotation first
+                                                    $productCode = null;
+                                                    if($order->quotation) {
+                                                        // Look for matching product in the quotation items
+                                                        foreach($order->quotation->items as $quotationItem) {
+                                                            if($quotationItem->product_id == $item->product_id) {
+                                                                if($quotationItem->product && ($quotationItem->product->code || $quotationItem->product->sku)) {
+                                                                    $productCode = $quotationItem->product->code ?? $quotationItem->product->sku;
+                                                                    break;
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                    
+                                                    // If not found in quotation, use the product code from order item
+                                                    if(!$productCode && $item->product) {
+                                                        $productCode = $item->product->code ?? $item->product->sku ?? '-';
+                                                    }
+                                                @endphp
+                                                {{ $productCode ?? '-' }}
+                                            </td>
                                             <td class="py-2 px-4 border-b">{{ $item->description }}</td>
                                             <td class="py-2 px-4 border-b text-center">{{ number_format($item->quantity) }}</td>
                                             <td class="py-2 px-4 border-b text-right">{{ $item->unit->name ?? '-' }}</td>
@@ -309,12 +335,12 @@
                                 </tbody>
                                 <tfoot>
                                     <tr class="bg-gray-50">
-                                        <td colspan="5" class="py-2 px-4 text-right font-medium">รวมเป็นเงิน:</td>
+                                        <td colspan="6" class="py-2 px-4 text-right font-medium">รวมเป็นเงิน:</td>
                                         <td class="py-2 px-4 text-right">{{ number_format($order->subtotal, 2) }}</td>
                                     </tr>
                                     @if($order->discount_amount > 0)
                                         <tr>
-                                            <td colspan="5" class="py-2 px-4 text-right font-medium">
+                                            <td colspan="6" class="py-2 px-4 text-right font-medium">
                                                 ส่วนลด{{ $order->discount_type == 'percentage' ? ' '. $order->discount_amount . '%' : '' }}:
                                             </td>
                                             <td class="py-2 px-4 text-right">{{ number_format($order->discount_value, 2) }}</td>
@@ -322,7 +348,7 @@
                                     @endif
                                     @if($order->tax_rate > 0)
                                         <tr>
-                                            <td colspan="5" class="py-2 px-4 text-right font-medium">
+                                            <td colspan="6" class="py-2 px-4 text-right font-medium">
                                                 ภาษีมูลค่าเพิ่ม {{ $order->tax_rate }}%:
                                             </td>
                                             <td class="py-2 px-4 text-right">{{ number_format($order->tax_amount, 2) }}</td>
@@ -330,12 +356,12 @@
                                     @endif
                                     @if($order->shipping_cost > 0)
                                         <tr>
-                                            <td colspan="5" class="py-2 px-4 text-right font-medium">ค่าขนส่ง:</td>
+                                            <td colspan="6" class="py-2 px-4 text-right font-medium">ค่าขนส่ง:</td>
                                             <td class="py-2 px-4 text-right">{{ number_format($order->shipping_cost, 2) }}</td>
                                         </tr>
                                     @endif
                                     <tr class="bg-blue-50">
-                                        <td colspan="5" class="py-2 px-4 text-right font-bold">จำนวนเงินรวมทั้งสิ้น:</td>
+                                        <td colspan="6" class="py-2 px-4 text-right font-bold">จำนวนเงินรวมทั้งสิ้น:</td>
                                         <td class="py-2 px-4 text-right font-bold">{{ number_format($order->total_amount, 2) }}</td>
                                     </tr>
                                 </tfoot>
@@ -542,6 +568,7 @@
                     <thead>
                         <tr class="bg-gray-200">
                             <th class="py-2 px-4 border text-left">ลำดับ</th>
+                            <th class="py-2 px-4 border text-left">รหัสสินค้า</th>
                             <th class="py-2 px-4 border text-left">รายการ</th>
                             <th class="py-2 px-4 border text-right">จำนวน</th>
                             <th class="py-2 px-4 border text-right">ราคาต่อหน่วย</th>
@@ -553,6 +580,29 @@
                         @forelse($order->items as $index => $item)
                         <tr>
                             <td class="py-2 px-4 border">{{ $index + 1 }}</td>
+                            <td class="py-2 px-4 border">
+                                @php
+                                    // Try to get product code from quotation first
+                                    $productCode = null;
+                                    if($order->quotation) {
+                                        // Look for matching product in the quotation items
+                                        foreach($order->quotation->items as $quotationItem) {
+                                            if($quotationItem->product_id == $item->product_id) {
+                                                if($quotationItem->product && ($quotationItem->product->code || $quotationItem->product->sku)) {
+                                                    $productCode = $quotationItem->product->code ?? $quotationItem->product->sku;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    
+                                    // If not found in quotation, use the product code from order item
+                                    if(!$productCode && $item->product) {
+                                        $productCode = $item->product->code ?? $item->product->sku ?? '-';
+                                    }
+                                @endphp
+                                {{ $productCode ?? '-' }}
+                            </td>
                             <td class="py-2 px-4 border">{{ $item->description ?? $item->product->name }}</td>
                             <td class="py-2 px-4 border text-right">{{ number_format($item->quantity, 2) }} {{ $item->unit->name ?? '' }}</td>
                             <td class="py-2 px-4 border text-right">{{ number_format($item->unit_price, 2) }}</td>
@@ -567,7 +617,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="py-2 px-4 border text-center">ไม่มีรายการสินค้า</td>
+                            <td colspan="7" class="py-2 px-4 border text-center">ไม่มีรายการสินค้า</td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -784,11 +834,14 @@
                             ${printContent.outerHTML}
                         </div>
                         <script>
+                            // พิมพ์อัตโนมัติเมื่อโหลดเสร็จ
                             window.onload = function() {
-                                window.print();
-                                setTimeout(function() { window.close(); }, 500);
+                                setTimeout(function() {
+                                    window.print();
+                                    setTimeout(function() { window.close(); }, 500);
+                                }, 500);
                             };
-                        </script>
+                        <\/script>
                     </body>
                     </html>
                 `);
@@ -809,19 +862,47 @@
             max-width: 210mm;
             margin: 0 auto;
             font-family: 'Sarabun', sans-serif;
+            transform: scale(1.1); /* เพิ่มขนาดเป็น 110% */
+            transform-origin: top center; /* ขยายจากจุดกึ่งกลางด้านบน */
+            font-size: 0.88rem; /* ลดขนาดตัวหนังสือลงอีก */
+            line-height: 1.2; /* ลด line height เพื่อประหยัดพื้นที่ */
         }
         
-        .grid-cols-2 {
-            display: flex;
-            justify-content: space-between;
+        /* ปรับขนาดตัวหนังสือในส่วนต่างๆ */
+        #preview-content h1 { font-size: 1.4rem; margin-bottom: 3px; }
+        #preview-content h2 { font-size: 1.2rem; margin-bottom: 3px; }
+        #preview-content h3, #preview-content h4 { font-size: 1rem; margin-bottom: 3px; }
+        #preview-content p { font-size: 0.85rem; margin: 1px 0; }
+        #preview-content table th,
+        #preview-content table td { font-size: 0.8rem; padding: 2px 3px; }
+        
+        /* เพิ่มสไตล์เพื่อให้ตารางสวยงามขึ้น */
+        #preview-content table {
             width: 100%;
-            margin: 0 0 20px 0;
-            padding: 0;
+            border-collapse: collapse;
         }
         
-        .grid-cols-2 > div {
-            width: 48%;
+        #preview-content table th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            text-align: left;
         }
+        
+        #preview-content table th, 
+        #preview-content table td {
+            border: 1px solid #ddd;
+        }
+        
+        /* เพิ่มความสูงให้ container เพื่อรองรับเนื้อหาที่ขยายขนาด */
+        .print-section {
+            overflow-y: auto;
+            max-height: 80vh; /* จำกัดความสูงสูงสุดเพื่อให้สามารถเลื่อนดูได้ */
+            padding: 15px 20px; /* เพิ่ม padding เพื่อความสวยงาม */
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1); /* เพิ่มเงาเล็กน้อย */
+        }
+        
+        // ...existing code...
     </style>
 
     <!-- เพิ่ม JavaScript สำหรับการจัดการปุ่มพิมพ์และดูตัวอย่าง -->
@@ -1040,20 +1121,29 @@
                             <style>
                                 body {
                                     font-family: 'Sarabun', 'Prompt', 'THSarabunNew', sans-serif;
-                                    font-size: 14px;
-                                    line-height: 1.5;
+                                    font-size: 12px; /* ลดขนาดตัวอักษร */
+                                    line-height: 1.3;
                                     color: #000;
                                     margin: 0;
-                                    padding: 20px;
+                                    padding: 15px;
                                 }
-                                h1 { font-size: 24px; margin-top: 0; }
-                                h2 { font-size: 20px; margin-top: 0; }
+                                h1 { font-size: 18px; margin-top: 0; margin-bottom: 3px; }
+                                h2 { font-size: 16px; margin-top: 0; margin-bottom: 3px; }
                                 table { width: 100%; border-collapse: collapse; }
-                                th, td { border: 1px solid #333; padding: 8px; }
+                                th, td { border: 1px solid #333; padding: 4px; font-size: 10px; } /* ลดขนาด padding และตัวอักษร */
                                 th { background-color: #f2f2f2; }
+                                p { margin: 1px 0; }
                                 @media print {
                                     body { padding: 0; }
-                                    @page { margin: 1.5cm; }
+                                    @page { 
+                                        margin: 1cm; /* ลดขนาดระยะขอบของหน้าพิมพ์ */
+                                        size: A4; 
+                                        scale: 90%; /* ลดสเกลขนาดเอกสาร */
+                                    }
+                                    .container { 
+                                        transform: scale(0.95);
+                                        transform-origin: top left;
+                                    }
                                 }
                             </style>
                         </head>
@@ -1069,7 +1159,7 @@
                                         window.onfocus = function() { window.close(); };
                                     }, 500);
                                 };
-                            </script>
+                            <\/script>
                         </body>
                         </html>
                     `;

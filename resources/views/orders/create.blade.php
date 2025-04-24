@@ -193,7 +193,7 @@
                         <div class="mb-6">
                             <div class="flex justify-between items-center mb-2">
                                 <h3 class="font-medium text-gray-700">รายการสินค้า</h3>
-                                <button type="button" id="addProductBtn" class="inline-flex items-center px-3 py-1 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white tracking-widest hover:bg-green-700">
+                                <button type="button" id="addProductBtn" class="hidden">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
                                     </svg>

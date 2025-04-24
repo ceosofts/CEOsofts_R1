@@ -139,6 +139,7 @@
                                                     </svg>
                                                 </a>
 
+                                                {{-- Edit icon hidden as requested
                                                 @if(!in_array($order->status, ['shipped', 'delivered', 'cancelled']))
                                                     <a href="{{ route('orders.edit', $order) }}" class="text-yellow-600 hover:text-yellow-900" title="แก้ไข">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -146,6 +147,7 @@
                                                         </svg>
                                                     </a>
                                                 @endif
+                                                --}}
 
                                                 @if(in_array($order->status, ['draft', 'cancelled']))
                                                     <button type="button" onclick="confirmDelete('{{ $order->id }}')" class="text-red-600 hover:text-red-900" title="ลบ">
