@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>ใบเสนอราคา {{ $quotation->quotation_number }}</title>
+    <title>ใบเสนอราคาเลขที่ {{ $quotation->quotation_number }}</title>
     <style>
         @font-face {
             font-family: 'THSarabunNew';
@@ -100,7 +100,8 @@
         <thead>
             <tr>
                 <th style="width: 5%;">ลำดับ</th>
-                <th style="width: 40%;">รายการ</th>
+                <th style="width: 15%;">รหัส</th>
+                <th style="width: 25%;">รายการ</th>
                 <th style="width: 10%;" class="text-right">จำนวน</th>
                 <th style="width: 15%;" class="text-right">ราคาต่อหน่วย</th>
                 <th style="width: 15%;" class="text-right">ส่วนลด</th>
@@ -111,6 +112,7 @@
             @forelse($quotation->items as $index => $item)
             <tr>
                 <td>{{ $index + 1 }}</td>
+                <td>{{ $item->product->code ?? '' }}</td>
                 <td>{{ $item->description }}</td>
                 <td class="text-right">{{ number_format($item->quantity, 2) }} {{ $item->unit->name ?? '' }}</td>
                 <td class="text-right">{{ number_format($item->unit_price, 2) }}</td>

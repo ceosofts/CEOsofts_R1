@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo; // เปลี่ยนจากการ import App\Models\BelongsTo
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Log;
-// use App\Traits\CompanyScope;
+use App\Traits\HasCompanyScope;
 
 class Employee extends Model
 {
-    use HasFactory, SoftDeletes; // , CompanyScope
+    use HasFactory, SoftDeletes, HasCompanyScope;
 
     protected $fillable = [
         'uuid',
@@ -299,5 +299,88 @@ class Employee extends Model
             
             return $fallbackCode;
         }
+    }
+
+    /**
+     * Get the quotations where this employee is the sales person
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function quotations()
+    {
+        return $this->hasMany(Quotation::class, 'sales_person_id');
+    }
+
+    /**
+     * Get the orders where this employee is the sales person
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function orders()
+    {
+        return $this->hasMany(Order::class, 'sales_person_id');
+    }
+    
+    /**
+     * Get the display name with employee code
+     *
+     * @return string
+     */
+    public function getDisplayNameAttribute()
+    {
+        return "{$this->employee_code} - {$this->first_name} {$this->last_name}";
+    }
+    
+    /**
+     * Scope to find sales employees
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeSalesPeople($query)
+    {
+        // อาจจะปรับเปลี่ยนตาม position_id จริงในระบบ
+        return $query->whereIn('position_id', [3, 4, 5])
+                    ->orWhere(function($q) {
+                        $q->where('metadata', 'like', '%"sales_target"%')
+                          ->orWhere('metadata', 'like', '%"sales_area"%');
+                    });
+    }
+    
+    /**
+     * Check if employee is a sales person
+     *
+     * @return bool
+     */
+    public function isSalesPerson()
+    {
+        // อาจจะปรับเปลี่ยนตาม position_id จริงในระบบ
+        return in_array($this->position_id, [3, 4, 5]) 
+               || (is_array($this->metadata) && 
+                  (isset($this->metadata['sales_target']) || isset($this->metadata['sales_area'])));
+    }
+    
+    /**
+     * Get the total sales amount from all quotations
+     *
+     * @return float
+     */
+    public function getTotalSalesQuotationsAttribute()
+    {
+        return $this->quotations()
+                    ->where('status', 'approved')
+                    ->sum('total_amount');
+    }
+    
+    /**
+     * Get the total sales amount from all orders
+     *
+     * @return float
+     */
+    public function getTotalSalesOrdersAttribute()
+    {
+        return $this->orders()
+                    ->whereIn('status', ['confirmed', 'processing', 'shipped', 'delivered'])
+                    ->sum('total_amount');
     }
 }

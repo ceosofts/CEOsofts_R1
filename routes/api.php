@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\OrganizationStructureController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\QuotationApiController;
+use App\Http\Controllers\DeliveryOrderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -63,3 +64,6 @@ Route::get('/customers/{customer}', function (App\Models\Customer $customer) {
 
 // แก้ไขเส้นทาง API โดยไม่ใช้ middleware web และกำหนดชื่อที่ชัดเจน
 Route::get('orders/{id}/products', [OrderController::class, 'getOrderProducts'])->name('api.orders.products');
+
+// เพิ่ม route สำหรับสร้างเลขที่ใบส่งสินค้าอัตโนมัติ
+Route::get('/generate-delivery-number', [DeliveryOrderController::class, 'generateDeliveryNumber']);

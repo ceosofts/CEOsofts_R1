@@ -22,19 +22,19 @@ class Quotation extends Model
         'quotation_number',
         'issue_date',
         'expiry_date',
-        'total_amount',
         'status',
-        'notes',
-        'discount_amount',
         'discount_type',
+        'discount_amount',
         'tax_rate',
         'tax_amount',
         'subtotal',
+        'total_amount',
+        'notes',
         'reference_number',
         'created_by',
         'approved_by',
         'approved_at',
-        'sales_person_id',
+        'sales_person_id', // ตรวจสอบว่ามีฟิลด์นี้หรือไม่ ถ้าไม่มีให้เพิ่ม
         'payment_term_id',
         'shipping_method',
         'shipping_cost',
@@ -111,6 +111,14 @@ class Quotation extends Model
     public function approver()
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /**
+     * Get the sales person associated with this quotation
+     */
+    public function salesPerson()
+    {
+        return $this->belongsTo(Employee::class, 'sales_person_id');
     }
 
     /**

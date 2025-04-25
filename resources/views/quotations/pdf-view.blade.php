@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ใบเสนอราคา {{ $quotation->quotation_number }}</title>
+    <title>ใบเสนอราคาเลขที่ {{ $quotation->quotation_number }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
     <style>
         /* ปรับปรุง CSS ให้เหมือนกับ "ดูตัวอย่าง" */
@@ -236,7 +236,14 @@
                 <strong>เลขที่:</strong> {{ $quotation->quotation_number }}<br>
                 <strong>วันที่:</strong> {{ $quotation->issue_date->format('d/m/Y') }}<br>
                 <strong>วันที่หมดอายุ:</strong> {{ $quotation->expiry_date->format('d/m/Y') }}<br>
-                <strong>อ้างอิง:</strong> {{ $quotation->reference_number ?: '-' }}
+                <strong>อ้างอิง:</strong> {{ $quotation->reference_number ?: '-' }}<br>
+                <!-- เพิ่มพนักงานขายในส่วน PDF view -->
+                <strong>พนักงานขาย:</strong>
+                @if($quotation->sales_person_id && $salesPerson = \App\Models\Employee::find($quotation->sales_person_id))
+                    {{ $salesPerson->employee_code }} - {{ $salesPerson->first_name }} {{ $salesPerson->last_name }}
+                @else
+                    -
+                @endif
             </div>
         </div>
 
@@ -244,7 +251,8 @@
             <thead>
                 <tr>
                     <th style="width: 5%;">ลำดับ</th>
-                    <th style="width: 40%;">รายการ</th>
+                    <th style="width: 15%;">รหัสสินค้า</th>
+                    <th style="width: 25%;">รายการ</th>
                     <th style="width: 10%;">จำนวน</th>
                     <th style="width: 15%;">ราคาต่อหน่วย</th>
                     <th style="width: 15%;">ส่วนลด</th>
@@ -255,6 +263,7 @@
                 @forelse($quotation->items as $index => $item)
                 <tr>
                     <td>{{ $index + 1 }}</td>
+                    <td>{{ $item->product->code ?? '-' }}</td>
                     <td>{{ $item->description }}</td>
                     <td style="text-align: right;">{{ number_format($item->quantity, 2) }} {{ $item->unit->name ?? '' }}</td>
                     <td style="text-align: right;">{{ number_format($item->unit_price, 2) }}</td>
@@ -269,7 +278,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" style="text-align: center;">ไม่มีรายการสินค้า</td>
+                    <td colspan="7" style="text-align: center;">ไม่มีรายการสินค้า</td>
                 </tr>
                 @endforelse
             </tbody>
@@ -296,9 +305,9 @@
                 <span>{{ number_format($quotation->tax_amount, 2) }}</span>
             </div>
             @endif
-            <div class="row total-row">
-                <span>ยอดรวมทั้งสิ้น</span>
-                <span>{{ number_format($quotation->total_amount, 2) }}</span>
+            <div class="flex justify-between py-3 font-bold">
+                <span class="total-label" style="text-align: left; padding-left: 5mm;">ยอดรวมทั้งสิ้น</span>
+                <span class="total-amount">{{ number_format($quotation->total_amount, 2) }}</span>
             </div>
         </div>
 
@@ -322,15 +331,18 @@
     <script>
         // เพิ่ม Event listener สำหรับการพิมพ์
         document.addEventListener('DOMContentLoaded', function() {
-            // โหลดแบบอัตโนมัติ
-            if (window.matchMedia) {
-                const mediaQueryList = window.matchMedia('print');
-                mediaQueryList.addListener(function(mql) {
-                    if (mql.matches) {
-                        document.body.classList.add('printing');
-                    } else {
-                        document.body.classList.remove('printing');
-                    }
+            // ตั้งชื่อเอกสารก่อนพิมพ์เสมอ
+            window.addEventListener('beforeprint', function() {
+                document.title = 'ใบเสนอราคาเลขที่ {{ $quotation->quotation_number }}';
+            });
+
+            // เพิ่ม event listener สำหรับปุ่มพิมพ์
+            const printButton = document.querySelector('.print-button');
+            if (printButton) {
+                printButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.title = 'ใบเสนอราคาเลขที่ {{ $quotation->quotation_number }}';
+                    window.print();
                 });
             }
         });

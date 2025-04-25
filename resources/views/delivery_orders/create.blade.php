@@ -88,10 +88,18 @@
 
                                 <div class="mb-4">
                                     <x-input-label for="delivery_number" :value="__('เลขที่ใบส่งสินค้า')" class="required" />
-                                    <x-text-input id="delivery_number" name="delivery_number" type="text" class="w-full" :value="old('delivery_number')" required />
+                                    <div class="flex">
+                                        <x-text-input id="delivery_number" name="delivery_number" type="text" class="w-full" :value="old('delivery_number', $deliveryNumber)" required />
+                                        <button type="button" id="refreshDeliveryNumber" class="ml-2 inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                            </svg>
+                                        </button>
+                                    </div>
                                     @error('delivery_number')
                                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                     @enderror
+                                    <p id="autoDeliveryNumberHint" class="text-xs text-green-600 mt-1">เลขที่ใบส่งสินค้าถูกสร้างโดยอัตโนมัติ</p>
                                 </div>
 
                                 <div class="mb-4">
@@ -308,6 +316,54 @@
                             const orderStatusBadge = document.getElementById('order_status_badge');
                             const productsList = document.getElementById('productsList');
                             const loadingIndicator = document.getElementById('loading-indicator');
+                            const refreshDeliveryNumberBtn = document.getElementById('refreshDeliveryNumber');
+                            const deliveryNumberInput = document.getElementById('delivery_number');
+                            
+                            // ปุ่มรีเฟรชเลขที่ใบส่งสินค้า
+                            refreshDeliveryNumberBtn.addEventListener('click', function() {
+                                refreshDeliveryNumberBtn.disabled = true;
+                                refreshDeliveryNumberBtn.innerHTML = '<svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+                                
+                                // เรียก API เพื่อสร้างเลขที่ใบส่งสินค้าใหม่
+                                fetch('/api/generate-delivery-number', {
+                                    method: 'GET',
+                                    headers: {
+                                        'Accept': 'application/json',
+                                        'Content-Type': 'application/json',
+                                        'X-Requested-With': 'XMLHttpRequest'
+                                    },
+                                    credentials: 'same-origin'
+                                })
+                                .then(response => {
+                                    if (!response.ok) {
+                                        throw new Error(`HTTP error! status: ${response.status}`);
+                                    }
+                                    return response.json();
+                                })
+                                .then(data => {
+                                    if (data.success) {
+                                        deliveryNumberInput.value = data.delivery_number;
+                                        document.getElementById('autoDeliveryNumberHint').textContent = 'เลขที่ใบส่งสินค้าถูกสร้างใหม่อัตโนมัติ';
+                                        document.getElementById('autoDeliveryNumberHint').classList.remove('text-green-600');
+                                        document.getElementById('autoDeliveryNumberHint').classList.add('text-blue-600');
+                                        setTimeout(() => {
+                                            document.getElementById('autoDeliveryNumberHint').classList.remove('text-blue-600');
+                                            document.getElementById('autoDeliveryNumberHint').classList.add('text-green-600');
+                                            document.getElementById('autoDeliveryNumberHint').textContent = 'เลขที่ใบส่งสินค้าถูกสร้างโดยอัตโนมัติ';
+                                        }, 2000);
+                                    } else {
+                                        alert('ไม่สามารถสร้างเลขที่ใบส่งสินค้าอัตโนมัติได้');
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error:', error);
+                                    alert('เกิดข้อผิดพลาดในการสร้างเลขที่ใบส่งสินค้า: ' + error.message);
+                                })
+                                .finally(() => {
+                                    refreshDeliveryNumberBtn.disabled = false;
+                                    refreshDeliveryNumberBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>';
+                                });
+                            });
                             
                             // เมื่อเลือกใบสั่งขายจาก dropdown
                             orderIdSelector.addEventListener('change', function() {

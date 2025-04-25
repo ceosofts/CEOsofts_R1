@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB; // เพิ่มการ import DB Facade
 use App\Traits\HasCompanyScope;
 use Carbon\Carbon;
 
@@ -48,7 +49,8 @@ class Order extends Model
         'delivered_at', 
         'cancelled_by', 
         'cancelled_at',
-        'cancellation_reason'
+        'cancellation_reason',
+        'sales_person_id', // เพิ่มฟิลด์พนักงานขาย
     ];
 
     /**
@@ -133,6 +135,14 @@ class Order extends Model
     }
 
     /**
+     * Get the sales person associated with the order.
+     */
+    public function salesPerson()
+    {
+        return $this->belongsTo(Employee::class, 'sales_person_id');
+    }
+
+    /**
      * Get the delivery orders associated with the order.
      */
     public function deliveryOrders()
@@ -196,41 +206,48 @@ class Order extends Model
 
     /**
      * สร้างเลขที่ใบสั่งขายอัตโนมัติในรูปแบบ SO{YYYY}{MM}{NNNN}
-     * 
-     * @param int|null $companyId รหัสบริษัท
-     * @param string|null $date วันที่ต้องการสร้างเลขที่ (Y-m-d format)
-     * @return string
+     * พร้อมตรวจสอบความซ้ำซ้อนรวมถึงรายการที่ถูก Soft Delete แล้ว
      */
     public static function generateOrderNumber(?int $companyId = null, ?string $date = null): string
     {
-        if (!$companyId) {
-            $companyId = session('company_id', 1);
-        }
-        
-        $now = $date ? Carbon::parse($date) : Carbon::now();
-        $year = $now->format('Y');
-        $month = $now->format('m');
-        
-        // ดึงเลขที่ล่าสุดของเดือนและปีที่กำหนด
-        $latestOrder = self::query()
-            ->where('company_id', $companyId)
-            ->where('order_number', 'like', "SO{$year}{$month}%")
-            ->orderByRaw('LENGTH(order_number) DESC')
-            ->orderBy('order_number', 'desc')
-            ->first();
-        
-        if ($latestOrder) {
-            // ถ้ามีเลขที่ใบสั่งขายในเดือนนี้แล้ว จะดึงตัวเลขที่ต่อจาก SO{YYYY}{MM} และเพิ่มขึ้น 1
-            $lastNumber = (int) substr($latestOrder->order_number, 8);
-            $nextNumber = $lastNumber + 1;
-        } else {
-            // ถ้าไม่มีเลขที่ใบสั่งขายในเดือนนี้ จะเริ่มที่ 0001
-            $nextNumber = 1;
-        }
-        
-        // สร้างเลขที่ใบสั่งขายรูปแบบ SO{YYYY}{MM}{NNNN}
-        $orderNumber = 'SO' . $year . $month . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
-        
-        return $orderNumber;
+        // ใช้ DB transaction เพื่อป้องกัน race condition
+        return DB::transaction(function() use ($companyId, $date) {
+            if (!$companyId) {
+                $companyId = session('company_id', 1);
+            }
+            
+            $now = $date ? \Carbon\Carbon::parse($date) : \Carbon\Carbon::now();
+            $year = $now->format('Y');
+            $month = $now->format('m');
+            
+            // ดึงเลขที่ล่าสุดของเดือนและปีที่กำหนด รวมถึงรายการที่ถูก soft delete
+            $latestOrder = self::withTrashed()
+                ->where('company_id', $companyId)
+                ->where('order_number', 'like', "SO{$year}{$month}%")
+                ->orderByRaw('LENGTH(order_number) DESC')
+                ->orderBy('order_number', 'desc')
+                ->lockForUpdate() // ใช้ lock เพื่อป้องกัน race condition
+                ->first();
+            
+            if ($latestOrder) {
+                // ถ้ามีเลขที่ใบสั่งขายในเดือนนี้แล้ว จะดึงตัวเลขที่ต่อจาก SO{YYYY}{MM} และเพิ่มขึ้น 1
+                $lastNumber = (int) substr($latestOrder->order_number, 8);
+                $nextNumber = $lastNumber + 1;
+            } else {
+                // ถ้าไม่มีเลขที่ใบสั่งขายในเดือนนี้ จะเริ่มที่ 0001
+                $nextNumber = 1;
+            }
+            
+            // สร้างเลขที่ใบสั่งขายรูปแบบ SO{YYYY}{MM}{NNNN}
+            $orderNumber = 'SO' . $year . $month . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+            
+            // ตรวจสอบว่าเลขที่สร้างใหม่ซ้ำหรือไม่ (ป้องกัน race condition) รวมถึงรายการที่ถูก soft delete
+            while (self::withTrashed()->where('order_number', $orderNumber)->exists()) {
+                $nextNumber++;
+                $orderNumber = 'SO' . $year . $month . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+            }
+            
+            return $orderNumber;
+        });
     }
 }

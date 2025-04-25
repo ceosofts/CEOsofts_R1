@@ -114,6 +114,11 @@ Route::post('/orders/{order}/process', [OrderController::class, 'process'])
     ->name('orders.process')
     ->middleware(['auth']);
 
+// Route to generate a unique order number
+Route::get('/orders/generate-order-number', function() {
+    return response()->json(['order_number' => \App\Models\Order::generateOrderNumber()]);
+})->middleware(['auth']);
+
 // ทดสอบเส้นทางเพื่อ debug
 Route::get('/test-companies', function () {
     return "Companies test route is working!";

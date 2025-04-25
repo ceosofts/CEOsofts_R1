@@ -58,6 +58,9 @@ class OrderController extends Controller
             $quotation = Quotation::with('items.product', 'customer')->find($quotationId);
         }
         
+        // เพิ่มการโหลดพนักงานขาย
+        $salesPersons = \App\Models\Employee::where('company_id', session('company_id'))->orderBy('first_name')->get();
+        
         // ดึงใบเสนอราคาที่อนุมัติแล้วทั้งหมด
         $approvedQuotations = Quotation::where('status', 'approved')
             ->with('customer')
@@ -66,7 +69,7 @@ class OrderController extends Controller
         
         $orderNumber = Order::generateOrderNumber(session('company_id'));
         
-        return view('orders.create', compact('customers', 'products', 'orderNumber', 'quotation', 'approvedQuotations'));
+        return view('orders.create', compact('customers', 'products', 'orderNumber', 'quotation', 'approvedQuotations', 'salesPersons'));
     }
 
     /**
@@ -81,26 +84,14 @@ class OrderController extends Controller
         ]);
         
         try {
-            // ตรวจสอบเลขที่ใบสั่งขายซ้ำเองก่อน insert (กันปัญหา unique constraint)
+            // ตรวจสอบเลขที่ใบสั่งขายซ้ำก่อนเริ่มกระบวนการ รวมถึงรายการที่ถูก soft delete
             $orderNumber = $request->order_number;
-            $orderNumberExists = Order::where('order_number', $orderNumber);
-            if (Schema::hasColumn('orders', 'deleted_at')) {
-                $orderNumberExists->whereNull('deleted_at');
-            }
-            // DEBUG: Log รายการ order_number ที่ซ้ำ
-            $existingOrder = $orderNumberExists->first();
+            $existingOrder = Order::withTrashed()->where('order_number', $orderNumber)->exists();
+            
             if ($existingOrder) {
-                Log::warning('Duplicate order_number detected', [
-                    'order_number' => $orderNumber,
-                    'existing_order_id' => $existingOrder->id,
-                    'existing_order_status' => $existingOrder->status,
-                    'existing_order_deleted_at' => $existingOrder->deleted_at,
-                ]);
-                // สร้างเลขที่ใบสั่งขายใหม่อัตโนมัติ
-                $newOrderNumber = $this->generateOrderNumber();
-                return redirect()->back()
-                    ->withInput(array_merge($request->all(), ['order_number' => $newOrderNumber]))
-                    ->with('error_message', 'เลขที่ใบสั่งขายนี้ถูกใช้ไปแล้ว ระบบได้สร้างเลขใหม่ให้ กรุณาตรวจสอบและบันทึกอีกครั้ง');
+                // ถ้าเลขซ้ำ ให้สร้างเลขใหม่ทันที
+                $orderNumber = Order::generateOrderNumber();
+                Log::info('เลขใบสั่งขายซ้ำ (รวมถึงรายการที่ถูกลบ) สร้างเลขใหม่: ' . $orderNumber);
             }
 
             // ปรับปรุงการ validate ให้มีความยืดหยุ่นมากขึ้น
@@ -130,6 +121,7 @@ class OrderController extends Controller
                 'discount_type' => 'nullable|in:fixed,percentage',
                 'discount_amount' => 'nullable|numeric|min:0',
                 'customer_po_number' => 'nullable|string',
+                'sales_person_id' => 'nullable|exists:employees,id', // เพิ่ม validation rule
                 // ...existing validation rules...
             ], [
                 'customer_id.required' => 'กรุณาเลือกลูกค้า',
@@ -170,7 +162,7 @@ class OrderController extends Controller
             $orderData = [
                 'company_id' => session('current_company_id') ?? session('company_id') ?? Auth::user()->company_id ?? 1,
                 'customer_id' => $validated['customer_id'],
-                'order_number' => $validated['order_number'],
+                'order_number' => $orderNumber, // Use the verified order number
                 'order_date' => $validated['order_date'],
                 'status' => $validated['status'] ?? 'draft',
                 'total_amount' => $totalAmount,
@@ -188,6 +180,7 @@ class OrderController extends Controller
                 'customer_po_number' => $validated['customer_po_number'] ?? null,
                 'quotation_id' => $request->quotation_id ?? null,
                 'created_by' => Auth::id(),
+                'sales_person_id' => $request->sales_person_id, // เพิ่มฟิลด์พนักงานขาย
             ];
             
             // กำหนด created_at และ updated_at ให้กับ orderData
@@ -219,7 +212,7 @@ class OrderController extends Controller
                     'description' => $product->name,
                     'quantity' => $productData['quantity'],
                     'unit_price' => $productData['unit_price'],
-                    'unit_id' => $product->unit_id,
+                    'unit_id' => $product->unit_id ?? null, // เพิ่ม unit_id
                     'total' => $productData['quantity'] * $productData['unit_price'],
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -294,8 +287,9 @@ class OrderController extends Controller
         
         $customers = Customer::orderBy('name')->get();
         $products = Product::orderBy('name')->get();
+        $salesPersons = \App\Models\Employee::where('company_id', session('company_id'))->orderBy('first_name')->get();
         
-        return view('orders.edit', compact('order', 'customers', 'products'));
+        return view('orders.edit', compact('order', 'customers', 'products', 'salesPersons'));
     }
 
     /**
@@ -346,6 +340,7 @@ class OrderController extends Controller
                 'discount_type' => 'nullable|in:fixed,percentage',
                 'discount_amount' => 'nullable|numeric|min:0',
                 'customer_po_number' => 'nullable|string', // รองรับ customer_po_number
+                'sales_person_id' => 'nullable|exists:employees,id', // เพิ่ม validation rule
             ]);
             
             Log::info('Starting transaction');
@@ -398,6 +393,7 @@ class OrderController extends Controller
                 'total_amount' => $totalAmount,
                 'payment_terms' => $validated['payment_terms'] ?? null,
                 'customer_po_number' => $validated['customer_po_number'] ?? null,
+                'sales_person_id' => $request->sales_person_id, // เพิ่มฟิลด์พนักงานขาย
             ]);
             
             // ลบรายการสินค้าเก่า (ใช้เทคนิคลบชั่วคราวแทนการลบถาวร)
@@ -620,7 +616,7 @@ class OrderController extends Controller
      */
     public function getOrderProducts($id)
     {
-        \Log::info('API getOrderProducts ถูกเรียกใช้', [
+        Log::info('API getOrderProducts ถูกเรียกใช้', [
             'id' => $id,
             'type' => gettype($id)
         ]);
@@ -635,9 +631,9 @@ class OrderController extends Controller
             $order = Order::findOrFail($id);
             
             // โหลดข้อมูลที่เกี่ยวข้อง
-            $order->load(['items.product', 'customer']);
+            $order->load(['items.product.unit', 'customer', 'quotation.items']);
             
-            \Log::info('พบใบสั่งขาย', [
+            Log::info('พบใบสั่งขาย', [
                 'order_id' => $order->id,
                 'order_number' => $order->order_number,
                 'customer' => $order->customer ? $order->customer->name : 'ไม่มีข้อมูลลูกค้า',
@@ -660,31 +656,54 @@ class OrderController extends Controller
                     'shipping_method' => $order->shipping_method ?? '',
                     'delivery_date' => $order->delivery_date ? $order->delivery_date->format('Y-m-d') : null,
                     'notes' => $order->notes ?? '',
+                    'sales_person_id' => $order->sales_person_id ?? null,
                 ],
                 'customer' => $order->customer,
                 'items' => $order->items->map(function ($item) {
+                    // ตรวจสอบและดึงข้อมูลหน่วยจากใบเสนอราคาหรือจากสินค้า
+                    $unit = null;
+                    $unitName = '';
+                    
+                    if ($item->unit_id) {
+                        $unit = \App\Models\Unit::find($item->unit_id);
+                        $unitName = $unit ? $unit->name : '';
+                    } elseif ($item->product && $item->product->unit_id) {
+                        $unit = $item->product->unit;
+                        $unitName = $unit ? $unit->name : '';
+                    }
+                    
                     return [
                         'id' => $item->id,
                         'product_id' => $item->product_id,
+                        'product_code' => $item->product ? $item->product->code ?? $item->product->sku ?? '' : '',
                         'description' => $item->description ?? '',
                         'quantity' => $item->quantity,
                         'unit_price' => $item->unit_price,
-                        'unit_name' => optional($item->product)->unit ?? '',
+                        'unit_id' => $item->unit_id ?? ($item->product ? $item->product->unit_id : null),
+                        'unit_name' => $unitName,
                         'product' => $item->product ? [
                             'id' => $item->product->id,
                             'name' => $item->product->name,
                             'sku' => $item->product->sku ?? '',
+                            'code' => $item->product->code ?? '',
+                            'unit_id' => $item->product->unit_id ?? null,
+                            'unit_name' => $item->product->unit ? $item->product->unit->name : '',
                         ] : null,
                     ];
                 }),
+                'sales_person' => $order->sales_person_id ? \App\Models\Employee::find($order->sales_person_id) : null,
+                'quotation' => $order->quotation_id ? [
+                    'id' => $order->quotation->id,
+                    'quotation_number' => $order->quotation->quotation_number
+                ] : null,
             ];
 
             return response()->json($response);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            \Log::error('ไม่พบใบสั่งขาย ID: ' . $id);
+            Log::error('ไม่พบใบสั่งขาย ID: ' . $id);
             return response()->json(['error' => 'ไม่พบใบสั่งขาย'], 404);
         } catch (\Exception $e) {
-            \Log::error('เกิดข้อผิดพลาดในการดึงข้อมูลใบสั่งขาย', [
+            Log::error('เกิดข้อผิดพลาดในการดึงข้อมูลใบสั่งขาย', [
                 'id' => $id,
                 'message' => $e->getMessage(),
                 'file' => $e->getFile(),

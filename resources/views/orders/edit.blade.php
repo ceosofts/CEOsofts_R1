@@ -98,6 +98,22 @@
                                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                     @enderror
                                 </div>
+                                
+                                <!-- เพิ่มฟิลด์พนักงานขาย -->
+                                <div class="mb-4">
+                                    <x-input-label for="sales_person_id" :value="__('พนักงานขาย')" />
+                                    <select id="sales_person_id" name="sales_person_id" class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                                        <option value="">-- เลือกพนักงานขาย --</option>
+                                        @foreach(\App\Models\Employee::where('company_id', session('company_id'))->orderBy('first_name')->get() as $employee)
+                                        <option value="{{ $employee->id }}" {{ old('sales_person_id', $order->sales_person_id) == $employee->id ? 'selected' : '' }}>
+                                            {{ $employee->employee_code }} - {{ $employee->first_name }} {{ $employee->last_name }}
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                    @error('sales_person_id')
+                                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
                             </div>
                         </div>
 

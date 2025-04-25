@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Quotation;
 use App\Models\Customer;
 use App\Models\Company;
+use App\Models\Employee; // เพิ่มการนำเข้า Employee model
 use Carbon\Carbon;
 
 class QuotationSeeder extends Seeder
@@ -81,6 +82,19 @@ class QuotationSeeder extends Seeder
             return;
         }
 
+        // ค้นหาพนักงานขายของบริษัท
+        $salesPersons = Employee::where('company_id', $company->id)
+            ->whereIn('position_id', [4, 5]) // สมมุติว่า position_id 4, 5 คือตำแหน่งพนักงานขาย หรือปรับตามที่มีในระบบ
+            ->orWhere('employee_code', 'like', '%EMP-%') // เลือกพนักงานทั่วไปได้ด้วย
+            ->get();
+
+        // ถ้าไม่พบพนักงานขาย ก็แสดงข้อความแต่ยังทำงานต่อ
+        if ($salesPersons->isEmpty()) {
+            $this->command->warn("ไม่พบข้อมูลพนักงานขายสำหรับบริษัท ID:{$company->id} จะสร้างใบเสนอราคาโดยไม่มีพนักงานขาย");
+        } else {
+            $this->command->info("พบพนักงานขาย {$salesPersons->count()} คนสำหรับบริษัท ID:{$company->id}");
+        }
+
         $this->command->info("กำลังสร้างใบเสนอราคาสำหรับบริษัท: {$company->name}");
 
         // สร้างตัวแปรที่จำเป็นสำหรับการสร้างเลขที่เอกสาร
@@ -95,6 +109,13 @@ class QuotationSeeder extends Seeder
                 // สร้างเลขที่เอกสารตามรูปแบบใหม่
                 $seqNumber = str_pad($index + 1, 4, '0', STR_PAD_LEFT);
                 $quotationNumber = "QT{$year}{$month}{$seqNumber}";
+                
+                // เลือกพนักงานขายแบบสุ่ม (ถ้ามี)
+                $salesPersonId = null;
+                if ($salesPersons->isNotEmpty()) {
+                    $salesPerson = $salesPersons->random();
+                    $salesPersonId = $salesPerson->id;
+                }
                 
                 $quotationData = [
                     'company_id' => $company->id,
@@ -112,7 +133,8 @@ class QuotationSeeder extends Seeder
                     'total_amount' => 52430,
                     'notes' => 'ราคานี้มีผล 30 วัน',
                     'reference_number' => 'REF-' . $timestamp . '-' . $randomSuffix1,
-                    'created_by' => 1
+                    'created_by' => 1,
+                    'sales_person_id' => $salesPersonId, // เพิ่มพนักงานขาย
                 ];
                 
                 // ใช้ DB::table แทนเพื่อแก้ปัญหา namespace
@@ -133,11 +155,13 @@ class QuotationSeeder extends Seeder
                     'notes' => $quotationData['notes'],
                     'reference_number' => $quotationData['reference_number'],
                     'created_by' => $quotationData['created_by'],
+                    'sales_person_id' => $quotationData['sales_person_id'], // เพิ่มพนักงานขาย
                     'created_at' => now(),
                     'updated_at' => now()
                 ]);
                 
-                $this->command->info("  สร้างใบเสนอราคา: {$quotationData['quotation_number']} สำเร็จ");
+                $this->command->info("  สร้างใบเสนอราคา: {$quotationData['quotation_number']} สำเร็จ" . 
+                                    ($salesPersonId ? " (พนักงานขาย ID: {$salesPersonId})" : " (ไม่มีพนักงานขาย)"));
             } catch (\Exception $e) {
                 $this->command->error("  ไม่สามารถสร้างใบเสนอราคาได้: " . $e->getMessage());
                 Log::error("Error creating quotation: " . $e->getMessage());
@@ -148,6 +172,13 @@ class QuotationSeeder extends Seeder
                 // สร้างเลขที่ใบเสนอราคาสำหรับใบที่ 2
                 $seqNumber = str_pad($index + 1 + count($customers), 4, '0', STR_PAD_LEFT);
                 $approvedQuotationNumber = "QT{$year}{$month}{$seqNumber}";
+                
+                // เลือกพนักงานขายแบบสุ่ม (ถ้ามี) สำหรับใบที่ 2
+                $salesPersonId = null;
+                if ($salesPersons->isNotEmpty()) {
+                    $salesPerson = $salesPersons->random();
+                    $salesPersonId = $salesPerson->id;
+                }
                 
                 // แยกเป็นขั้นตอนเพื่อหาจุดที่ error
                 $quotationData = [
@@ -168,7 +199,8 @@ class QuotationSeeder extends Seeder
                     'reference_number' => 'REF-' . $timestamp . '-' . $randomSuffix2,
                     'created_by' => 1,
                     'approved_by' => 1,
-                    'approved_at' => now()->subDays(10)
+                    'approved_at' => now()->subDays(10),
+                    'sales_person_id' => $salesPersonId, // เพิ่มพนักงานขาย
                 ];
                 
                 // ใช้ DB::table แทนเพื่อแก้ปัญหา namespace
@@ -191,11 +223,13 @@ class QuotationSeeder extends Seeder
                     'created_by' => $quotationData['created_by'],
                     'approved_by' => $quotationData['approved_by'],
                     'approved_at' => $quotationData['approved_at'],
+                    'sales_person_id' => $quotationData['sales_person_id'], // เพิ่มพนักงานขาย
                     'created_at' => now(),
                     'updated_at' => now()
                 ]);
                 
-                $this->command->info("  สร้างใบเสนอราคา: {$quotationData['quotation_number']} สำเร็จ");
+                $this->command->info("  สร้างใบเสนอราคา: {$quotationData['quotation_number']} สำเร็จ" . 
+                                    ($salesPersonId ? " (พนักงานขาย ID: {$salesPersonId})" : " (ไม่มีพนักงานขาย)"));
             } catch (\Exception $e) {
                 $this->command->error("  ไม่สามารถสร้างใบเสนอราคาได้: " . $e->getMessage());
                 Log::error("Error creating quotation: " . $e->getMessage());

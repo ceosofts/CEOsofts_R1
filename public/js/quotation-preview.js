@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // ระบุองค์ประกอบที่เกี่ยวข้อง
     const previewButton = document.getElementById('preview-button');
-    const printButton = document.getElementById('print-button');
     const previewModal = document.getElementById('preview-modal');
     const closePreview = document.getElementById('close-preview');
     
@@ -15,35 +14,30 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Preview button found in document');
         
         // แสดงตัวอย่างใบเสนอราคา
-        previewButton.onclick = function() {
+        previewButton.addEventListener('click', function() {
             console.log('Preview button clicked');
-            previewModal.classList.remove('modal-hidden'); // แก้ไขจาก hidden เป็น modal-hidden
-        };
+            previewModal.classList.remove('modal-hidden'); 
+        });
     }
     
     // ปิดการแสดงตัวอย่าง
     if (closePreview) {
-        closePreview.onclick = function() {
+        closePreview.addEventListener('click', function() {
             console.log('Close preview clicked');
-            previewModal.classList.add('modal-hidden'); // แก้ไขจาก hidden เป็น modal-hidden
-        };
+            previewModal.classList.add('modal-hidden');
+        });
     }
     
-    // พิมพ์ใบเสนอราคา
-    if (printButton) {
-        console.log('Print button found in document');
-        
-        printButton.onclick = function() {
-            console.log('Print button clicked');
-            printQuotation();
-        };
-    }
+    // *** สำคัญ: ไม่ผูกปุ่มพิมพ์กับฟังก์ชันที่นี่ ***
+    // การจัดการปุ่มพิมพ์จะทำใน show.blade.php เพื่อหลีกเลี่ยงการทำงานซ้ำซ้อน
 });
 
 /**
- * ฟังก์ชันสั่งพิมพ์ใบเสนอราคา
+ * ฟังก์ชันสำหรับพิมพ์ใบเสนอราคาในรูปแบบที่กำหนด
+ * @param {string} title - ชื่อเอกสารที่จะแสดงในหัวเพจ
  */
-function printQuotation() {
+function printQuotation(title) {
+    const quotationTitle = title || 'ใบเสนอราคา'; // ใช้ค่าเริ่มต้นถ้าไม่มีการส่ง title มา
     const printContent = document.getElementById('preview-content').innerHTML;
     
     const printWindow = window.open('', '_blank');
@@ -52,7 +46,7 @@ function printQuotation() {
         <!DOCTYPE html>
         <html>
         <head>
-            <title>พิมพ์ใบเสนอราคา</title>
+            <title>${quotationTitle}</title>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
@@ -133,7 +127,7 @@ function printQuotation() {
                 }
 
                 .grid-cols-2 > div {
-                    width: 48%; /* เพิ่มจาก 46% เป็น 48% */
+                    width: 48%;
                 }
                 
                 .border-b-2 {
@@ -143,12 +137,12 @@ function printQuotation() {
                 }
                 
                 /* ปรับขนาดตารางและองค์ประกอบอื่นๆ */
-                .flex { 
+                .flex {
                     display: flex;
                     justify-content: flex-end;
                 }
-                .w-1\\/3 { 
-                    width: 35%; 
+                .w-1\\/3 {
+                    width: 35%;
                 }
                 
                 /* ปรับปรุงการแสดงผลยอดรวม */
@@ -159,79 +153,62 @@ function printQuotation() {
                     justify-content: space-between;
                 }
                 
-                /* แยกข้อความและตัวเลขให้มีระยะห่างที่เหมาะสม */
-                .row, .total-row {
-                    display: flex;
-                    justify-content: space-between;
-                    width: 100%;
-                    margin-bottom: 1mm;
-                    position: relative;
-                }
-                
-                .row span:first-child, .total-row span:first-child {
-                    width: 60%;
-                    text-align: left;
-                    margin-right: 5mm; /* เพิ่มระยะห่างขวา */
-                    white-space: nowrap; /* ป้องกันการตัดบรรทัด */
-                }
-                
-                .row span:last-child, .total-row span:last-child {
-                    width: 40%;
-                    text-align: right;
-                    font-variant-numeric: tabular-nums; /* ทำให้ตัวเลขเรียงตรงกัน */
-                    padding-left: 10mm; /* เพิ่มระยะห่างซ้าย */
-                }
-                
-                /* เพิ่ม spacer ระหว่างข้อความและตัวเลข */
-                .row::after, .total-row::after {
-                    content: "..........................";
-                    position: absolute;
-                    left: 50%;
-                    top: 50%;
-                    transform: translateY(-50%);
-                    color: transparent;
-                    letter-spacing: 2px;
-                    overflow: hidden;
-                    pointer-events: none;
-                }
-                
-                /* ปรับแต่งแถวยอดรวมทั้งสิ้นเป็นพิเศษ */
+                /* แถวยอดรวมทั้งสิ้น */
                 .total-row {
                     font-weight: bold;
                     padding: 2mm 0;
                     margin-top: 1mm;
-                    position: relative; /* ต้องใส่เพื่อให้ ::after ทำงานได้ */
+                }
+                
+                /* สไตล์สำหรับแถวยอดรวมทั้งสิ้น - ใช้ได้กับทั้งตารางและ div */
+                .summary-table tr:last-child td:first-child,
+                div.summary-row > div:first-child,
+                .total-label {
+                    text-align: left !important;
+                    padding-left: 5mm !important;
+                }
+                
+                .summary-table tr:last-child td:last-child,
+                div.summary-row > div:last-child,
+                .total-amount {
+                    text-align: right !important;
+                }
+                
+                /* สำหรับยอดรวมทั้งสิ้นที่อยู่ใน div */
+                .flex.justify-between:last-child {
                     display: flex;
                     justify-content: space-between;
-                    width: 100%;
+                    padding: 2mm 0;
                 }
                 
-                .total-row span:first-child {
-                    display: inline-block;
-                    width: 40% !important;
+                /* กรณีเป็น <p> หรือ element อื่นๆ ที่มีคำว่า "ยอดรวมทั้งสิ้น" */
+                p:contains("ยอดรวมทั้งสิ้น"), 
+                div:contains("ยอดรวมทั้งสิ้น"),
+                span:contains("ยอดรวมทั้งสิ้น") {
+                    text-align: left !important;
+                    padding-left: 5mm !important;
+                }
+                
+                /* แก้ไขเพิ่มเติมสำหรับกรณีใช้คลาส flex */
+                .flex.justify-between:last-child > :first-child {
+                    margin-right: auto;
+                    padding-left: 5mm !important;
                     text-align: left;
-                    margin-right: 0;
-                    white-space: nowrap;
                 }
                 
-                .total-row span:last-child {
-                    display: inline-block;
-                    width: 30% !important;
+                .flex.justify-between:last-child > :last-child {
                     text-align: right;
-                    padding-left: 0;
                 }
                 
-                .border-b {
-                    border-bottom: 0.8pt solid #ddd;
-                    padding: 1mm 0;
+                .total-row .total-label {
+                    text-align: left;
+                    padding-left: 2.5mm;
                 }
                 
-                .py-2 { padding-top: 2mm; padding-bottom: 2mm; }
-                .py-3 { padding-top: 2.5mm; padding-bottom: 2.5mm; }
-                .p-3 { padding: 2.5mm; }
-                
-                .border { border: 0.8pt solid #ddd; }
-                .rounded { border-radius: 2mm; }
+                .total-row .total-amount {
+                    text-align: right;
+                    padding-right: 2.5mm;
+                }
                 
                 .mt-12 { margin-top: 12mm; }
                 
@@ -275,111 +252,79 @@ function printQuotation() {
                     /* ปรับขนาดหัวข้อ */
                     h1 { font-size: 14pt; }
                     h2 { font-size: 12pt; }
-                    
-                    /* ปรับปรุงการแสดงผลยอดรวมเมื่อพิมพ์ */
-                    .row span:first-child, .total-row span:first-child {
-                        width: 60%;
-                        margin-right: 5mm;
-                        white-space: nowrap;
-                    }
-                    
-                    .row span:last-child, .total-row span:last-child {
-                        width: 40%;
-                        text-align: right;
-                        padding-left: 10mm;
-                    }
-                    
-                    /* แก้ไขแถวยอดรวมทั้งสิ้นโดยเฉพาะเมื่อพิมพ์ */
-                    .total-row::after {
-                        content: "................................";
-                        position: absolute;
-                        left: 40%;
-                        top: 50%;
-                        transform: translateY(-50%);
-                        color: transparent;
-                        letter-spacing: 3px;
-                        overflow: hidden;
-                        pointer-events: none;
-                    }
+                }
+
+                /* สไตล์เพิ่มเติมเพื่อจัดการปัญหาการจัดวาง */
+                .summary-table tr:last-child td:first-child,
+                div.summary-row > div:first-child,
+                .total-label,
+                .total-row span:first-child,
+                div[style*="font-weight: bold"] > span:first-child,
+                .flex.justify-between.py-3.font-bold > span:first-child {
+                    text-align: left !important;
+                    padding-left: 5mm !important;
                 }
                 
-                /* แยกตัวหนังสือและตัวเลขให้ชัดเจน */
-                .row, .total-row {
+                .flex.justify-between.py-3.font-bold,
+                div[style*="font-weight: bold; padding"],
+                .total-row {
+                    display: flex !important;
+                    justify-content: space-between !important;
+                    padding: 2mm 0 !important;
+                }
+                
+                /* สำหรับปรับแต่ง CSS ที่ถูกใช้งานในทุกเทมเพลต */
+                span:contains("ยอดรวมทั้งสิ้น"),
+                *:contains("ยอดรวมทั้งสิ้น") {
+                    text-align: left !important;
+                    padding-left: 5mm !important;
+                }
+
+                /* สไตล์เพิ่มเติมเพื่อจัดการแนวการจัดวางให้ตรงกับรายการด้านบน */
+                .border-b span:first-child,
+                .row span:first-child,
+                .total-row span:first-child,
+                .flex.justify-between > span:first-child,
+                div[style*="justify-content: space-between"] > span:first-child,
+                .flex.justify-between.py-3.font-bold > span:first-child {
+                    text-align: left !important;
+                    padding-left: 0 !important; /* ลบ padding ซ้ายทั้งหมด */
+                }
+                
+                /* ทำให้แถวทุกแถวในส่วนยอดรวมมีรูปแบบเดียวกัน */
+                .amount-summary .row,
+                .amount-summary .total-row,
+                .w-1\\/3 .border-b,
+                .w-1\\/3 .flex.justify-between,
+                .flex.justify-between.py-3.font-bold {
                     display: flex;
                     justify-content: space-between;
                     width: 100%;
-                    margin-bottom: 1mm;
+                    box-sizing: border-box;
                 }
                 
-                .row span:first-child, .total-row span:first-child {
-                    width: 70%; /* เพิ่มความกว้างส่วนข้อความ */
-                    text-align: left;
-                    padding-right: 10mm; /* เพิ่ม padding ระหว่างข้อความและตัวเลข */
+                /* ทำให้ข้อความ "ยอดรวมทั้งสิ้น" อยู่ในตำแหน่งเดียวกับข้อความอื่นๆ */
+                span:contains("ยอดรวมทั้งสิ้น"),
+                *:contains("ยอดรวมทั้งสิ้น") {
+                    text-align: left !สำคัญ;
+                    padding-left: 0 !สำคัญ;
                 }
                 
-                .row span:last-child, .total-row span:last-child {
-                    width: 30%; /* เพิ่มความกว้างส่วนตัวเลข */
-                    text-align: right;
-                    font-variant-numeric: tabular-nums; /* ทำให้ตัวเลขเรียงตรงกัน */
+                /* แก้ไขเพิ่มเติมเพื่อให้แน่ใจว่าการจัดวางถูกต้อง */
+                .total-label,
+                .total-row .total-label {
+                    text-align: left !สำคัญ;
+                    padding-left: 0 !สำคัญ;
                 }
                 
-                .total-row {
+                /* สไตล์สำหรับแสดงพนักงานขาย */
+                .sales-person-info {
+                    margin-top: 2mm;
+                    font-weight: normal;
+                }
+                
+                .bold-label {
                     font-weight: bold;
-                    padding: 2mm 0;
-                    margin-top: 1mm;
-                }
-                
-                /* แก้ไขปัญหาเรื่องระยะห่างของยอดรวมทั้งสิ้น */
-                .total-row, .flex.justify-between.py-3.font-bold {
-                    position: relative !important;
-                    display: flex !important;
-                    justify-content: space-between !important;
-                    padding: 3mm 0 !important;
-                    font-weight: bold !important;
-                    width: 100% !important;
-                    box-sizing: border-box !important;
-                }
-                
-                .total-row span:first-child, 
-                .flex.justify-between.py-3.font-bold span:first-child {
-                    display: inline-block !important;
-                    width: 70% !important;
-                    text-align: left !important;
-                    padding-right: 0 !important;
-                    margin-right: 0 !important;
-                    white-space: nowrap !important;
-                }
-                
-                .total-row span:last-child,
-                .flex.justify-between.py-3.font-bold span:last-child {
-                    display: inline-block !important;
-                    width: 30% !important;
-                    text-align: right !important;
-                    padding-left: 0 !important;
-                    box-sizing: border-box !important;
-                }
-
-                /* จัดวางตำแหน่งสม่ำเสมอ */
-                .w-1\\/3 .row,
-                .w-1\\/3 .total-row,
-                .w-full .row,
-                .w-full .total-row,
-                .amount-summary .row,
-                .amount-summary .total-row {
-                    width: 100% !important;
-                    display: flex !important;
-                    box-sizing: border-box !important;
-                }
-
-                /* สร้างความสม่ำเสมอระหว่างแถว */
-                .row span:first-child,
-                .total-row span:first-child {
-                    width: 70% !important;
-                }
-
-                .row span:last-child,
-                .total-row span:last-child {
-                    width: 30% !important;
                 }
             </style>
         </head>
@@ -389,92 +334,14 @@ function printQuotation() {
             </div>
             <script>
                 window.onload = function() {
-                    // รอให้โค้ดทำงานและรูปภาพโหลดเสร็จก่อนวัดขนาด
-                    setTimeout(function() {
-                        // วัดความสูงของเนื้อหา
-                        const contentHeight = document.body.scrollHeight;
-                        const viewportHeight = window.innerHeight;
-                        
-                        // กำหนดเกณฑ์ขนาดเอกสารสูงสุด (มากกว่านี้จะเล็กลง)
-                        const maxAllowedHeight = viewportHeight * 0.97;
-                        
-                        // ถ้าเนื้อหาสูงเกินไป ปรับลดขนาดแบบอัตโนมัติ
-                        if (contentHeight > maxAllowedHeight) {
-                            console.log('Content too tall: ' + contentHeight + 'px (max: ' + maxAllowedHeight + 'px)');
-                            
-                            // คำนวณอัตราส่วน แต่ไม่ปรับลดมากเกินไป (อย่างน้อย 85%)
-                            const scale = Math.max(0.85, maxAllowedHeight / contentHeight);
-                            
-                            // ปรับขนาดด้วย transform: scale()
-                            document.body.style.transform = \`scale(\${scale})\`;
-                            document.body.style.transformOrigin = 'top center';
-                            document.body.style.width = (100 / scale) + '%';
-                            document.body.style.marginBottom = '50px';
-                        } else {
-                            console.log('Content height OK: ' + contentHeight + 'px');
-                        }
-                        
-                        // พิมพ์หลังจากปรับขนาด
-                        setTimeout(function() {
-                            window.print();
-                        }, 500);
-                    }, 500);
-                    
-                    // ปรับแต่งการแสดงผลยอดรวมเพิ่มเติม
-                    document.querySelectorAll('.row, .total-row').forEach(function(row) {
-                        // ตรวจสอบว่ามี spans สองตัวหรือไม่ (ข้อความและตัวเลข)
-                        if (row.children.length >= 2) {
-                            // จัดรูปแบบตัวเลขให้ชิดขวา
-                            const valueSpan = row.children[row.children.length - 1];
-                            valueSpan.style.textAlign = 'right';
-                        }
-                    });
-                    
-                    // แก้ไขปัญหาการแสดงผลยอดรวมทั้งสิ้นโดยตรงด้วย JavaScript
-                    const fixTotalRow = function() {
-                        // หารายการยอดรวมทั้งสิ้นทั้งหมด
-                        const totalRows = document.querySelectorAll('.total-row, .flex.justify-between.py-3.font-bold');
-                        
-                        totalRows.forEach(function(row) {
-                            // เพิ่มระยะห่างด้วยการปรับ style โดยตรง
-                            row.style.display = 'flex';
-                            row.style.justifyContent = 'space-between';
-                            row.style.width = '100%';
-                            row.style.padding = '3mm 0';
-                            row.style.fontWeight = 'bold';
-                            
-                            // ปรับแต่งข้อความด้านซ้าย
-                            if (row.firstElementChild) {
-                                row.firstElementChild.style.display = 'inline-block';
-                                row.firstElementChild.style.width = '50%';
-                                row.firstElementChild.style.textAlign = 'left';
-                                row.firstElementChild.style.paddingRight = '30mm';
-                                row.firstElementChild.style.whiteSpace = 'nowrap';
-                                
-                                // ตรวจสอบหากเป็น "ยอดรวมทั้งสิ้น" จะทำการแทรกช่องว่างพิเศษ
-                                if (row.firstElementChild.textContent.includes('ยอดรวมทั้งสิ้น')) {
-                                    row.firstElementChild.innerHTML = 'ยอดรวมทั้งสิ้น&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
-                                }
-                            }
-                            
-                            // ปรับแต่งข้อความด้านขวา (ตัวเลข)
-                            if (row.lastElementChild) {
-                                row.lastElementChild.style.display = 'inline-block';
-                                row.lastElementChild.style.width = '50%';
-                                row.lastElementChild.style.textAlign = 'right';
-                            }
-                        });
-                    };
-                    
-                    // เรียกใช้ฟังก์ชันแก้ไข
-                    fixTotalRow();
-                    
-                    // รอเวลาเล็กน้อยแล้วเรียกใช้อีกครั้งเพื่อความแน่ใจ
-                    setTimeout(fixTotalRow, 100);
-                    
+                    document.title = "${quotationTitle}"; // กำหนดชื่อเอกสารอีกครั้งหลังจากโหลดเสร็จ
                     // พิมพ์หลังจากปรับขนาด
                     setTimeout(function() {
                         window.print();
+                        setTimeout(function() {
+                            // ปิดหน้าต่างหลังจากพิมพ์เสร็จ (หรือยกเลิก)
+                            window.close();
+                        }, 1000);
                     }, 500);
                 };
             </script>

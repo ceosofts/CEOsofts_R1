@@ -4,13 +4,14 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Quotation;
-use App\Models\QuotationItem; // เพิ่มการนำเข้าคลาส QuotationItem
-use App\Models\Product; // เพิ่มการนำเข้าคลาส Product
-use App\Models\Unit; // เพิ่มการนำเข้าคลาส Unit ถ้าใช้
-use App\Models\Customer; // เพิ่มการนำเข้าคลาส Customer
-use App\Models\Company; // เพิ่มการนำเข้าคลาส Company
-use Illuminate\Support\Facades\Auth; // เพิ่มการนำเข้า Auth Facade
-use Illuminate\Support\Facades\Log; // เพิ่มการนำเข้า Log Facade
+use App\Models\QuotationItem;
+use App\Models\Product;
+use App\Models\Unit;
+use App\Models\Customer;
+use App\Models\Company;
+use App\Models\Employee; // เพิ่มการนำเข้าโมเดล Employee
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class QuotationController extends Controller
@@ -37,10 +38,15 @@ class QuotationController extends Controller
             }
             
             // สร้าง query builder เริ่มต้น - ต้องแน่ใจว่า $query ถูกกำหนดค่า
-            $query = Quotation::with(['customer', 'creator'])
+            $query = Quotation::with(['customer', 'creator', 'salesPerson'])
                     ->where('company_id', $companyId);
             
             // ...existing code for filters...
+            
+            // กรองตามพนักงานขาย
+            if ($request->filled('sales_person_id')) {
+                $query->where('sales_person_id', $request->sales_person_id);
+            }
             
             // จัดเรียงข้อมูล - เปลี่ยนค่าเริ่มต้นเป็น quotation_number
             $sort = $request->input('sort', 'quotation_number');
@@ -108,6 +114,7 @@ class QuotationController extends Controller
         $customers = Customer::where('company_id', $companyId)->orderBy('name')->get();
         $products = Product::where('company_id', $companyId)->orderBy('name')->get();
         $units = Unit::all();
+        $salesPersons = Employee::where('company_id', $companyId)->orderBy('first_name')->get();
 
         // สร้างเลขที่เอกสารอัตโนมัติตามรูปแบบใหม่: QT + ปี + เดือน + 4 หลัก
         $currentYear = date('Y');
@@ -128,7 +135,7 @@ class QuotationController extends Controller
             $nextNumber = $prefix . '0001';
         }
 
-        return view('quotations.create', compact('customers', 'products', 'units', 'nextNumber'));
+        return view('quotations.create', compact('customers', 'products', 'units', 'nextNumber', 'salesPersons'));
     }
 
     /**
@@ -136,6 +143,17 @@ class QuotationController extends Controller
      */
     public function store(Request $request)
     {
+        // ...existing code...
+        
+        $data = $request->validate([
+            'customer_id' => 'required',
+            'quotation_number' => 'required|unique:quotations',
+            'issue_date' => 'required|date',
+            'expiry_date' => 'required|date|after_or_equal:issue_date',
+            'sales_person_id' => 'nullable|exists:employees,id', // เพิ่ม validation
+            // ...existing validation rules...
+        ]);
+
         try {
             // บันทึก raw request เพื่อดีบั๊ก
             Log::info('ข้อมูลที่รับจากฟอร์ม', [
@@ -202,6 +220,7 @@ class QuotationController extends Controller
                 'quotation_number' => $request->quotation_number,
                 'issue_date' => $request->issue_date,
                 'expiry_date' => $request->expiry_date,
+                'sales_person_id' => $request->sales_person_id, // เพิ่มบรรทัดนี้
                 'subtotal' => $subtotal,
                 'discount_type' => $request->discount_type ?? 'fixed',
                 'discount_amount' => $discountAmount,
@@ -248,6 +267,7 @@ class QuotationController extends Controller
                     'tax_amount' => ($request->tax_rate / 100) * $itemSubtotal,
                     'subtotal' => $itemSubtotal,
                     'total' => $itemSubtotal * (1 + (($request->tax_rate ?? 0) / 100)),
+                    'metadata' => json_encode(['product_code' => $productModel->code ?? null])
                 ]);
                 
                 Log::info('สร้างรายการสินค้า', ['item_id' => $item->id, 'product_name' => $productModel->name]);
@@ -330,6 +350,7 @@ class QuotationController extends Controller
             'issue_date' => 'required|date',
             'expiry_date' => 'required|date|after_or_equal:issue_date',
             'products_json' => 'required|json',  // เปลี่ยนการตรวจสอบเป็น JSON string
+            'sales_person_id' => 'nullable|exists:employees,id', // เพิ่ม validation
         ]);
         
         // แปลงข้อมูลจาก JSON เป็น array
@@ -361,6 +382,7 @@ class QuotationController extends Controller
             'customer_id' => $request->customer_id,
             'issue_date' => $request->issue_date,
             'expiry_date' => $request->expiry_date,
+            'sales_person_id' => $request->sales_person_id, // เพิ่มบรรทัดนี้
             'subtotal' => $subtotal,
             'discount_type' => $request->discount_type,
             'discount_amount' => $discountAmount,
@@ -398,6 +420,7 @@ class QuotationController extends Controller
                 'tax_amount' => ($request->tax_rate / 100) * $itemSubtotal,
                 'subtotal' => $itemSubtotal,
                 'total' => $itemSubtotal * (1 + ($request->tax_rate / 100)),
+                'metadata' => json_encode(['product_code' => $productModel->code ?? null])
             ]);
         }
         

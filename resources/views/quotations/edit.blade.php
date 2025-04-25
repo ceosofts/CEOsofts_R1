@@ -54,6 +54,22 @@
                                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                     @enderror
                                 </div>
+                                
+                                <!-- เพิ่มฟิลด์พนักงานขาย -->
+                                <div class="mb-4">
+                                    <label for="sales_person_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">พนักงานขาย</label>
+                                    <select id="sales_person_id" name="sales_person_id" class="block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('sales_person_id') border-red-500 @enderror">
+                                        <option value="">-- เลือกพนักงานขาย --</option>
+                                        @foreach(\App\Models\Employee::where('company_id', session('company_id'))->orderBy('first_name')->get() as $employee)
+                                        <option value="{{ $employee->id }}" {{ old('sales_person_id', $quotation->sales_person_id) == $employee->id ? 'selected' : '' }}>
+                                            {{ $employee->employee_code }} - {{ $employee->first_name }} {{ $employee->last_name }}
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                    @error('sales_person_id')
+                                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
                             </div>
 
                             <div>
@@ -205,9 +221,12 @@
                 <select name="products[INDEX].product_id" class="product-select block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
                     <option value="">-- เลือกสินค้า --</option>
                     @foreach($products as $product)
-                    <option value="{{ $product->id }}" data-price="{{ $product->selling_price }}">{{ $product->name }}</option>
+                    <option value="{{ $product->id }}" data-price="{{ $product->selling_price }}" data-code="{{ $product->code }}">
+                        {{ $product->code ? "[$product->code] " : "" }}{{ $product->name }}
+                    </option>
                     @endforeach
                 </select>
+                <input type="hidden" name="products[INDEX].product_code" class="product-code">
             </td>
             <td class="py-2">
                 <input type="number" name="products[INDEX].quantity" class="quantity block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" min="0.01" step="0.01" value="1" required>
@@ -289,11 +308,18 @@
                 productSelect.addEventListener('change', function() {
                     const selectedOption = this.options[this.selectedIndex];
                     const price = selectedOption.getAttribute('data-price');
+                    const productCode = selectedOption.getAttribute('data-code') || '';
                     const row = this.closest('.product-row');
                     const unitPriceInput = row.querySelector('.unit-price');
+                    const productCodeInput = row.querySelector('.product-code');
+                    
                     if (price) {
                         unitPriceInput.value = price;
                     }
+                    
+                    // เก็บรหัสสินค้า
+                    productCodeInput.value = productCode;
+                    
                     calculateRowTotal(row);
                 });
 

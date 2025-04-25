@@ -85,12 +85,16 @@ class DeliveryOrderController extends Controller
         
         $customers = Customer::orderBy('name')->get();
         $users = User::orderBy('name')->get();
+        
+        // สร้างเลขที่ใบส่งสินค้าอัตโนมัติ
+        $deliveryNumber = DeliveryOrder::generateDeliveryNumber();
 
         return view('delivery_orders.create', [
             'orders' => $orders,
             'customers' => $customers,
             'users' => $users,
             'selectedOrder' => $order,
+            'deliveryNumber' => $deliveryNumber, // เพิ่มเลขที่ใบส่งสินค้าอัตโนมัติ
         ]);
     }
 
@@ -368,5 +372,26 @@ class DeliveryOrderController extends Controller
             'items' => $order->items,
             'customer' => $order->customer,
         ]);
+    }
+
+    /**
+     * สร้างเลขที่ใบส่งสินค้าอัตโนมัติ (API)
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function generateDeliveryNumber()
+    {
+        try {
+            $deliveryNumber = DeliveryOrder::generateDeliveryNumber();
+            return response()->json([
+                'success' => true,
+                'delivery_number' => $deliveryNumber
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'เกิดข้อผิดพลาดในการสร้างเลขที่ใบส่งสินค้า: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
