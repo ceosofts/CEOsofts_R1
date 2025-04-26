@@ -35,7 +35,46 @@ class CompanySeeder extends Seeder
                     'industry' => 'Software Development',
                 ]),
             ],
-            
+            [
+                'name' => 'บริษัท ไทยเทค โซลูชั่นส์ จำกัด',
+                'code' => 'THAITECH',
+                'address' => '123 อาคารศูนย์นวัตกรรม ถนนสาทร แขวงทุ่งมหาเมฆ เขตสาทร กรุงเทพมหานคร 10120',
+                'phone' => '02-789-5678',
+                'email' => 'contact@thaitech.co.th',
+                'tax_id' => '0105564789012',
+                'website' => 'https://www.thaitech.co.th',
+                'logo' => null,
+                'is_active' => true,
+                'status' => 'active',
+                'settings' => json_encode([
+                    'invoice_prefix' => 'INV-THAITECH',
+                    'receipt_prefix' => 'REC-THAITECH',
+                ]),
+                'metadata' => json_encode([
+                    'founded_year' => 2018,
+                    'industry' => 'IT Services & Consulting',
+                ]),
+            ],
+            [
+                'name' => 'บริษัท ดิจิตอลแอสเซต จำกัด',
+                'code' => 'DIGASSET',
+                'address' => '888/71 อาคารมหานคร ชั้น 15 ถนนสีลม แขวงสีลม เขตบางรัก กรุงเทพมหานคร 10500',
+                'phone' => '02-111-9999',
+                'email' => 'hello@digitalasset.co.th',
+                'tax_id' => '0105565432109',
+                'website' => 'https://www.digitalasset.co.th',
+                'logo' => null,
+                'is_active' => true,
+                'status' => 'active',
+                'settings' => json_encode([
+                    'invoice_prefix' => 'INV-DIGASSET',
+                    'receipt_prefix' => 'REC-DIGASSET',
+                ]),
+                'metadata' => json_encode([
+                    'founded_year' => 2020,
+                    'industry' => 'Digital Asset Management',
+                ]),
+            ],
         ];
 
         foreach ($companies as $company) {
