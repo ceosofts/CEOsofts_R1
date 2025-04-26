@@ -395,3 +395,10 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->group(function () {
 Route::post('/company/request-access', [CompanyController::class, 'requestAccess'])
     ->name('company.request-access')
     ->middleware(['auth', 'verified']);
+
+// เพิ่ม route สำหรับการดึงเนื้อหา PDF ใบส่งสินค้า
+Route::get('/delivery-orders/{delivery_order}/pdf-content', [DeliveryOrderController::class, 'pdfContent'])
+    ->name('delivery-orders.pdf-content');
+
+// รองรับการพิมพ์ใบส่งสินค้า
+Route::get('/delivery-orders/{deliveryOrder}/print', [DeliveryOrderController::class, 'print'])->name('delivery-orders.print');

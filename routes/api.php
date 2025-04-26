@@ -67,3 +67,6 @@ Route::get('orders/{id}/products', [OrderController::class, 'getOrderProducts'])
 
 // เพิ่ม route สำหรับสร้างเลขที่ใบส่งสินค้าอัตโนมัติ
 Route::get('/generate-delivery-number', [DeliveryOrderController::class, 'generateDeliveryNumber']);
+
+// Get products for a delivery‑order form
+Route::get('order-products/{order_id}', [\App\Http\Controllers\DeliveryOrderController::class, 'getOrderProducts']);
