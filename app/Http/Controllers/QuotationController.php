@@ -21,88 +21,50 @@ class QuotationController extends Controller
      */
     public function index(Request $request)
     {
-        try {
-            // แก้ไขการดึงค่า company_id ให้มีค่าเริ่มต้นเป็น 1 ถ้าไม่มีค่า
-            $companyId = session('company_id');
-            
-            // ถ้า session ไม่มีค่า ลองดึงจาก user
-            if (empty($companyId) && Auth::check()) {
-                $companyId = Auth::user()->company_id;
-            }
-            
-            // ถ้ายังไม่มีค่า ให้ใช้ค่าเริ่มต้นเป็น 1
-            if (empty($companyId)) {
-                $companyId = 1; // ค่าเริ่มต้นกรณีไม่พบ company_id
-                // บันทึก session เพื่อใช้ในครั้งต่อไป
-                session(['company_id' => $companyId]);
-            }
-            
-            // สร้าง query builder เริ่มต้น - ต้องแน่ใจว่า $query ถูกกำหนดค่า
-            $query = Quotation::with(['customer', 'creator', 'salesPerson'])
-                    ->where('company_id', $companyId);
-            
-            // ...existing code for filters...
-            
-            // กรองตามพนักงานขาย
-            if ($request->filled('sales_person_id')) {
-                $query->where('sales_person_id', $request->sales_person_id);
-            }
-            
-            // จัดเรียงข้อมูล - เปลี่ยนค่าเริ่มต้นเป็น quotation_number
-            $sort = $request->input('sort', 'quotation_number');
-            $direction = $request->input('direction', 'desc');
-            
-            // ตรวจสอบ column ที่อนุญาตให้เรียงลำดับ
-            $allowedSortColumns = ['quotation_number', 'issue_date', 'expiry_date', 'total_amount', 'created_at'];
-            
-            if (in_array($sort, $allowedSortColumns)) {
-                $query->orderBy($sort, $direction);
-            } else {
-                $query->orderBy('quotation_number', 'desc');
-            }
-            
-            // ดึงข้อมูลพร้อม pagination
-            $quotations = $query->paginate(10);
-            
-            // นับจำนวนตามสถานะ (เพิ่มบรรทัดนี้เพื่อให้แน่ใจว่ามี $statusCounts)
-            $statusCounts = [
-                'all' => Quotation::where('company_id', $companyId)->count(),
-                'draft' => Quotation::where('company_id', $companyId)->where('status', 'draft')->count(),
-                'approved' => Quotation::where('company_id', $companyId)->where('status', 'approved')->count(),
-                'rejected' => Quotation::where('company_id', $companyId)->where('status', 'rejected')->count(),
-            ];
-            
-            // เตรียมข้อมูล debug (ถ้าจำเป็น)
-            $debugInfo = null;
-            if (config('app.env') === 'local') {
-                $debugInfo = [
-                    'total_count' => $quotations->total(),
-                    'query_count' => $quotations->count(),
-                    // ...additional debug info...
-                ];
-            }
-            
-            return view('quotations.index', compact('quotations', 'statusCounts', 'debugInfo'));
-        } catch (\Exception $e) {
-            // ใช้ LengthAwarePaginator แทน collect()->paginate()
-            $perPage = 10;
-            $currentPage = $request->input('page', 1);
-            $path = route('quotations.index');
-            
-            $quotations = new LengthAwarePaginator(
-                [], // empty array
-                0, // total items
-                $perPage,
-                $currentPage,
-                ['path' => $path]
-            );
-            
-            return view('quotations.index', [
-                'quotations' => $quotations,
-                'statusCounts' => ['all' => 0, 'draft' => 0, 'approved' => 0, 'rejected' => 0],
-                'error' => 'เกิดข้อผิดพลาดในการดึงข้อมูลใบเสนอราคา: ' . $e->getMessage()
-            ]);
+        $query = Quotation::where('company_id', session('company_id'));
+
+        // Search by text (quotation number, reference, customer name)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('quotation_number', 'like', "%{$search}%")
+                  ->orWhere('reference', 'like', "%{$search}%")
+                  ->orWhereHas('customer', function ($q2) use ($search) {
+                      $q2->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('salesPerson', function ($q2) use ($search) {
+                      $q2->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%");
+                  });
+            });
         }
+
+        // Filter by customer
+        if ($request->filled('customer')) {
+            $query->where('customer_id', $request->customer);
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by date range
+        if ($request->filled('date_from')) {
+            $query->whereDate('issue_date', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('issue_date', '<=', $request->date_to);
+        }
+
+        // Apply sorting
+        $sortField = $request->input('sort', 'quotation_number');
+        $sortDirection = $request->input('direction', 'desc');
+        $query->orderBy($sortField, $sortDirection);
+
+        $quotations = $query->paginate(15)->withQueryString();
+
+        return view('quotations.index', compact('quotations'));
     }
 
     /**

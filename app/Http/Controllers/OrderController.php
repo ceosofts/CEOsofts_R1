@@ -19,32 +19,63 @@ use Illuminate\Support\Facades\Schema; // เพิ่มบรรทัดน�
 class OrderController extends Controller
 {
     /**
-     * Display a listing of the orders.
+     * Display a listing of the resource.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
      */
     public function index(Request $request)
     {
-        $query = Order::query()->with('customer');
+        $query = Order::where('company_id', session('company_id'));
 
-        // ค้นหาจากคำค้น
+        // Search parameter handling
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('order_number', 'like', "%{$search}%")
-                  ->orWhere('customer_po_number', 'like', "%{$search}%")
-                  ->orWhereHas('customer', function($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%");
+                  ->orWhere('po_number', 'like', "%{$search}%")
+                  ->orWhereHas('customer', function ($q2) use ($search) {
+                      $q2->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('salesPerson', function ($q2) use ($search) {
+                      $q2->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%");
                   });
             });
         }
 
-        // เรียงลำดับหมายเลขใบสั่งขายล่าสุด (order_number) มาก่อน
-        $orders = $query->orderBy('order_number', 'desc')->paginate(10);
-        
+        // Customer filter
+        if ($request->filled('customer_id')) {
+            $query->where('customer_id', $request->customer_id);
+        }
+
+        // Status filter
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Date range filter
+        if ($request->filled('from_date')) {
+            $query->whereDate('order_date', '>=', $request->from_date);
+        }
+        if ($request->filled('to_date')) {
+            $query->whereDate('order_date', '<=', $request->to_date);
+        }
+
+        // Apply sorting
+        $sortField = $request->input('sort', 'order_number');
+        $sortDirection = $request->input('direction', 'desc');
+        $query->orderBy($sortField, $sortDirection);
+
+        $orders = $query->paginate(15)->withQueryString();
+
         return view('orders.index', compact('orders'));
     }
 
     /**
-     * Show the form for creating a new order.
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
      */
     public function create(Request $request)
     {
@@ -73,7 +104,10 @@ class OrderController extends Controller
     }
 
     /**
-     * Store a newly created order in storage.
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
@@ -265,7 +299,10 @@ class OrderController extends Controller
     }
 
     /**
-     * Display the specified order.
+     * Display the specified resource.
+     *
+     * @param  \App\Models\Order  $order
+     * @return \Illuminate\Http\Response
      */
     public function show(Order $order)
     {
@@ -275,7 +312,10 @@ class OrderController extends Controller
     }
 
     /**
-     * Show the form for editing the specified order.
+     * Show the form for editing the specified resource.
+     *
+     * @param  \App\Models\Order  $order
+     * @return \Illuminate\Http\Response
      */
     public function edit(Order $order)
     {
@@ -293,7 +333,11 @@ class OrderController extends Controller
     }
 
     /**
-     * Update the specified order in storage.
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Order  $order
+     * @return \Illuminate\Http\Response
      */
     public function update(Request $request, Order $order)
     {
@@ -455,7 +499,10 @@ class OrderController extends Controller
     }
 
     /**
-     * Remove the specified order from storage.
+     * Remove the specified resource from storage.
+     *
+     * @param  \App\Models\Order  $order
+     * @return \Illuminate\Http\Response
      */
     public function destroy(Order $order)
     {

@@ -30,46 +30,107 @@
             <!-- Filters -->
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
                 <div class="p-6">
-                    <form action="{{ route('delivery-orders.index') }}" method="GET" class="flex flex-wrap gap-4">
-                        <div class="flex-1">
-                            <x-input-label for="search" :value="__('ค้นหา')" class="dark:text-gray-300" />
-                            <x-text-input id="search" name="search" type="text" class="w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="ค้นหาตามเลขที่ใบส่งสินค้า หรือชื่อลูกค้า" value="{{ request('search') }}" />
-                        </div>
+                    <form action="{{ route('delivery-orders.index') }}" method="GET">
+                        <!-- Grid layout แบบแถวเดียว -->
+                        <div class="flex flex-wrap items-end gap-3">
+                            <!-- ช่อง "ค้นหา" -->
+                            <div class="w-full md:w-64 lg:w-70">
+                                <label for="search" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ค้นหา</label>
+                                <div class="relative rounded-md shadow-sm">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <input type="text" name="search" id="search" value="{{ request('search') }}"
+                                        class="block w-full pl-10 pr-3 py-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        placeholder="เลขที่ใบส่งสินค้า, เลขที่ใบสั่งขาย">
+                                </div>
+                            </div>
 
-                        <div class="w-40">
-                            <x-input-label for="status" :value="__('สถานะ')" class="dark:text-gray-300" />
-                            <select id="status" name="status" class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                <option value="all">ทั้งหมด</option>
-                                <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>รอดำเนินการ</option>
-                                <option value="processing" {{ request('status') == 'processing' ? 'selected' : '' }}>กำลังดำเนินการ</option>
-                                <option value="shipped" {{ request('status') == 'shipped' ? 'selected' : '' }}>จัดส่งแล้ว</option>
-                                <option value="delivered" {{ request('status') == 'delivered' ? 'selected' : '' }}>ส่งมอบแล้ว</option>
-                                <option value="partial_delivered" {{ request('status') == 'partial_delivered' ? 'selected' : '' }}>ส่งมอบบางส่วน</option>
-                                <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>ยกเลิก</option>
-                            </select>
-                        </div>
+                            <!-- ช่อง "ลูกค้า" -->
+                            <div class="w-full md:w-40 lg:w-48">
+                                <label for="customer_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ลูกค้า</label>
+                                <select name="customer_id" id="customer_id"
+                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    <option value="">-- ทั้งหมด --</option>
+                                    @foreach(\App\Models\Customer::where('company_id', session('company_id'))->orderBy('name')->get() as $customer)
+                                    <option value="{{ $customer->id }}" {{ request('customer_id') == $customer->id ? 'selected' : '' }}>
+                                        {{ $customer->name }}
+                                    </option>
+                                    @endforeach
+                                </select>
+                            </div>
 
-                        <div class="w-40">
-                            <x-input-label for="date_from" :value="__('ตั้งแต่วันที่')" class="dark:text-gray-300" />
-                            <x-text-input id="date_from" name="date_from" type="date" class="w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white" value="{{ request('date_from') }}" />
-                        </div>
+                            <!-- ช่อง "สถานะ" -->
+                            <div class="w-full md:w-40 lg:w-48">
+                                <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">สถานะ</label>
+                                <select id="status" name="status"
+                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    <option value="">-- ทั้งหมด --</option>
+                                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>รอดำเนินการ</option>
+                                    <option value="processing" {{ request('status') == 'processing' ? 'selected' : '' }}>กำลังดำเนินการ</option>
+                                    <option value="shipped" {{ request('status') == 'shipped' ? 'selected' : '' }}>จัดส่งแล้ว</option>
+                                    <option value="delivered" {{ request('status') == 'delivered' ? 'selected' : '' }}>ส่งมอบแล้ว</option>
+                                    <option value="partial_delivered" {{ request('status') == 'partial_delivered' ? 'selected' : '' }}>ส่งมอบบางส่วน</option>
+                                    <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>ยกเลิก</option>
+                                </select>
+                            </div>
 
-                        <div class="w-40">
-                            <x-input-label for="date_to" :value="__('ถึงวันที่')" class="dark:text-gray-300" />
-                            <x-text-input id="date_to" name="date_to" type="date" class="w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white" value="{{ request('date_to') }}" />
-                        </div>
+                            <!-- วันที่ (ย่อให้สั้นลง) -->
+                            <div class="w-full md:w-44 lg:w-60">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ช่วงวันที่</label>
+                                <div class="flex space-x-1">
+                                    <input type="date" name="date_from" id="date_from" value="{{ request('date_from') }}"
+                                        class="block w-1/2 py-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    <input type="date" name="date_to" id="date_to" value="{{ request('date_to') }}"
+                                        class="block w-1/2 py-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                </div>
+                            </div>
 
-                        <div class="w-auto">
-                            <x-input-label class="invisible" for="filter_button" :value="__('กรอง')" />
-                            <x-primary-button class="h-10">{{ __('กรอง') }}</x-primary-button>
-                        </div>
-
-                        @if(request('search') || request('status') || request('date_from') || request('date_to'))
-                            <div class="flex items-end">
-                                <a href="{{ route('delivery-orders.index') }}" class="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
-                                    {{ __('ล้างตัวกรอง') }}
+                            <!-- ปุ่มค้นหาและรีเซ็ต -->
+                            <div class="flex space-x-2">
+                                <button type="submit" class="inline-flex items-center px-4 h-10 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                    ค้นหา
+                                </button>
+                                <a href="{{ route('delivery-orders.index') }}" class="inline-flex items-center px-4 h-10 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600">
+                                    <svg class="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                                    </svg>
+                                    รีเซ็ต
                                 </a>
                             </div>
+                        
+
+                        <!-- For debugging purposes - hidden by default -->
+                        @if(config('app.debug'))
+                        <div class="mt-2 text-right">
+                            <button type="button" id="toggleDebug" class="text-xs text-gray-500 dark:text-gray-400 hover:underline">Debug</button>
+                        </div>
+                        <div id="debugInfo" class="hidden mt-2 p-3 bg-gray-100 dark:bg-gray-700 text-xs rounded">
+                            <p class="font-semibold mb-1">Debug: Search Parameters</p>
+                            <ul>
+                                <li>Search: {{ request('search') ?? 'null' }}</li>
+                                <li>Status: {{ request('status') ?? 'null' }}</li>
+                                <li>Date From: {{ request('date_from') ?? 'null' }}</li>
+                                <li>Date To: {{ request('date_to') ?? 'null' }}</li>
+                                <li>Current URL: {{ url()->full() }}</li>
+                            </ul>
+                        </div>
+
+                        </div>
+
+                        <script>
+                            document.getElementById('toggleDebug').addEventListener('click', function() {
+                                const debugInfo = document.getElementById('debugInfo');
+                                const isHidden = debugInfo.classList.contains('hidden');
+                                debugInfo.classList.toggle('hidden');
+                                this.textContent = isHidden ? 'Hide Debug Info' : 'Debug';
+                            });
+                        </script>
                         @endif
                     </form>
                 </div>

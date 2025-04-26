@@ -35,7 +35,7 @@
                     <h3 class="text-lg font-semibold mb-4">ค้นหาและกรองข้อมูล</h3>
 
                     <form method="GET" action="{{ route('customers.index') }}">
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
                             <div>
                                 <label for="search" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ค้นหา</label>
                                 <input type="text" name="search" id="search" value="{{ request('search') }}"
@@ -73,15 +73,18 @@
                                     <option value="C" {{ request('group') == 'C' ? 'selected' : '' }}>กลุ่ม C</option>
                                 </select>
                             </div>
-                        </div>
 
-                        <div class="mt-4 flex justify-end">
-                            <a href="{{ route('customers.index') }}" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mr-2 dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600">
-                                รีเซ็ต
-                            </a>
-                            <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                ค้นหา
-                            </button>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">&nbsp;</label>
+                                <div class="flex space-x-2">
+                                    <a href="{{ route('customers.index') }}" class="inline-flex items-center px-4 h-10 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600">
+                                        รีเซ็ต
+                                    </a>
+                                    <button type="submit" class="inline-flex items-center px-4 h-10 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        ค้นหา
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </form>
                 </div>
