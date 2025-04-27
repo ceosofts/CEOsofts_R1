@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB; // เพิ่มการ import DB Facade
+use Illuminate\Support\Facades\DB; 
+use Illuminate\Support\Facades\Schema; // เพิ่ม import Schema facade
 use App\Traits\HasCompanyScope;
 use Carbon\Carbon;
 
@@ -28,9 +29,8 @@ class Order extends Model
         'status', 
         'metadata', 
         'subtotal',
-        'discount_type', // เพิ่มฟิลด์นี้
+        'discount_type',
         'discount_amount', 
-        'tax_rate', 
         'tax_amount', 
         'customer_po_number',
         'notes', 
@@ -50,7 +50,10 @@ class Order extends Model
         'cancelled_by', 
         'cancelled_at',
         'cancellation_reason',
-        'sales_person_id', // เพิ่มฟิลด์พนักงานขาย
+        'sales_person_id',
+        // เพิ่ม tax_rate ใน $fillable
+        'tax_rate',
+        'shipping_cost', // เพิ่ม shipping_cost ใน $fillable
     ];
 
     /**
@@ -73,7 +76,9 @@ class Order extends Model
         'shipping_cost' => 'decimal:2',
     ];
     
-    // เพิ่ม boot เพื่อกำหนดค่า company_id อัตโนมัติ
+    /**
+     * Boot the model.
+     */
     protected static function boot()
     {
         parent::boot();
@@ -84,6 +89,16 @@ class Order extends Model
             }
             if (!$model->created_by && Auth::check()) {
                 $model->created_by = Auth::id();
+            }
+            
+            // เพิ่มการตรวจสอบคอลัมน์ tax_rate (ใช้ Schema facade โดยไม่มี \ ข้างหน้า)
+            if (!Schema::hasColumn('orders', 'tax_rate')) {
+                unset($model->tax_rate);
+            }
+
+            // เพิ่มการตรวจสอบคอลัมน์ shipping_cost
+            if (!Schema::hasColumn('orders', 'shipping_cost')) {
+                unset($model->shipping_cost);
             }
         });
     }

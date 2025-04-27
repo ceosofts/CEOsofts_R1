@@ -4,13 +4,23 @@
             <h2 class="font-extrabold text-4xl text-blue-800">
                 {{ __('รายการใบสั่งขาย') }}
             </h2>
-            <div>
+            <div class="flex space-x-2">
                 <a href="{{ route('orders.create') }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                     <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                     </svg>
                     {{ __('สร้างใบสั่งขายใหม่') }}
                 </a>
+                
+                <!-- แสดงปุ่มสร้างข้อมูลตัวอย่างเสมอในโหมด debug -->
+                @if(config('app.debug'))
+                <a href="{{ route('orders.index', ['seed_sample' => 1]) }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-purple-600 border border-transparent rounded-md shadow-sm hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                    <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    {{ __('สร้างข้อมูลตัวอย่าง') }}
+                </a>
+                @endif
             </div>
         </div>
     </x-slot>
@@ -26,6 +36,53 @@
             @if(session('error'))
             <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
                 <span class="block sm:inline">{{ session('error') }}</span>
+            </div>
+            @endif
+
+            @if(session('error_message'))
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                <span class="block sm:inline">{{ session('error_message') }}</span>
+            </div>
+            @endif
+
+            @if(session('info'))
+            <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative mb-4" role="alert">
+                <span class="block sm:inline">{{ session('info') }}</span>
+            </div>
+            @endif
+
+            <!-- Debug section -->
+            @if(config('app.debug'))
+            <div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded relative mb-4" role="alert">
+                <span class="font-bold">Debug Info:</span>
+                <ul class="ml-4 mt-1 text-sm">
+                    <li>Current Company ID: {{ session('company_id') ?? 'Not Set' }}</li>
+                    <li>Current Company ID (Alternate): {{ session('current_company_id') ?? 'Not Set' }}</li>
+                    <li>Orders Count: {{ $orders->count() }} (Total: {{ $orders->total() ?? 0 }})</li>
+                    <li>Is Paginated: {{ $orders instanceof \Illuminate\Pagination\LengthAwarePaginator ? 'Yes' : 'No' }}</li>
+                    <li>Auth User: {{ auth()->check() ? auth()->user()->name : 'Not Logged In' }}</li>
+                </ul>
+                
+                <div class="flex space-x-2 mt-2">
+                    <a href="{{ route('orders.index', ['seed_sample' => 1]) }}" class="inline-flex items-center px-3 py-1 text-xs font-medium text-white bg-purple-600 border border-transparent rounded-md shadow-sm hover:bg-purple-700">
+                        <svg class="-ml-0.5 mr-1.5 h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        สร้างข้อมูลตัวอย่าง
+                    </a>
+                    <a href="{{ url('/debug/orders/check-connection') }}" target="_blank" class="inline-flex items-center px-3 py-1 text-xs font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700">
+                        <svg class="-ml-0.5 mr-1.5 h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        ตรวจสอบฐานข้อมูล
+                    </a>
+                    <a href="{{ url('/debug/orders/fix-company-id') }}" target="_blank" class="inline-flex items-center px-3 py-1 text-xs font-medium text-white bg-yellow-600 border border-transparent rounded-md shadow-sm hover:bg-yellow-700">
+                        <svg class="-ml-0.5 mr-1.5 h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        ซ่อมค่า Company ID
+                    </a>
+                </div>
             </div>
             @endif
 
@@ -56,7 +113,11 @@
                                 <select name="customer_id" id="customer_id"
                                     class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                     <option value="">-- ทั้งหมด --</option>
-                                    @foreach(\App\Models\Customer::where('company_id', session('company_id'))->orderBy('name')->get() as $customer)
+                                    @php
+                                        $companyId = session('company_id') ?? session('current_company_id') ?? 1;
+                                        $customers = \App\Models\Customer::where('company_id', $companyId)->orderBy('name')->get();
+                                    @endphp
+                                    @foreach($customers as $customer)
                                     <option value="{{ $customer->id }}" {{ request('customer_id') == $customer->id ? 'selected' : '' }}>
                                         {{ $customer->name }}
                                     </option>
@@ -111,36 +172,6 @@
                         <input type="hidden" name="sort" value="{{ request('sort', 'order_number') }}">
                         <input type="hidden" name="direction" value="{{ request('direction', 'desc') }}">
                         
-                        <!-- For debugging purposes - hidden by default -->
-                        @if(config('app.debug'))
-                        <div class="mt-2 text-right">
-                            <button type="button" id="toggleDebug" class="text-xs text-gray-500 dark:text-gray-400 hover:underline">Debug</button>
-                        </div>
-                        <div id="debugInfo" class="hidden mt-2 p-3 bg-gray-100 dark:bg-gray-700 text-xs rounded">
-                            <p class="font-semibold mb-1">Debug: Search Parameters</p>
-                            <ul>
-                                <li>Search: {{ request('search') ?? 'null' }}</li>
-                                <li>Customer ID: {{ request('customer_id') ?? 'null' }}</li>
-                                <li>Status: {{ request('status') ?? 'null' }}</li>
-                                <li>From Date: {{ request('from_date') ?? 'null' }}</li>
-                                <li>To Date: {{ request('to_date') ?? 'null' }}</li>
-                                <li>Sort: {{ request('sort') ?? 'null' }}</li>
-                                <li>Direction: {{ request('direction') ?? 'null' }}</li>
-                                <li>Current URL: {{ url()->full() }}</li>
-                            </ul>
-                        </div>
-
-                        </div>
-
-                        <script>
-                            document.getElementById('toggleDebug').addEventListener('click', function() {
-                                const debugInfo = document.getElementById('debugInfo');
-                                const isHidden = debugInfo.classList.contains('hidden');
-                                debugInfo.classList.toggle('hidden');
-                                this.textContent = isHidden ? 'Hide Debug Info' : 'Debug';
-                            });
-                        </script>
-                        @endif
                     </form>
                 </div>
             </div>
@@ -192,11 +223,11 @@
                                             {{ $order->order_number }}
                                         </a>
                                     </td>
-                                    <td class="py-2 px-4">{{ $order->order_date->format('d/m/Y') }}</td>
+                                    <td class="py-2 px-4">{{ $order->order_date ? $order->order_date->format('d/m/Y') : 'N/A' }}</td>
                                     <td class="py-2 px-4">{{ $order->customer->name ?? 'ไม่ระบุ' }}</td>
                                     <td class="py-2 px-4">
-                                        @if($order->sales_person_id && $salesPerson = \App\Models\Employee::find($order->sales_person_id))
-                                            {{ $salesPerson->first_name }} {{ $salesPerson->last_name }}
+                                        @if($order->salesPerson)
+                                            {{ $order->salesPerson->first_name }} {{ $order->salesPerson->last_name }}
                                         @else
                                             -
                                         @endif
@@ -245,16 +276,6 @@
                                                 </svg>
                                             </a>
                                             
-                                            {{-- Edit icon hidden as requested
-                                            @if(!in_array($order->status, ['shipped', 'delivered', 'cancelled']))
-                                                <a href="{{ route('orders.edit', $order) }}" class="text-yellow-500 hover:text-yellow-700">
-                                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                    </svg>
-                                                </a>
-                                            @endif
-                                            --}}
-                                            
                                             @if(in_array($order->status, ['draft', 'cancelled']))
                                                 <form action="{{ route('orders.destroy', $order) }}" method="POST" class="inline" onsubmit="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบใบสั่งขายนี้?');">
                                                     @csrf
@@ -277,9 +298,22 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                             </svg>
                                             <p>ไม่พบข้อมูลใบสั่งขาย</p>
-                                            <a href="{{ route('orders.create') }}" class="mt-3 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                                <i class="fas fa-plus mr-1"></i> สร้างใบสั่งขายใหม่
-                                            </a>
+                                            
+                                            @if(session('info'))
+                                                <p class="mt-2 text-sm text-yellow-600">{{ session('info') }}</p>
+                                            @endif
+                                            
+                                            <div class="flex space-x-2 mt-4">
+                                                <a href="{{ route('orders.create') }}" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                                    <i class="fas fa-plus mr-1"></i> สร้างใบสั่งขายใหม่
+                                                </a>
+                                                
+                                                @if(config('app.debug'))
+                                                <a href="{{ route('orders.index', ['seed_sample' => 1]) }}" class="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                                                    <i class="fas fa-database mr-1"></i> สร้างข้อมูลตัวอย่าง
+                                                </a>
+                                                @endif
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -289,7 +323,9 @@
                     </div>
 
                     <div class="mt-4">
-                        {{ $orders->links() }}
+                        @if($orders instanceof \Illuminate\Pagination\LengthAwarePaginator)
+                            {{ $orders->links() }}
+                        @endif
                     </div>
                 </div>
             </div>

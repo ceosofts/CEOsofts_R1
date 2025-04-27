@@ -26,9 +26,12 @@ return new class extends Migration
                 $table->dateTime('delivery_date')->nullable();
                 $table->string('status')->check("status IN ('draft', 'pending', 'approved', 'processing', 'shipped', 'completed', 'canceled')");
                 $table->decimal('subtotal', 15, 2)->default(0);
+                $table->string('discount_type')->default('fixed'); 
                 $table->decimal('discount_amount', 15, 2)->default(0);
+                $table->decimal('tax_rate', 15, 2)->default(0);  // เพิ่มคอลัมน์ tax_rate ตรงนี้
                 $table->decimal('tax_amount', 15, 2)->default(0);
                 $table->decimal('total_amount', 15, 2)->default(0);
+                $table->decimal('shipping_cost', 15, 2)->default(0); // เพิ่มคอลัมน์ shipping_cost
                 $table->text('remarks')->nullable();
                 $table->date('expected_delivery_date')->nullable();
                 
@@ -39,6 +42,7 @@ return new class extends Migration
                 $table->string('shipping_state')->nullable();
                 $table->string('shipping_postal_code')->nullable();
                 $table->string('shipping_country')->default('Thailand');
+                $table->string('shipping_method')->nullable(); // เพิ่มคอลัมน์ shipping_method
                 
                 // ข้อมูลเพิ่มเติมเกี่ยวกับออเดอร์
                 $table->text('notes')->nullable();
@@ -74,6 +78,11 @@ return new class extends Migration
         } else {
             // ตรวจสอบว่ามีคอลัมน์ที่จำเป็นหรือไม่ ถ้าไม่มีให้เพิ่ม
             Schema::table('orders', function (Blueprint $table) {
+                // เพิ่มคอลัมน์ discount_type ถ้ายังไม่มี
+                if (!Schema::hasColumn('orders', 'discount_type')) {
+                    $table->string('discount_type')->default('fixed')->after('subtotal');
+                }
+                
                 // เพิ่มฟิลด์พนักงานขาย ถ้ายังไม่มี
                 if (!Schema::hasColumn('orders', 'sales_person_id')) {
                     $table->foreignId('sales_person_id')->nullable()->constrained('employees')->onDelete('set null');
@@ -123,6 +132,21 @@ return new class extends Migration
                 
                 if (!Schema::hasColumn('orders', 'delivery_order_id')) {
                     $table->foreignId('delivery_order_id')->nullable();
+                }
+                
+                // เพิ่มคอลัมน์ tax_rate ถ้ายังไม่มี
+                if (!Schema::hasColumn('orders', 'tax_rate')) {
+                    $table->decimal('tax_rate', 15, 2)->default(0)->after('discount_amount');
+                }
+                
+                // เพิ่มคอลัมน์ shipping_cost ถ้ายังไม่มี
+                if (!Schema::hasColumn('orders', 'shipping_cost')) {
+                    $table->decimal('shipping_cost', 15, 2)->default(0)->after('tax_amount');
+                }
+                
+                // เพิ่มคอลัมน์ shipping_method ถ้ายังไม่มี
+                if (!Schema::hasColumn('orders', 'shipping_method')) {
+                    $table->string('shipping_method')->nullable()->after('shipping_country');
                 }
             });
         }
@@ -323,10 +347,13 @@ return new class extends Migration
                     $table->id();
                     $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
                     $table->foreignId('order_id')->nullable()->constrained('orders')->onDelete('set null');
+                    $table->foreignId('customer_id')->nullable()->constrained('customers')->onDelete('set null');
                     $table->string('delivery_number')->unique();
                     $table->dateTime('delivery_date');
                     $table->string('status')->check("status IN ('draft', 'pending', 'in_transit', 'delivered', 'failed', 'canceled')");
+                    $table->string('delivery_status')->nullable(); // เพิ่ม delivery_status เพื่อให้เข้ากับ seeder
                     $table->text('delivery_address')->nullable();
+                    $table->string('shipping_method')->nullable(); // เพิ่ม shipping_method
                     $table->string('receiver_name')->nullable();
                     $table->string('receiver_contact')->nullable();
                     $table->text('notes')->nullable();
@@ -343,6 +370,29 @@ return new class extends Migration
             } catch (\Exception $e) {
                 Log::error('เกิดข้อผิดพลาดในการสร้างตาราง delivery_orders: ' . $e->getMessage());
                 echo "เกิดข้อผิดพลาดในการสร้างตาราง delivery_orders: " . $e->getMessage() . "\n";
+            }
+        } else {
+            // ถ้าตารางมีอยู่แล้ว ตรวจสอบและเพิ่มคอลัมน์
+            try {
+                Schema::table('delivery_orders', function (Blueprint $table) {
+                    if (!Schema::hasColumn('delivery_orders', 'customer_id')) {
+                        $table->foreignId('customer_id')->nullable()->after('order_id')->constrained('customers')->onDelete('set null');
+                        echo "เพิ่มคอลัมน์ customer_id ในตาราง delivery_orders เรียบร้อยแล้ว\n";
+                    }
+                    
+                    if (!Schema::hasColumn('delivery_orders', 'delivery_status')) {
+                        $table->string('delivery_status')->nullable()->after('status');
+                        echo "เพิ่มคอลัมน์ delivery_status ในตาราง delivery_orders เรียบร้อยแล้ว\n";
+                    }
+                    
+                    if (!Schema::hasColumn('delivery_orders', 'shipping_method')) {
+                        $table->string('shipping_method')->nullable()->after('delivery_address');
+                        echo "เพิ่มคอลัมน์ shipping_method ในตาราง delivery_orders เรียบร้อยแล้ว\n";
+                    }
+                });
+            } catch (\Exception $e) {
+                Log::error('เกิดข้อผิดพลาดในการเพิ่มคอลัมน์: ' . $e->getMessage());
+                echo "เกิดข้อผิดพลาดในการเพิ่มคอลัมน์: " . $e->getMessage() . "\n";
             }
         }
 

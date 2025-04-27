@@ -402,3 +402,9 @@ Route::get('/delivery-orders/{delivery_order}/pdf-content', [DeliveryOrderContro
 
 // รองรับการพิมพ์ใบส่งสินค้า
 Route::get('/delivery-orders/{deliveryOrder}/print', [DeliveryOrderController::class, 'print'])->name('delivery-orders.print');
+
+// Debug routes - ตั้งค่า middleware เป็น auth เพื่อความปลอดภัย
+Route::middleware('auth')->prefix('debug')->group(function () {
+    Route::get('/orders/check-connection', [App\Http\Controllers\OrderDebugController::class, 'checkConnection']);
+    Route::get('/orders/fix-company-id', [App\Http\Controllers\OrderDebugController::class, 'fixCompanyId']);
+});

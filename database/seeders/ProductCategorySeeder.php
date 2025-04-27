@@ -2,12 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Models\Company;
+use App\Models\ProductCategory;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\ProductCategory;
-use App\Models\Company;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Schema;
 
 class ProductCategorySeeder extends Seeder
@@ -18,97 +16,112 @@ class ProductCategorySeeder extends Seeder
     public function run(): void
     {
         try {
-            // ตรวจสอบว่าคอลัมน์ level และ path มีอยู่จริงหรือไม่
-            if (!Schema::hasColumn('product_categories', 'level') || !Schema::hasColumn('product_categories', 'path')) {
-                echo "ตาราง product_categories ไม่มีคอลัมน์ level และ/หรือ path ที่จำเป็น\n";
-                echo "กรุณารันคำสั่ง php artisan migrate เพื่อสร้างคอลัมน์เหล่านี้ก่อน\n";
+            // ตรวจสอบว่ามีตาราง product_categories หรือไม่
+            if (!Schema::hasTable('product_categories')) {
+                echo "ไม่พบตาราง product_categories กรุณารัน migration ก่อน\n";
                 return;
             }
             
-            // ล้างข้อมูลเดิมก่อน
-            // DB::table('product_categories')->truncate();
-
-            // ดึงข้อมูลบริษัททั้งหมด
-            $companies = Company::all();
-
-            if ($companies->isEmpty()) {
-                $this->command->info('ไม่พบข้อมูลบริษัท กรุณาสร้างบริษัทก่อน');
-                return;
+            // ตรวจสอบว่ามีคอลัมน์ที่จำเป็นหรือไม่
+            $hasLevel = Schema::hasColumn('product_categories', 'level');
+            $hasPath = Schema::hasColumn('product_categories', 'path');
+            
+            if (!$hasLevel || !$hasPath) {
+                echo "ตาราง product_categories ไม่มีคอลัมน์ level และ/หรือ path ที่จำเป็น\n";
+                echo "กรุณารันคำสั่ง php artisan migrate เพื่อสร้างคอลัมน์เหล่านี้ก่อน\n";
+                
+                // แต่เราจะพยายามรันต่อโดยไม่ใช้ level และ path
+                echo "กำลังพยายามสร้างข้อมูลโดยไม่ใช้คอลัมน์ที่ขาดหาย...\n";
             }
-
-            // ประเภทสินค้าพื้นฐาน
-            $categories = [
-                [
-                    'code' => 'IT-HW',
-                    'name' => 'อุปกรณ์คอมพิวเตอร์',
-                    'description' => 'สินค้าประเภทอุปกรณ์คอมพิวเตอร์และฮาร์ดแวร์',
-                ],
-                [
-                    'code' => 'IT-SW',
-                    'name' => 'ซอฟต์แวร์',
-                    'description' => 'สินค้าประเภทซอฟต์แวร์และลิขสิทธิ์',
-                ],
-                [
-                    'code' => 'OFC',
-                    'name' => 'อุปกรณ์สำนักงาน',
-                    'description' => 'สินค้าประเภทอุปกรณ์สำนักงานและเครื่องใช้',
-                ],
-                [
-                    'code' => 'FURN',
-                    'name' => 'เฟอร์นิเจอร์',
-                    'description' => 'สินค้าประเภทเฟอร์นิเจอร์และของตกแต่ง',
-                ],
-                [
-                    'code' => 'STAT',
-                    'name' => 'เครื่องเขียน',
-                    'description' => 'สินค้าประเภทเครื่องเขียนและอุปกรณ์',
-                ],
-                [
-                    'code' => 'SVC-IT',
-                    'name' => 'บริการไอที',
-                    'description' => 'บริการด้านเทคโนโลยีสารสนเทศ',
-                ],
-                [
-                    'code' => 'SVC-CONSULT',
-                    'name' => 'บริการให้คำปรึกษา',
-                    'description' => 'บริการให้คำปรึกษาด้านธุรกิจและการจัดการ',
-                ],
-                [
-                    'code' => 'SVC-TRAIN',
-                    'name' => 'บริการฝึกอบรม',
-                    'description' => 'บริการฝึกอบรมและพัฒนาบุคลากร',
-                ],
-            ];
-
+            
+            $companies = Company::all();
+            
             foreach ($companies as $company) {
-                foreach ($categories as $index => $category) {
-                    // คำนวณ ID รันตัวเลข 3 หลัก
-                    $nextId = DB::table('product_categories')->max('id') + $index + 1;
-                    $formattedId = str_pad($nextId, 3, '0', STR_PAD_LEFT);
-                    $code = $category['code'];
-                    
-                    // เพิ่ม formatted_code ลงใน metadata
-                    $metadata = [
-                        'formatted_code' => "PC-{$formattedId}-{$company->id}-{$code}"
-                    ];
-                    
-                    ProductCategory::create([
-                        'company_id' => $company->id,
-                        'code' => $code,
-                        'name' => $category['name'],
-                        'description' => $category['description'],
-                        'is_active' => true,
-                        'slug' => Str::slug($category['name']),
-                        'level' => 0,
-                        'path' => '',
-                        'metadata' => json_encode($metadata)
-                    ]);
+                // สร้างหมวดหมู่สินค้าหลัก
+                $this->createCategory($company->id, 'สินค้าทั่วไป', null, $hasLevel, $hasPath);
+                $this->createCategory($company->id, 'วัตถุดิบ', null, $hasLevel, $hasPath);
+                $this->createCategory($company->id, 'สินค้าสำเร็จรูป', null, $hasLevel, $hasPath);
+                
+                // หาหมวดหมู่ที่เพิ่งสร้าง
+                $generalCategory = $this->findCategory($company->id, 'สินค้าทั่วไป');
+                $rawMaterialCategory = $this->findCategory($company->id, 'วัตถุดิบ');
+                $finishedGoodsCategory = $this->findCategory($company->id, 'สินค้าสำเร็จรูป');
+                
+                // สร้างหมวดหมู่ย่อย
+                if ($generalCategory) {
+                    $this->createCategory($company->id, 'เครื่องใช้สำนักงาน', $generalCategory->id, $hasLevel, $hasPath, $generalCategory);
+                    $this->createCategory($company->id, 'อุปกรณ์อิเล็กทรอนิกส์', $generalCategory->id, $hasLevel, $hasPath, $generalCategory);
+                }
+                
+                if ($rawMaterialCategory) {
+                    $this->createCategory($company->id, 'โลหะ', $rawMaterialCategory->id, $hasLevel, $hasPath, $rawMaterialCategory);
+                    $this->createCategory($company->id, 'พลาสติก', $rawMaterialCategory->id, $hasLevel, $hasPath, $rawMaterialCategory);
+                }
+                
+                if ($finishedGoodsCategory) {
+                    $this->createCategory($company->id, 'เฟอร์นิเจอร์', $finishedGoodsCategory->id, $hasLevel, $hasPath, $finishedGoodsCategory);
+                    $this->createCategory($company->id, 'เครื่องใช้ไฟฟ้า', $finishedGoodsCategory->id, $hasLevel, $hasPath, $finishedGoodsCategory);
                 }
             }
-
-            $this->command->info('เพิ่มข้อมูลหมวดหมู่สินค้าเรียบร้อยแล้ว');
+            
+            echo "เพิ่มข้อมูลหมวดหมู่สินค้าเรียบร้อยแล้ว\n";
         } catch (\Exception $e) {
             echo "เกิดข้อผิดพลาด: " . $e->getMessage() . "\n";
         }
+    }
+    
+    /**
+     * สร้างหมวดหมู่ใหม่
+     */
+    private function createCategory($companyId, $name, $parentId = null, $hasLevel = true, $hasPath = true, $parentCategory = null)
+    {
+        try {
+            // คำนวณค่า level และ path ถ้า column นั้นมีอยู่
+            $level = 1;
+            $path = null;
+            
+            if ($parentCategory && $hasLevel) {
+                $level = $parentCategory->level + 1;
+            }
+            
+            if ($parentCategory && $hasPath) {
+                $path = $parentCategory->path ? $parentCategory->path . '/' . $parentCategory->id : $parentCategory->id;
+            }
+            
+            // เตรียมข้อมูลที่ต้องมี
+            $data = [
+                'company_id' => $companyId,
+                'name' => $name,
+                'parent_id' => $parentId,
+                'is_active' => true,
+            ];
+            
+            // เพิ่มข้อมูล level และ path ถ้าคอลัมน์เหล่านั้นมีอยู่
+            if ($hasLevel) {
+                $data['level'] = $level;
+            }
+            
+            if ($hasPath) {
+                $data['path'] = $path;
+            }
+            
+            return ProductCategory::updateOrCreate(
+                ['company_id' => $companyId, 'name' => $name],
+                $data
+            );
+        } catch (\Exception $e) {
+            echo "เกิดข้อผิดพลาดในการสร้างหมวดหมู่ {$name}: " . $e->getMessage() . "\n";
+            return null;
+        }
+    }
+    
+    /**
+     * ค้นหาหมวดหมู่ตามชื่อ
+     */
+    private function findCategory($companyId, $name)
+    {
+        return ProductCategory::where('company_id', $companyId)
+                              ->where('name', $name)
+                              ->first();
     }
 }

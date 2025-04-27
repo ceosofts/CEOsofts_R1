@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\HasCompanyScope;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class Unit extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasCompanyScope;
 
     /**
      * The attributes that are mass assignable.
@@ -22,37 +22,44 @@ class Unit extends Model
         'name',
         'code',
         'symbol',
+        'abbreviation',
+        'description',
+        'is_active',
         'base_unit_id',
         'conversion_factor',
-        'is_active',
-        'description',
+        'is_default',
         'type',
         'category',
-        'is_default',
-        'is_system',
         'created_by',
         'updated_by'
     ];
 
-    // ตรวจสอบว่ามี accessor, mutator, หรือ event listeners ที่อาจแก้ไข description
-    // protected static function boot()
-    // {
-    //     parent::boot();
-    //     static::creating(function ($model) {
-    //         // มีการกำหนดค่า description หรือไม่?
-    //     });
-    // }
-
     /**
      * The attributes that should be cast.
      *
-     * @var array<string, string>
+     * @var array
      */
     protected $casts = [
         'is_active' => 'boolean',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+        'is_default' => 'boolean',
+        'conversion_factor' => 'decimal:5',
     ];
+
+    /**
+     * Get the base unit for this unit.
+     */
+    public function baseUnit()
+    {
+        return $this->belongsTo(Unit::class, 'base_unit_id');
+    }
+
+    /**
+     * Get the derived units for this base unit.
+     */
+    public function derivedUnits()
+    {
+        return $this->hasMany(Unit::class, 'base_unit_id');
+    }
 
     /**
      * Get the company that owns the unit.
@@ -63,75 +70,52 @@ class Unit extends Model
     }
 
     /**
-     * Get the base unit for the unit.
-     */
-    public function baseUnit()
-    {
-        return $this->belongsTo(Unit::class, 'base_unit_id');
-    }
-
-    /**
-     * Get the products for the unit.
+     * Get the products that use this unit.
      */
     public function products()
     {
         return $this->hasMany(Product::class);
     }
 
-    public static function generateUnitCode($companyId)
+    /**
+     * สร้างรหัสหน่วยอัตโนมัติในรูปแบบ UNI-{category_code}-{sequential_number}
+     * 
+     * @param int $companyId รหัสบริษัท
+     * @param string $category ประเภทของหน่วย (เช่น weight, volume, quantity)
+     * @return string
+     */
+    public static function generateUnitCode($companyId, $category = null)
     {
-        $prefix = 'UNI';
-        $companyPart = str_pad($companyId, 2, '0', STR_PAD_LEFT);
-        $likePattern = "{$prefix}-{$companyPart}-%";
-        $lastUnit = self::where('company_id', $companyId)
-            ->where('code', 'like', $likePattern)
-            ->orderByDesc('id')
-            ->first();
-
-        if ($lastUnit && preg_match("/^{$prefix}-{$companyPart}-(\d{3})$/", $lastUnit->code, $m)) {
-            $nextNumber = intval($m[1]) + 1;
-        } else {
-            $nextNumber = 1;
+        // สร้างรหัสประเภท 2 หลักตามประเภทหน่วย หรือใช้ค่าเริ่มต้นเป็น 01
+        $categoryCode = '01'; // ค่าเริ่มต้นสำหรับ quantity
+        
+        if ($category === 'weight') {
+            $categoryCode = '02';
+        } elseif ($category === 'volume') {
+            $categoryCode = '03';
+        } elseif ($category === 'length') {
+            $categoryCode = '04';
+        } elseif ($category === 'area') {
+            $categoryCode = '05';
         }
         
-        $numberPart = str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
-        $code = "{$prefix}-{$companyPart}-{$numberPart}";
-        
-        // เพิ่ม log เพื่อดูว่าสร้างรหัสอะไร
-        Log::info("Generated unit code: {$code} for company: {$companyId}");
-        
-        return $code;
-    }
-
-    public static function normalizeAllUnitCodes()
-    {
-        // ใช้ transaction เพื่อให้แน่ใจว่าการทำงานสำเร็จทั้งหมดหรือล้มเหลวทั้งหมด
-        return DB::transaction(function() {
-            $count = 0;
-            // ดึงหน่วยทั้งหมดและจัดกลุ่มตามบริษัท
-            $unitsByCompany = self::all()->groupBy('company_id');
+        // ค้นหาเลขลำดับถัดไปสำหรับประเภทนี้ในบริษัท
+        $lastUnit = self::where('company_id', $companyId)
+            ->where('code', 'like', "UNI-{$categoryCode}-%")
+            ->orderBy('code', 'desc')
+            ->first();
             
-            foreach ($unitsByCompany as $companyId => $units) {
-                $runningNumber = 1;
-                
-                foreach ($units as $unit) {
-                    $prefix = 'UNI';
-                    $companyPart = str_pad($companyId, 2, '0', STR_PAD_LEFT);
-                    $numberPart = str_pad($runningNumber, 3, '0', STR_PAD_LEFT);
-                    $newCode = "{$prefix}-{$companyPart}-{$numberPart}";
-                    
-                    // ถ้าโค้ดใหม่ไม่เหมือนโค้ดเก่า ให้อัปเดต
-                    if ($unit->code !== $newCode) {
-                        $unit->code = $newCode;
-                        $unit->save();
-                        $count++;
-                    }
-                    
-                    $runningNumber++;
-                }
+        $sequentialNumber = 1;
+        
+        if ($lastUnit) {
+            // ดึงเลขลำดับจากรหัสล่าสุด และเพิ่มขึ้น 1
+            $parts = explode('-', $lastUnit->code);
+            if (count($parts) >= 3) {
+                $sequentialNumber = (int) $parts[2] + 1;
             }
-            
-            return $count;
-        });
+        }
+        
+        // จัดรูปแบบ sequential number เป็น 3 หลัก (เช่น 001, 012, 123)
+        return "UNI-{$categoryCode}-" . sprintf('%03d', $sequentialNumber);
     }
 }
