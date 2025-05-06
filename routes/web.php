@@ -30,6 +30,7 @@ use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\SystemCheckController;
 use App\Http\Controllers\TestController;
 use App\Http\Controllers\QuotationApiController;
+use App\Http\Controllers\InvoiceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -408,3 +409,14 @@ Route::middleware('auth')->prefix('debug')->group(function () {
     Route::get('/orders/check-connection', [App\Http\Controllers\OrderDebugController::class, 'checkConnection']);
     Route::get('/orders/fix-company-id', [App\Http\Controllers\OrderDebugController::class, 'fixCompanyId']);
 });
+
+// Invoice Routes
+Route::get('/invoices/generate-invoice-number', [InvoiceController::class, 'generateInvoiceNumber'])->name('invoices.generate-invoice-number');
+Route::get('/orders/{order}/get-data', [InvoiceController::class, 'getOrderData'])->name('invoices.get-order-data');
+Route::get('/invoices/{invoice}/print', [InvoiceController::class, 'print'])->name('invoices.print');
+
+Route::resource('invoices', InvoiceController::class);
+
+Route::post('/invoices/{invoice}/issue', [InvoiceController::class, 'issue'])->name('invoices.issue');
+Route::post('/invoices/{invoice}/mark-as-paid', [InvoiceController::class, 'markAsPaid'])->name('invoices.mark-as-paid');
+Route::post('/invoices/{invoice}/void', [InvoiceController::class, 'void'])->name('invoices.void');

@@ -78,9 +78,32 @@ class OrderController extends Controller
             }
         }
 
-        // ตรวจสอบและบันทึกข้อมูล session เพื่อ debug
-        $companyId = session('company_id') ?? session('current_company_id') ?? 1;
+        // ปรับปรุงการดึงค่า company ID ให้ทำงานได้ดีขึ้น
+        $companyId = session('company_id') ?? session('current_company_id');
+        
+        // กรณีไม่มี company ID ในระบบ แต่เป็น admin ให้ดึงบริษัทแรกในระบบ
+        if (empty($companyId) && Auth::check() && Auth::user()->hasRole('Super Admin')) {
+            $firstCompany = \App\Models\Company::first();
+            if ($firstCompany) {
+                $companyId = $firstCompany->id;
+                // ทำการตั้งค่า session เพื่อให้การใช้งานต่อไปได้ผลลัพธ์
+                session(['company_id' => $companyId]);
+                session(['current_company_id' => $companyId]);
+                
+                Log::info('Auto-setting company_id for Admin', [
+                    'company_id' => $companyId,
+                    'company_name' => $firstCompany->name,
+                    'user_id' => Auth::id(),
+                    'user_email' => Auth::user()->email
+                ]);
+            } else {
+                Log::warning('No companies found in the system');
+            }
+        }
 
+        // เพิ่มการตรวจสอบค่า companyId อีกครั้ง และกำหนดค่าเริ่มต้นเป็น 1 ถ้ายังไม่มี
+        $companyId = $companyId ?? 1;
+        
         // เริ่ม direct query เพื่อตรวจสอบว่ามีข้อมูลหรือไม่
         $checkOrdersExist = \App\Models\Order::where('company_id', $companyId)->exists();
         
@@ -93,9 +116,17 @@ class OrderController extends Controller
             'orders_exist' => $checkOrdersExist ? 'Yes' : 'No'
         ]);
         
-        // เริ่มต้น query พร้อมกับการ eager loading ความสัมพันธ์ที่จำเป็น
-        $query = \App\Models\Order::where('company_id', $companyId)
-            ->with(['customer', 'salesPerson']);
+        // เริ่มต้น query
+        $query = \App\Models\Order::query();
+        
+        // ถ้ามี company_id และไม่ใช่ Super Admin ให้กรองตาม company_id
+        // ถ้าเป็น Super Admin และไม่มี company_id ให้แสดงทั้งหมด
+        if ($companyId && !(Auth::check() && Auth::user()->hasRole('Super Admin') && $request->has('show_all'))) {
+            $query->where('company_id', $companyId);
+        }
+        
+        // เพิ่ม eager loading ความสัมพันธ์ที่จำเป็น
+        $query->with(['customer', 'salesPerson']);
 
         // Search parameter handling
         if ($request->filled('search')) {

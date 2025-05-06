@@ -2,14 +2,14 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <h2 class="font-extrabold text-4xl text-blue-800">
-                {{ __('สร้างใบสั่งขาย') }}{{ $quotation ? ' จากใบเสนอราคา #'.$quotation->quotation_number : '' }}
+                {{ __('สร้างใบแจ้งหนี้') }}{{ $order ? ' จากใบสั่งขาย #'.$order->order_number : '' }}
             </h2>
             <div>
-                <a href="{{ route('orders.index') }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <a href="{{ route('invoices.index') }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                     <svg class="-ml-1 mr-2 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
-                    {{ __('กลับไปรายการใบสั่งขาย') }}
+                    {{ __('กลับไปรายการใบแจ้งหนี้') }}
                 </a>
             </div>
         </div>
@@ -43,19 +43,19 @@
                 </div>
             @endif
 
-            <form action="{{ route('orders.store') }}" method="POST" id="orderCreateForm">
+            <form action="{{ route('invoices.store') }}" method="POST" id="invoiceCreateForm">
                 @csrf
 
-                @if($quotation)
-                    <input type="hidden" name="quotation_id" id="quotation_id" value="{{ $quotation->id }}">
+                @if($order)
+                    <input type="hidden" name="order_id" id="order_id" value="{{ $order->id }}">
                 @else
-                    <input type="hidden" name="quotation_id" id="quotation_id" value="">
+                    <input type="hidden" name="order_id" id="order_id" value="">
                 @endif
 
-                <!-- ส่วนของการเลือกใบเสนอราคา -->
+                <!-- ส่วนของการเลือกใบสั่งขาย -->
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
                     <div class="p-6 text-gray-900 dark:text-gray-100">
-                        <h3 class="text-lg font-semibold mb-4">เลือกใบเสนอราคา</h3>
+                        <h3 class="text-lg font-semibold mb-4">เลือกใบสั่งขาย</h3>
                         
                         <div class="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-400 p-4 rounded">
                             <div class="flex">
@@ -66,18 +66,26 @@
                                 </div>
                                 <div class="ml-3 w-full">
                                     <p class="text-sm text-blue-800 dark:text-blue-300 mb-2">
-                                        เลือกใบเสนอราคาที่อนุมัติแล้วเพื่อสร้างใบสั่งขาย
+                                        เลือกใบสั่งขายที่ต้องการสร้างใบแจ้งหนี้
                                     </p>
                                     <div class="flex flex-col md:flex-row md:space-x-2 space-y-2 md:space-y-0">
-                                        <select id="approved_quotation_selector" class="w-full md:flex-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                            <option value="">-- เลือกใบเสนอราคาที่อนุมัติแล้ว --</option>
-                                            @foreach($approvedQuotations as $apQuote)
-                                            <option value="{{ $apQuote->id }}" data-customer="{{ $apQuote->customer_id }}">
-                                                {{ $apQuote->quotation_number }} - {{ $apQuote->customer->name ?? 'ไม่ระบุชื่อลูกค้า' }} ({{ number_format($apQuote->total_amount, 2) }} บาท)
+                                        <select id="order_selector" class="w-full md:flex-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                            <option value="">-- เลือกใบสั่งขาย --</option>
+                                            @php
+                                                $companyId = session('company_id') ?? session('current_company_id') ?? 1;
+                                                $orders = \App\Models\Order::with('customer')
+                                                    ->where('company_id', $companyId)
+                                                    ->whereIn('status', ['confirmed', 'processing', 'shipped', 'delivered'])
+                                                    ->orderBy('order_number', 'desc')
+                                                    ->get();
+                                            @endphp
+                                            @foreach($orders as $orderItem)
+                                            <option value="{{ $orderItem->id }}" data-customer="{{ $orderItem->customer_id }}" {{ $order && $order->id == $orderItem->id ? 'selected' : '' }}>
+                                                {{ $orderItem->order_number }} - {{ $orderItem->customer->name ?? 'ไม่ระบุชื่อลูกค้า' }} ({{ number_format($orderItem->total_amount, 2) }} บาท)
                                             </option>
                                             @endforeach
                                         </select>
-                                        <button type="button" id="loadQuotationBtn" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-700 dark:hover:bg-blue-600">
+                                        <button type="button" id="loadOrderBtn" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-700 dark:hover:bg-blue-600">
                                             <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                             </svg>
@@ -85,7 +93,7 @@
                                         </button>
                                     </div>
                                     <div class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                                        <p>หรือ <a href="{{ route('quotations.index') }}?status=approved" class="text-blue-600 hover:underline dark:text-blue-400">ดูรายการใบเสนอราคาทั้งหมดที่อนุมัติแล้ว</a></p>
+                                        <p>หรือ <a href="{{ route('orders.index') }}?status=confirmed" class="text-blue-600 hover:underline dark:text-blue-400">ดูรายการใบสั่งขายทั้งหมด</a></p>
                                     </div>
                                 </div>
                             </div>
@@ -93,26 +101,26 @@
                     </div>
                 </div>
 
-                <!-- ข้อมูลทั่วไปของใบสั่งขาย -->
+                <!-- ข้อมูลทั่วไปของใบแจ้งหนี้ -->
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
                     <div class="p-6 text-gray-900 dark:text-gray-100">
                         <h3 class="text-lg font-semibold mb-4">ข้อมูลเอกสาร</h3>
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <div>
-                                <label for="order_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">เลขที่ใบสั่งขาย <span class="text-red-600">*</span></label>
-                                <input type="text" name="order_number" id="order_number" value="{{ old('order_number', $orderNumber) }}" required 
+                                <label for="invoice_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">เลขที่ใบแจ้งหนี้ <span class="text-red-600">*</span></label>
+                                <input type="text" name="invoice_number" id="invoice_number" value="{{ old('invoice_number', $invoiceNumber) }}" required 
                                     class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                @error('order_number')
+                                @error('invoice_number')
                                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
 
                             <div>
-                                <label for="customer_po_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">เลขที่ใบสั่งซื้อจากลูกค้า</label>
-                                <input type="text" name="customer_po_number" id="customer_po_number" value="{{ old('customer_po_number') }}"
+                                <label for="reference_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">เลขที่อ้างอิง</label>
+                                <input type="text" name="reference_number" id="reference_number" value="{{ old('reference_number') }}"
                                     class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                @error('customer_po_number')
+                                @error('reference_number')
                                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
@@ -122,13 +130,13 @@
                                 <select id="customer_id" name="customer_id" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
                                     <option value="">-- เลือกลูกค้า --</option>
                                     @foreach($customers as $customer)
-                                        <option value="{{ $customer->id }}" @if(old('customer_id', $quotation ? $quotation->customer_id ?? null : null) == $customer->id) selected @endif>
+                                        <option value="{{ $customer->id }}" @if(old('customer_id', $order ? $order->customer_id : null) == $customer->id) selected @endif>
                                             {{ $customer->name }}
                                         </option>
                                     @endforeach
                                 </select>
-                                @if($quotation)
-                                    <input type="hidden" name="customer_id" value="{{ $quotation->customer_id }}">
+                                @if($order)
+                                    <input type="hidden" name="customer_id" value="{{ $order->customer_id }}">
                                 @endif
                                 @error('customer_id')
                                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -136,19 +144,19 @@
                             </div>
 
                             <div>
-                                <label for="order_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">วันที่สั่งซื้อ <span class="text-red-600">*</span></label>
-                                <input type="date" name="order_date" id="order_date" value="{{ old('order_date', date('Y-m-d')) }}" required
+                                <label for="invoice_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">วันที่ใบแจ้งหนี้ <span class="text-red-600">*</span></label>
+                                <input type="date" name="invoice_date" id="invoice_date" value="{{ old('invoice_date', date('Y-m-d')) }}" required
                                     class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                @error('order_date')
+                                @error('invoice_date')
                                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
 
                             <div>
-                                <label for="delivery_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">กำหนดส่งมอบ</label>
-                                <input type="date" name="delivery_date" id="delivery_date" value="{{ old('delivery_date') }}"
+                                <label for="due_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">วันครบกำหนดชำระ</label>
+                                <input type="date" name="due_date" id="due_date" value="{{ old('due_date', date('Y-m-d', strtotime('+30 days'))) }}"
                                     class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                @error('delivery_date')
+                                @error('due_date')
                                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
@@ -157,8 +165,12 @@
                                 <label for="sales_person_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">พนักงานขาย</label>
                                 <select id="sales_person_id" name="sales_person_id" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                     <option value="">-- เลือกพนักงานขาย --</option>
-                                    @foreach(\App\Models\Employee::where('company_id', session('company_id'))->orderBy('first_name')->get() as $employee)
-                                    <option value="{{ $employee->id }}" {{ old('sales_person_id', $quotation ? $quotation->sales_person_id : null) == $employee->id ? 'selected' : '' }}>
+                                    @php
+                                        $companyId = session('company_id') ?? session('current_company_id') ?? 1;
+                                        $employees = \App\Models\Employee::where('company_id', $companyId)->orderBy('first_name')->get();
+                                    @endphp
+                                    @foreach($employees as $employee)
+                                    <option value="{{ $employee->id }}" {{ old('sales_person_id', $order ? $order->sales_person_id : null) == $employee->id ? 'selected' : '' }}>
                                         {{ $employee->employee_code }} - {{ $employee->first_name }} {{ $employee->last_name }}
                                     </option>
                                     @endforeach
@@ -171,7 +183,7 @@
 
                         <div class="mt-4">
                             <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">หมายเหตุ</label>
-                            <textarea id="notes" name="notes" rows="3" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">{{ old('notes', $quotation ? $quotation->notes : '') }}</textarea>
+                            <textarea id="notes" name="notes" rows="3" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">{{ old('notes', $order ? $order->notes : '') }}</textarea>
                             @error('notes')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
@@ -187,7 +199,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label for="shipping_address" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ที่อยู่จัดส่ง</label>
-                                <textarea id="shipping_address" name="shipping_address" rows="3" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">{{ old('shipping_address', $quotation->shipping_address ?? ($quotation ? $quotation->customer->address : '')) }}</textarea>
+                                <textarea id="shipping_address" name="shipping_address" rows="3" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">{{ old('shipping_address', $order ? $order->shipping_address : '') }}</textarea>
                                 @error('shipping_address')
                                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                 @enderror
@@ -196,7 +208,7 @@
                             <div>
                                 <div class="mb-4">
                                     <label for="shipping_method" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">วิธีการจัดส่ง</label>
-                                    <input type="text" name="shipping_method" id="shipping_method" value="{{ old('shipping_method', $quotation->shipping_method ?? '') }}"
+                                    <input type="text" name="shipping_method" id="shipping_method" value="{{ old('shipping_method', $order ? $order->shipping_method : '') }}"
                                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                     @error('shipping_method')
                                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -205,7 +217,7 @@
                                 
                                 <div>
                                     <label for="shipping_cost" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ค่าขนส่ง</label>
-                                    <input type="number" name="shipping_cost" id="shipping_cost" step="0.01" min="0" value="{{ old('shipping_cost', $quotation->shipping_cost ?? 0) }}"
+                                    <input type="number" name="shipping_cost" id="shipping_cost" step="0.01" min="0" value="{{ old('shipping_cost', $order ? $order->shipping_cost : 0) }}"
                                         class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                     @error('shipping_cost')
                                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -221,7 +233,7 @@
                     <div class="p-6 text-gray-900 dark:text-gray-100">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-lg font-semibold">รายการสินค้า</h3>
-                            <button type="button" id="addProductBtn" class="hidden px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:bg-green-700 dark:hover:bg-green-600">
+                            <button type="button" id="addProductBtn" class="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:bg-green-700 dark:hover:bg-green-600">
                                 <svg class="-ml-1 mr-2 h-5 w-5 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                 </svg>
@@ -244,14 +256,14 @@
                                     </tr>
                                 </thead>
                                 <tbody id="productsList">
-                                    <!-- รายการสินค้าจะถูกเพิ่มที่นี่ด้วย JavaScript หรือจากใบเสนอราคา -->
+                                    <!-- รายการสินค้าจะถูกเพิ่มที่นี่ด้วย JavaScript หรือจากใบสั่งขาย -->
                                 </tbody>
                                 <tfoot>
                                     <tr class="bg-gray-50 dark:bg-gray-600">
                                         <td colspan="6" class="py-2 px-4 text-right font-medium text-gray-700 dark:text-gray-300">รวมเป็นเงิน:</td>
                                         <td class="py-2 px-4 text-right">
-                                            <input type="text" id="subtotalDisplay" class="w-full text-right bg-gray-50 dark:bg-gray-600 border-gray-300 dark:border-gray-500 rounded-md shadow-sm dark:text-gray-300" value="{{ $quotation ? number_format($quotation->subtotal, 2) : '0.00' }}" readonly>
-                                            <input type="hidden" name="subtotal" id="subtotal" value="{{ $quotation ? $quotation->subtotal : '0' }}">
+                                            <input type="text" id="subtotalDisplay" class="w-full text-right bg-gray-50 dark:bg-gray-600 border-gray-300 dark:border-gray-500 rounded-md shadow-sm dark:text-gray-300" value="{{ $order ? number_format($order->subtotal, 2) : '0.00' }}" readonly>
+                                            <input type="hidden" name="subtotal" id="subtotal" value="{{ $order ? $order->subtotal : '0' }}">
                                         </td>
                                         <td></td>
                                     </tr>
@@ -260,13 +272,13 @@
                                             <div class="flex justify-end items-center">
                                                 <span class="mr-2">ส่วนลด:</span>
                                                 <select name="discount_type" id="discount_type" class="mr-2 border-gray-300 dark:border-gray-500 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:text-white" style="width:100px;">
-                                                    <option value="fixed" @if(old('discount_type', $quotation ? $quotation->discount_type : 'fixed') == 'fixed') selected @endif>บาท</option>
-                                                    <option value="percentage" @if(old('discount_type', $quotation ? $quotation->discount_type : '') == 'percentage') selected @endif>%</option>
+                                                    <option value="fixed" @if(old('discount_type', $order ? $order->discount_type : 'fixed') == 'fixed') selected @endif>บาท</option>
+                                                    <option value="percentage" @if(old('discount_type', $order ? $order->discount_type : '') == 'percentage') selected @endif>%</option>
                                                 </select>
                                             </div>
                                         </td>
                                         <td class="py-2 px-4 text-right">
-                                            <input type="number" name="discount_amount" id="discount_amount" class="w-full text-right border-gray-300 dark:border-gray-500 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:text-white" min="0" step="0.01" value="{{ old('discount_amount', $quotation ? $quotation->discount_amount : '0') }}">
+                                            <input type="number" name="discount_amount" id="discount_amount" class="w-full text-right border-gray-300 dark:border-gray-500 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:text-white" min="0" step="0.01" value="{{ old('discount_amount', $order ? $order->discount_amount : '0') }}">
                                         </td>
                                         <td></td>
                                     </tr>
@@ -274,21 +286,21 @@
                                         <td colspan="6" class="py-2 px-4 text-right font-medium text-gray-700 dark:text-gray-300">
                                             <div class="flex justify-end items-center">
                                                 <span>ภาษีมูลค่าเพิ่ม:</span>
-                                                <input type="number" name="tax_rate" id="tax_rate" class="ml-2 w-24 text-right border-gray-300 dark:border-gray-500 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:text-white" min="0" max="100" step="0.01" value="{{ old('tax_rate', $quotation ? $quotation->tax_rate : '7') }}">
+                                                <input type="number" name="tax_rate" id="tax_rate" class="ml-2 w-24 text-right border-gray-300 dark:border-gray-500 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:text-white" min="0" max="100" step="0.01" value="{{ old('tax_rate', $order ? $order->tax_rate : '7') }}">
                                                 <span class="ml-1">%</span>
                                             </div>
                                         </td>
                                         <td class="py-2 px-4 text-right">
-                                            <input type="text" id="tax_amount_display" class="w-full text-right bg-gray-50 dark:bg-gray-600 border-gray-300 dark:border-gray-500 rounded-md shadow-sm dark:text-gray-300" value="{{ $quotation ? number_format($quotation->tax_amount, 2) : '0.00' }}" readonly>
-                                            <input type="hidden" name="tax_amount" id="tax_amount" value="{{ $quotation ? $quotation->tax_amount : '0' }}">
+                                            <input type="text" id="tax_amount_display" class="w-full text-right bg-gray-50 dark:bg-gray-600 border-gray-300 dark:border-gray-500 rounded-md shadow-sm dark:text-gray-300" value="{{ $order ? number_format($order->tax_amount, 2) : '0.00' }}" readonly>
+                                            <input type="hidden" name="tax_amount" id="tax_amount" value="{{ $order ? $order->tax_amount : '0' }}">
                                         </td>
                                         <td></td>
                                     </tr>
                                     <tr class="bg-blue-50 dark:bg-blue-900/30">
                                         <td colspan="6" class="py-2 px-4 text-right font-bold text-gray-700 dark:text-gray-300">จำนวนเงินรวมทั้งสิ้น:</td>
                                         <td class="py-2 px-4 text-right">
-                                            <input type="text" id="total_amount_display" class="w-full text-right font-bold bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800 rounded-md shadow-sm text-blue-800 dark:text-blue-200" value="{{ $quotation ? number_format($quotation->total_amount, 2) : '0.00' }}" readonly>
-                                            <input type="hidden" name="total_amount" id="total_amount" value="{{ $quotation ? $quotation->total_amount : '0' }}">
+                                            <input type="text" id="total_amount_display" class="w-full text-right font-bold bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800 rounded-md shadow-sm text-blue-800 dark:text-blue-200" value="{{ $order ? number_format($order->total_amount, 2) : '0.00' }}" readonly>
+                                            <input type="hidden" name="total_amount" id="total_amount" value="{{ $order ? $order->total_amount : '0' }}">
                                         </td>
                                         <td></td>
                                     </tr>
@@ -305,14 +317,14 @@
                     </div>
                 </div>
 
-                <!-- เงื่อนไขและหมายเหตุ -->
+                <!-- เงื่อนไขการชำระเงิน -->
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
                     <div class="p-6 text-gray-900 dark:text-gray-100">
                         <h3 class="text-lg font-semibold mb-4">เงื่อนไขการชำระเงิน</h3>
                         
                         <div>
                             <label for="payment_terms" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">เงื่อนไขการชำระเงิน</label>
-                            <textarea id="payment_terms" name="payment_terms" rows="3" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">{{ old('payment_terms', $quotation ? $quotation->payment_terms : '') }}</textarea>
+                            <textarea id="payment_terms" name="payment_terms" rows="3" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">{{ old('payment_terms', $order ? $order->payment_terms : 'ชำระภายใน 30 วัน') }}</textarea>
                             @error('payment_terms')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
@@ -323,13 +335,13 @@
                 <!-- สถานะ -->
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
                     <div class="p-6 text-gray-900 dark:text-gray-100">
-                        <h3 class="text-lg font-semibold mb-4">สถานะใบสั่งขาย</h3>
+                        <h3 class="text-lg font-semibold mb-4">สถานะใบแจ้งหนี้</h3>
                         
                         <div>
                             <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">สถานะ <span class="text-red-600">*</span></label>
                             <select id="status" name="status" class="w-full md:w-1/4 border-gray-300 dark:border-gray-500 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:text-white" required>
                                 <option value="draft" @if(old('status') == 'draft') selected @endif>ร่าง</option>
-                                <option value="confirmed" @if(old('status') == 'confirmed') selected @endif>ยืนยันแล้ว</option>
+                                <option value="issued" @if(old('status') == 'issued') selected @endif>ออกใบแจ้งหนี้</option>
                             </select>
                             @error('status')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -344,7 +356,7 @@
                         ยกเลิก
                     </button>
                     <button type="submit" id="submitBtn" class="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:bg-blue-700 dark:hover:bg-blue-600">
-                        <span class="normal-state">บันทึกใบสั่งขาย</span>
+                        <span class="normal-state">บันทึกใบแจ้งหนี้</span>
                         <span class="loading-state hidden">
                             <svg class="animate-spin h-5 w-5 text-white inline mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -366,8 +378,15 @@
                 <span class="product-code">-</span>
             </td>
             <td class="py-2 px-4 border-b dark:border-gray-700">
-                <select name="products[INDEX][id]" class="product-select w-full border-gray-300 dark:border-gray-500 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:text-white" required>
+                <select name="products[INDEX][product_id]" class="product-select w-full border-gray-300 dark:border-gray-500 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:text-white" required>
                     <option value="">เลือกสินค้า</option>
+                    @php
+                        $companyId = session('company_id') ?? session('current_company_id') ?? 1;
+                        $products = \App\Models\Product::where('company_id', $companyId)
+                            ->where('is_active', true)
+                            ->orderBy('name')
+                            ->get();
+                    @endphp
                     @foreach($products as $product)
                         <option value="{{ $product->id }}" 
                             data-price="{{ $product->price }}"
@@ -570,13 +589,13 @@
             document.getElementById('tax_rate').addEventListener('input', calculateTotals);
             document.getElementById('shipping_cost').addEventListener('input', calculateTotals);
 
-            // เพิ่ม event listener สำหรับปุ่มโหลดข้อมูลใบเสนอราคา
-            document.getElementById('loadQuotationBtn').addEventListener('click', function() {
-                const quotationSelect = document.getElementById('approved_quotation_selector');
-                const quotationId = quotationSelect.value;
+            // เพิ่ม event listener สำหรับปุ่มโหลดข้อมูลใบสั่งขาย
+            document.getElementById('loadOrderBtn').addEventListener('click', function() {
+                const orderSelector = document.getElementById('order_selector');
+                const orderId = orderSelector.value;
                 
-                if (!quotationId) {
-                    alert('กรุณาเลือกใบเสนอราคาก่อน');
+                if (!orderId) {
+                    alert('กรุณาเลือกใบสั่งขายก่อน');
                     return;
                 }
                 
@@ -584,8 +603,8 @@
                 this.innerHTML = '<span class="inline-block animate-spin mr-1">⟳</span> กำลังโหลด...';
                 this.disabled = true;
                 
-                // ทำ AJAX request เพื่อดึงข้อมูลใบเสนอราคา
-                fetch(`/quotations/${quotationId}/get-data`)
+                // ทำ AJAX request เพื่อดึงข้อมูลใบสั่งขาย
+                fetch(`/orders/${orderId}/get-data`)
                     .then(response => {
                         if (!response.ok) {
                             throw new Error(`HTTP error ${response.status}`);
@@ -593,8 +612,8 @@
                         return response.json();
                     })
                     .then(data => {
-                        // เซ็ตค่า quotation_id ในฟอร์ม
-                        document.getElementById('quotation_id').value = data.id;
+                        // Set order_id in hidden field
+                        document.getElementById('order_id').value = data.id;
                         
                         // เลือกลูกค้า
                         const customerSelect = document.getElementById('customer_id');
@@ -606,7 +625,7 @@
                         // เซ็ตข้อมูลอื่นๆ
                         document.getElementById('shipping_method').value = data.shipping_method || '';
                         document.getElementById('shipping_cost').value = data.shipping_cost || 0;
-                        document.getElementById('payment_terms').value = data.payment_terms || '';
+                        document.getElementById('payment_terms').value = data.payment_terms || 'ชำระเงินภายใน 30 วัน';
                         document.getElementById('notes').value = data.notes || '';
                         document.getElementById('discount_type').value = data.discount_type || 'fixed';
                         document.getElementById('discount_amount').value = data.discount_amount || 0;
@@ -626,47 +645,65 @@
                         // รีเซ็ตค่า index
                         productIndex = 0;
                         
-                        // เพิ่มรายการสินค้าจากใบเสนอราคา
-                        data.items.forEach((item, idx) => {
-                            const template = productRowTemplate.innerHTML;
-                            const newIndex = productIndex++;
-                            // แก้ไขตรงนี้: แทนที่ ROW_NUMBER ด้วยลำดับที่ถูกต้อง
-                            let newRow = template.replace(/INDEX/g, newIndex).replace('ROW_NUMBER', idx + 1);
-                            
-                            productsList.insertAdjacentHTML('beforeend', newRow);
-                            const row = productsList.lastElementChild;
-                            
-                            // ดึงข้อมูลหน่วยจากใบเสนอราคา
-                            let unitId = '';
-                            let unitName = '-';
-                            if (item.unit_id) {
-                                unitId = item.unit_id;
-                                if (item.unit && item.unit.name) {
-                                    unitName = item.unit.name;
-                                } else if (window.unitsList && window.unitsList[unitId]) {
-                                    unitName = window.unitsList[unitId];
+                        // เพิ่มรายการสินค้าจากใบสั่งขาย
+                        if (data.items && data.items.length > 0) {
+                            data.items.forEach((item, idx) => {
+                                const template = productRowTemplate.innerHTML;
+                                const newIndex = productIndex++;
+                                let newRow = template.replace(/INDEX/g, newIndex).replace('ROW_NUMBER', idx + 1);
+                                
+                                productsList.insertAdjacentHTML('beforeend', newRow);
+                                const row = productsList.lastElementChild;
+                                
+                                // ดึงข้อมูลหน่วยจากใบสั่งขาย
+                                let unitId = '';
+                                let unitName = '-';
+                                if (item.unit_id) {
+                                    unitId = item.unit_id;
+                                    if (item.unit && item.unit.name) {
+                                        unitName = item.unit.name;
+                                    } else if (window.unitsList && window.unitsList[unitId]) {
+                                        unitName = window.unitsList[unitId];
+                                    }
                                 }
-                            }
-                            
-                            // เลือกสินค้าในรายการ
-                            const productSelect = row.querySelector('.product-select');
-                            Array.from(productSelect.options).forEach(option => {
-                                if (option.value == item.product_id) {
-                                    option.selected = true;
+                                
+                                // เลือกสินค้าในรายการ
+                                const productSelect = row.querySelector('.product-select');
+                                Array.from(productSelect.options).forEach(option => {
+                                    if (option.value == item.product_id) {
+                                        option.selected = true;
+                                    }
+                                });
+                                
+                                // แก้ไขส่วนนี้: เพิ่มการกำหนดค่า product_id ให้กับ input ชื่อ products[INDEX][id]
+                                // หาทุก input ที่มีชื่อขึ้นต้นด้วย products[INDEX] และมีคำว่า id ต่อท้าย
+                                const productIdField = row.querySelector(`[name="products[${newIndex}][id]"]`);
+                                if (productIdField) {
+                                    productIdField.value = item.product_id;
+                                } else {
+                                    // ถ้าไม่พบ field นี้ ให้สร้างใหม่
+                                    const hiddenInput = document.createElement('input');
+                                    hiddenInput.type = 'hidden';
+                                    hiddenInput.name = `products[${newIndex}][id]`;
+                                    hiddenInput.value = item.product_id;
+                                    row.appendChild(hiddenInput);
                                 }
+                                
+                                // กำหนดค่าอื่นๆ
+                                row.querySelector('.quantity').value = item.quantity;
+                                row.querySelector('.unit-price').value = item.unit_price;
+                                row.querySelector('.unit-id').value = unitId;
+                                row.querySelector('.product-unit').textContent = unitName;
+                                row.querySelector('.product-code').textContent = item.product ? (item.product.code || item.product.sku || '-') : '-';
+                                
+                                // คำนวณยอดรวม
+                                updateRowTotal(row);
+                                initializeRowEvents(row);
                             });
-                            
-                            // กำหนดค่าอื่นๆ
-                            row.querySelector('.quantity').value = item.quantity;
-                            row.querySelector('.unit-price').value = item.unit_price;
-                            row.querySelector('.unit-id').value = unitId;
-                            row.querySelector('.product-unit').textContent = unitName;
-                            row.querySelector('.product-code').textContent = item.product ? (item.product.code || item.product.sku || '-') : '-';
-                            
-                            // คำนวณยอดรวม
-                            updateRowTotal(row);
-                            initializeRowEvents(row);
-                        });
+                        } else {
+                            // ถ้าไม่มีรายการสินค้าในใบสั่งขาย
+                            addProductRow();
+                        }
                         
                         // อัพเดทสถานะการแสดงข้อความ "ไม่มีรายการสินค้า"
                         updateNoProductsMessage();
@@ -679,7 +716,7 @@
                         this.disabled = false;
                         
                         // แจ้งเตือนสำเร็จ
-                        alert('โหลดข้อมูลใบเสนอราคาสำเร็จ');
+                        alert('โหลดข้อมูลใบสั่งขายสำเร็จ');
                     })
                     .catch(error => {
                         console.error('Error:', error);
@@ -690,12 +727,12 @@
                         this.disabled = false;
                     });
 
-                // ขอเลขที่ใบสั่งขายใหม่จากเซิร์ฟเวอร์ (ผ่าน AJAX)
-                refreshOrderNumber();
+                // ขอเลขที่ใบแจ้งหนี้ใหม่จากเซิร์ฟเวอร์ (ผ่าน AJAX)
+                refreshInvoiceNumber();
             });
             
             // JavaScript สำหรับป้องกันการส่งฟอร์มซ้ำ
-            document.getElementById('orderCreateForm').addEventListener('submit', function(e) {
+            document.getElementById('invoiceCreateForm').addEventListener('submit', function(e) {
                 // ตรวจสอบฟิลด์สำคัญเพิ่มเติม
                 const customerId = document.getElementById('customer_id').value;
                 if (!customerId) {
@@ -719,21 +756,21 @@
                 document.getElementById('submitBtn').disabled = true;
             });
 
-            // ขอเลขที่ใบสั่งขายใหม่ทุกครั้งที่เปิดหน้า หรือหลังโหลดใบเสนอราคา
-            function refreshOrderNumber() {
-                fetch('/orders/generate-order-number')
+            // ขอเลขที่ใบแจ้งหนี้ใหม่ทุกครั้งที่เปิดหน้า หรือหลังโหลดใบสั่งขาย
+            function refreshInvoiceNumber() {
+                fetch('/invoices/generate-invoice-number')
                     .then(res => res.json())
                     .then(json => {
-                        if (json.order_number) {
-                            document.getElementById('order_number').value = json.order_number;
+                        if (json.invoice_number) {
+                            document.getElementById('invoice_number').value = json.invoice_number;
                         }
                     });
             }
 
             // เรียกทันทีเมื่อโหลดหน้า (ป้องกันเลขซ้ำ)
-            refreshOrderNumber();
+            refreshInvoiceNumber();
 
-            // เพิ่มรายการสินค้าเริ่มต้น (หากไม่มีการโหลดจากใบเสนอราคา)
+            // เพิ่มรายการสินค้าเริ่มต้น (หากไม่มีการโหลดจากใบสั่งขาย)
             if (!document.querySelector('.product-row')) {
                 addProductRow();
             }
@@ -746,9 +783,6 @@
             
             // กำหนด event listeners สำหรับแถวที่มีอยู่แล้ว
             initializeExistingRows();
-            
-            // แสดงปุ่ม "เพิ่มรายการ"
-            document.getElementById('addProductBtn').classList.remove('hidden');
         });
     </script>
 </x-app-layout>

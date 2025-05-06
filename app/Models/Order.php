@@ -165,6 +165,14 @@ class Order extends Model
         return $this->hasMany(DeliveryOrder::class);
     }
 
+    /**
+     * Get invoices associated with this order
+     */
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
     // Accessor สำหรับสถานะแบบอ่านง่าย
     public function getStatusTextAttribute()
     {

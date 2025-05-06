@@ -33,6 +33,7 @@ class DatabaseSeeder extends Seeder
             QuotationItemSeeder::class, // เพิ่มบรรทัดนี้
             OrderSeeder::class,
             InvoiceSeeder::class,
+            InvoiceItemSeeder::class, // Adding InvoiceItemSeeder after InvoiceSeeder
             ReceiptSeeder::class,
             ReceiptItemSeeder::class,
             DocumentTemplateSeeder::class,
