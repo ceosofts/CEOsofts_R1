@@ -168,6 +168,7 @@
                                         <tr>
                                             <th class="py-2 px-4 border-b text-left">สินค้า</th>
                                             <th class="py-2 px-4 border-b text-center" style="width: 120px;">จำนวน</th>
+                                            <th class="py-2 px-4 border-b text-center" style="width: 100px;">หน่วย</th>
                                             <th class="py-2 px-4 border-b text-right" style="width: 150px;">ราคาต่อหน่วย</th>
                                             <th class="py-2 px-4 border-b text-right" style="width: 150px;">จำนวนเงิน</th>
                                             <th class="py-2 px-4 border-b text-center" style="width: 80px;">จัดการ</th>
@@ -182,6 +183,7 @@
                                                         @foreach($products as $product)
                                                             <option value="{{ $product->id }}" 
                                                                 data-price="{{ $product->price }}"
+                                                                data-unit-id="{{ $product->unit_id }}"
                                                                 @if($item->product_id == $product->id) selected @endif>
                                                                 {{ $product->name }}
                                                             </option>
@@ -190,6 +192,15 @@
                                                 </td>
                                                 <td class="py-2 px-4 border-b">
                                                     <input type="number" name="products[{{ $index }}][quantity]" class="quantity w-full text-center border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" min="1" value="{{ $item->quantity }}" required>
+                                                </td>
+                                                <td class="py-2 px-4 border-b">
+                                                    <select name="products[{{ $index }}][unit_id]" class="unit-select w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                                                        @foreach(\App\Models\Unit::where('is_active', true)->where('company_id', session('company_id'))->orderBy('name')->get() as $unit)
+                                                            <option value="{{ $unit->id }}" @if(isset($item->unit_id) && $item->unit_id == $unit->id) selected @endif>
+                                                                {{ $unit->name }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
                                                 </td>
                                                 <td class="py-2 px-4 border-b">
                                                     <input type="number" name="products[{{ $index }}][unit_price]" class="unit-price w-full text-right border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" min="0" step="0.01" value="{{ $item->unit_price }}" required>
@@ -323,12 +334,19 @@
                                         <select name="products[${rowCount}][id]" class="product-select w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
                                             <option value="">เลือกสินค้า</option>
                                             @foreach($products as $product)
-                                                <option value="{{ $product->id }}" data-price="{{ $product->price }}">{{ $product->name }}</option>
+                                                <option value="{{ $product->id }}" data-price="{{ $product->price }}" data-unit-id="{{ $product->unit_id }}">{{ $product->name }}</option>
                                             @endforeach
                                         </select>
                                     </td>
                                     <td class="py-2 px-4 border-b">
                                         <input type="number" name="products[${rowCount}][quantity]" class="quantity w-full text-center border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" min="1" value="1" required>
+                                    </td>
+                                    <td class="py-2 px-4 border-b">
+                                        <select name="products[${rowCount}][unit_id]" class="unit-select w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                                            @foreach(\App\Models\Unit::where('is_active', true)->where('company_id', session('company_id'))->orderBy('name')->get() as $unit)
+                                                <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+                                            @endforeach
+                                        </select>
                                     </td>
                                     <td class="py-2 px-4 border-b">
                                         <input type="number" name="products[${rowCount}][unit_price]" class="unit-price w-full text-right border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" min="0" step="0.01" value="0.00" required>

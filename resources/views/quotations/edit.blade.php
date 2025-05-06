@@ -110,28 +110,24 @@
                                 </button>
                             </h3>
 
-                            <div class="overflow-x-auto bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                                <table class="min-w-full" id="productsTable">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full bg-white dark:bg-gray-700">
                                     <thead>
-                                        <tr class="border-b dark:border-gray-600">
-                                            <th class="py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">สินค้า</th>
-                                            <th class="py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-20">จำนวน</th>
-                                            <th class="py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-24">หน่วย</th>
-                                            <th class="py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-32">ราคา/หน่วย</th>
-                                            <th class="py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-24">ส่วนลด (%)</th>
-                                            <th class="py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-32">รวม</th>
-                                            <th class="py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-16">จัดการ</th>
+                                        <tr class="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300">
+                                            <th class="py-2 px-4 border-b text-center">ลำดับ</th>
+                                            <th class="py-2 px-4 border-b text-left">สินค้า</th>
+                                            <th class="py-2 px-4 border-b text-right">จำนวน</th>
+                                            <th class="py-2 px-4 border-b text-right">หน่วย</th>
+                                            <th class="py-2 px-4 border-b text-right">ราคาต่อหน่วย</th>
+                                            <th class="py-2 px-4 border-b text-right">ส่วนลด (%)</th>
+                                            <th class="py-2 px-4 border-b text-right">รวม</th>
+                                            <th class="py-2 px-4 border-b text-center">จัดการ</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="productRowsContainer">
-                                        <!-- แถวสินค้าจะถูกเพิ่มที่นี่ด้วย JavaScript -->
+                                    <tbody id="product-list">
+                                        <!-- รายการสินค้าจะถูกโหลดผ่าน JavaScript -->
                                     </tbody>
                                 </table>
-
-                                <!-- แสดงเมื่อไม่มีรายการสินค้า -->
-                                <div id="noProductsMessage" class="text-center py-4 text-gray-500 dark:text-gray-400 {{ count($quotation->items) > 0 ? 'hidden' : '' }}">
-                                    ไม่มีรายการสินค้า กดปุ่ม "เพิ่มรายการ" เพื่อเพิ่มสินค้า
-                                </div>
                             </div>
                         </div>
                         
@@ -217,6 +213,9 @@
     <!-- Template สำหรับแถวสินค้า -->
     <template id="productRowTemplate">
         <tr class="product-row border-b dark:border-gray-600">
+            <td class="py-2 px-4 text-center item-sequence">
+                <!-- ลำดับจะถูกใส่ผ่าน JavaScript -->
+            </td>
             <td class="py-2">
                 <select name="products[INDEX].product_id" class="product-select block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
                     <option value="">-- เลือกสินค้า --</option>
@@ -232,8 +231,8 @@
                 <input type="number" name="products[INDEX].quantity" class="quantity block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" min="0.01" step="0.01" value="1" required>
             </td>
             <td class="py-2">
-                <select name="products[INDEX].unit_id" class="block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
-                    <option value="">-- หน่วย --</option>
+                <select name="products[INDEX].unit_id" class="unit-select block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                    <option value="">-- เลือกหน่วย --</option>
                     @foreach($units as $unit)
                     <option value="{{ $unit->id }}">{{ $unit->name }}</option>
                     @endforeach
@@ -261,23 +260,26 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             let rowIndex = 0;
-            const noProductsMessage = document.getElementById('noProductsMessage');
-            const productRowsContainer = document.getElementById('productRowsContainer');
+            const productList = document.getElementById('product-list');
             const productRowTemplate = document.getElementById('productRowTemplate').content;
             
             // เพิ่มแถวสินค้าที่มีอยู่แล้ว
-            const existingItems = @json($quotation->items);
+            const existingItems = @json($quotation->items()->with('unit', 'product')->get());
+            console.log('Existing items with relationships:', existingItems);
+            
             if (existingItems && existingItems.length > 0) {
                 existingItems.forEach(item => {
                     addProductRow(item);
                 });
                 updateTotals();
+            } else {
+                console.log('No existing items found or items array is empty');
             }
             
             // ปุ่มเพิ่มแถวสินค้า
             document.getElementById('addProductRow').addEventListener('click', function() {
                 addProductRow();
-                toggleNoProductsMessage();
+                updateSequenceNumbers(); // เรียกใช้ฟังก์ชันอัพเดทเลขลำดับ
             });
 
             // เปลี่ยนฉลากของส่วนลดเมื่อเปลี่ยนประเภทส่วนลด
@@ -293,66 +295,121 @@
             document.getElementById('discount_amount').addEventListener('input', updateTotals);
             document.getElementById('tax_rate').addEventListener('input', updateTotals);
 
-            // ฟังก์ชันเพิ่มแถวสินค้า
-            function addProductRow(item = null) {
-                const clone = document.importNode(productRowTemplate, true);
+            // Event delegation for product list changes
+            document.getElementById('product-list').addEventListener('change', function(event) {
+                const target = event.target;
+                const row = target.closest('.product-row');
                 
-                // แทนที่ INDEX ในชื่อฟิลด์
-                const inputs = clone.querySelectorAll('[name*="INDEX"]');
-                inputs.forEach(input => {
-                    input.name = input.name.replace('INDEX', rowIndex);
-                });
-
-                // เพิ่มการฟังก์ชันเมื่อเลือกสินค้า
-                const productSelect = clone.querySelector('.product-select');
-                productSelect.addEventListener('change', function() {
-                    const selectedOption = this.options[this.selectedIndex];
-                    const price = selectedOption.getAttribute('data-price');
-                    const productCode = selectedOption.getAttribute('data-code') || '';
-                    const row = this.closest('.product-row');
-                    const unitPriceInput = row.querySelector('.unit-price');
-                    const productCodeInput = row.querySelector('.product-code');
-                    
-                    if (price) {
-                        unitPriceInput.value = price;
-                    }
-                    
-                    // เก็บรหัสสินค้า
-                    productCodeInput.value = productCode;
-                    
-                    calculateRowTotal(row);
-                });
-
-                // เพิ่มการคำนวณเมื่อมีการเปลี่ยนค่าในฟิลด์
-                const row = clone.querySelector('.product-row');
-                const inputsToWatch = ['.quantity', '.unit-price', '.discount-percentage'];
-                inputsToWatch.forEach(selector => {
-                    const input = row.querySelector(selector);
-                    input.addEventListener('input', function() {
+                if (!row) return;
+                
+                if (target.classList.contains('product-select')) {
+                    const selectedOption = target.options[target.selectedIndex];
+                    if (selectedOption) {
+                        const price = selectedOption.dataset.price || 0;
+                        const code = selectedOption.dataset.code || '';
+                        row.querySelector('.product-code').value = code;
+                        row.querySelector('.unit-price').value = price;
                         calculateRowTotal(row);
-                    });
-                });
-
-                // เพิ่มการลบแถว
-                const removeButton = row.querySelector('.remove-row');
-                removeButton.addEventListener('click', function() {
-                    row.remove();
-                    updateTotals();
-                    toggleNoProductsMessage();
-                });
-
-                // เพิ่มค่าเริ่มต้นจากรายการที่มีอยู่แล้ว
-                if (item) {
-                    row.querySelector('.product-select').value = item.product_id;
-                    row.querySelector('.quantity').value = item.quantity;
-                    row.querySelector('select[name$="unit_id"]').value = item.unit_id;
-                    row.querySelector('.unit-price').value = item.unit_price;
-                    row.querySelector('.discount-percentage').value = item.discount_percentage;
+                    }
+                } else if (target.classList.contains('quantity') || 
+                          target.classList.contains('unit-price') || 
+                          target.classList.contains('discount-percentage')) {
                     calculateRowTotal(row);
                 }
+            });
 
-                productRowsContainer.appendChild(row);
-                rowIndex++;
+            // Event delegation for removing products
+            document.getElementById('product-list').addEventListener('click', function(event) {
+                if (event.target.closest('.remove-row')) {
+                    const row = event.target.closest('.product-row');
+                    row.remove();
+                    updateSequenceNumbers();
+                    updateTotals();
+                }
+            });
+
+            // ฟังก์ชันเพิ่มแถวสินค้า
+            function addProductRow(existingItem = null) {
+                const row = document.importNode(productRowTemplate, true);
+                const index = rowIndex++;
+                
+                // อัปเดต index ในชื่อฟิลด์
+                row.querySelectorAll('[name^="products[INDEX]"]').forEach(field => {
+                    field.name = field.name.replace('INDEX', index);
+                });
+
+                // ถ้ามีข้อมูลอยู่แล้ว ให้เติมข้อมูลเข้าไป
+                if (existingItem) {
+                    // กำหนดค่าสินค้า
+                    const productSelect = row.querySelector('.product-select');
+                    let foundProduct = false;
+                    for (let i = 0; i < productSelect.options.length; i++) {
+                        if (productSelect.options[i].value === String(existingItem.product_id)) {
+                            productSelect.selectedIndex = i;
+                            foundProduct = true;
+                            break;
+                        }
+                    }
+                    if (!foundProduct && existingItem.product) {
+                        let newOption = new Option(
+                            `${existingItem.product.code ? '[' + existingItem.product.code + '] ' : ''}${existingItem.product.name}`,
+                            existingItem.product.id
+                        );
+                        productSelect.add(newOption);
+                        productSelect.value = existingItem.product.id;
+                    }
+
+                    // กำหนดรหัสสินค้า
+                    row.querySelector('.product-code').value = existingItem.product_code || '';
+                    // กำหนดจำนวน
+                    row.querySelector('.quantity').value = existingItem.quantity;
+                    // กำหนดหน่วย
+                    const unitSelect = row.querySelector('.unit-select');
+                    let foundUnit = false;
+                    for (let i = 0; i < unitSelect.options.length; i++) {
+                        if (unitSelect.options[i].value === String(existingItem.unit_id)) {
+                            unitSelect.selectedIndex = i;
+                            foundUnit = true;
+                            break;
+                        }
+                    }
+                    if (!foundUnit) {
+                        let unitName = '';
+                        if (existingItem.unit && existingItem.unit.name) {
+                            unitName = existingItem.unit.name;
+                        } else {
+                            unitName = 'หน่วย #' + existingItem.unit_id;
+                        }
+                        let newOption = new Option(unitName, existingItem.unit_id);
+                        unitSelect.add(newOption);
+                        unitSelect.value = existingItem.unit_id;
+                    }
+                    // กำหนดราคาต่อหน่วย
+                    row.querySelector('.unit-price').value = existingItem.unit_price;
+                    // กำหนดส่วนลด
+                    row.querySelector('.discount-percentage').value = existingItem.discount_percentage || 0;
+                    // คำนวณยอดรวมของแถว
+                    const subtotal = existingItem.quantity * existingItem.unit_price * (1 - existingItem.discount_percentage / 100);
+                    row.querySelector('.subtotal').value = subtotal.toFixed(2);
+                    // กำหนด id สำหรับรายการที่มีอยู่แล้ว
+                    const itemIdInput = document.createElement('input');
+                    itemIdInput.type = 'hidden';
+                    itemIdInput.name = `products[${index}].id`;
+                    itemIdInput.value = existingItem.id;
+                    row.querySelector('td:first-child').appendChild(itemIdInput);
+                }
+                
+                // อัปเดตลำดับ
+                row.querySelector('.item-sequence').textContent = productList.children.length + 1;
+                
+                // เพิ่มแถวลงใน DOM
+                productList.appendChild(row);
+
+                // คำนวณยอดรวมหากไม่มีข้อมูลอยู่แล้ว
+                if (!existingItem) {
+                    calculateRowTotal(productList.lastElementChild);
+                    updateTotals();
+                }
             }
 
             // คำนวณยอดรวมของแถว
@@ -361,82 +418,59 @@
                 const unitPrice = parseFloat(row.querySelector('.unit-price').value) || 0;
                 const discountPercentage = parseFloat(row.querySelector('.discount-percentage').value) || 0;
                 
-                const total = quantity * unitPrice * (1 - (discountPercentage / 100));
-                row.querySelector('.subtotal').value = total.toFixed(2);
+                const subtotal = quantity * unitPrice * (1 - discountPercentage / 100);
+                row.querySelector('.subtotal').value = subtotal.toFixed(2);
                 
                 updateTotals();
             }
 
+            // อัปเดตเลขลำดับ
+            function updateSequenceNumbers() {
+                const rows = document.querySelectorAll('#product-list .product-row');
+                rows.forEach((row, index) => {
+                    row.querySelector('.item-sequence').textContent = index + 1;
+                });
+            }
+
             // อัปเดตยอดรวมทั้งหมด
             function updateTotals() {
-                const subtotalElement = document.getElementById('subtotal');
-                const discountElement = document.getElementById('discount');
-                const taxElement = document.getElementById('tax');
-                const totalElement = document.getElementById('total');
-                
+                // คำนวณยอดรวมก่อนหักส่วนลด
                 let subtotal = 0;
-                document.querySelectorAll('.subtotal').forEach(input => {
-                    subtotal += parseFloat(input.value) || 0;
+                document.querySelectorAll('#product-list .product-row').forEach(row => {
+                    subtotal += parseFloat(row.querySelector('.subtotal').value) || 0;
                 });
                 
+                // หาประเภทและมูลค่าของส่วนลด
                 const discountType = document.querySelector('input[name="discount_type"]:checked').value;
-                let discountAmount = parseFloat(document.getElementById('discount_amount').value) || 0;
+                const discountAmount = parseFloat(document.getElementById('discount_amount').value) || 0;
+                
+                // คำนวณส่วนลด
+                let discount = 0;
                 if (discountType === 'percentage') {
-                    discountAmount = subtotal * (discountAmount / 100);
+                    discount = subtotal * (discountAmount / 100);
+                } else {
+                    discount = discountAmount;
                 }
                 
-                const afterDiscount = subtotal - discountAmount;
+                // คำนวณยอดหลังหักส่วนลด
+                const afterDiscount = subtotal - discount;
+                
+                // คำนวณภาษีมูลค่าเพิ่ม
                 const taxRate = parseFloat(document.getElementById('tax_rate').value) || 0;
                 const taxAmount = afterDiscount * (taxRate / 100);
-                const total = afterDiscount + taxAmount;
                 
-                subtotalElement.textContent = subtotal.toFixed(2);
-                discountElement.textContent = discountAmount.toFixed(2);
-                taxElement.textContent = taxAmount.toFixed(2);
-                totalElement.textContent = total.toFixed(2);
+                // คำนวณยอดรวมทั้งสิ้น
+                const totalAmount = afterDiscount + taxAmount;
+                
+                // อัปเดตการแสดงผล
+                document.getElementById('subtotal').textContent = subtotal.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                document.getElementById('discount').textContent = discount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                document.getElementById('tax').textContent = taxAmount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                document.getElementById('total').textContent = totalAmount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                
+                // อัปเดตค่าภาษีที่แสดง
+                document.querySelector('span.text-sm.font-medium:contains("ภาษีมูลค่าเพิ่ม")').textContent = `ภาษีมูลค่าเพิ่ม (${taxRate}%):`;
             }
-
-            // แสดง/ซ่อนข้อความ "ไม่มีรายการสินค้า"
-            function toggleNoProductsMessage() {
-                const hasProducts = productRowsContainer.querySelectorAll('.product-row').length > 0;
-                noProductsMessage.classList.toggle('hidden', hasProducts);
-            }
-
-            // เตรียมฟอร์มก่อนส่ง - แก้ไขรูปแบบการส่งข้อมูลรายการสินค้า
-            document.getElementById('quotationForm').addEventListener('submit', function(e) {
-                e.preventDefault(); // ป้องกันการส่งฟอร์มแบบปกติ
-                
-                const hasProducts = productRowsContainer.querySelectorAll('.product-row').length > 0;
-                if (!hasProducts) {
-                    alert('กรุณาเพิ่มอย่างน้อย 1 รายการสินค้า');
-                    return;
-                }
-                
-                // เตรียมข้อมูลรายการสินค้าในรูปแบบที่ server สามารถประมวลผลได้
-                const productRows = productRowsContainer.querySelectorAll('.product-row');
-                const products = [];
-                
-                productRows.forEach(function(row, index) {
-                    const product = {
-                        product_id: row.querySelector('.product-select').value,
-                        quantity: row.querySelector('.quantity').value,
-                        unit_id: row.querySelector('select[name$="unit_id"]').value,
-                        unit_price: row.querySelector('.unit-price').value,
-                        discount_percentage: row.querySelector('.discount-percentage').value
-                    };
-                    products.push(product);
-                });
-                
-                // สร้าง hidden input เพื่อส่งข้อมูลรายการสินค้า
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'products_json';
-                input.value = JSON.stringify(products);
-                this.appendChild(input);
-                
-                // ส่งฟอร์ม
-                this.submit();
-            });
         });
     </script>
 

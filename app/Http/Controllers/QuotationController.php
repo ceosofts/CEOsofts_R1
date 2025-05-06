@@ -75,7 +75,7 @@ class QuotationController extends Controller
         $companyId = session('company_id', 1);
         $customers = Customer::where('company_id', $companyId)->orderBy('name')->get();
         $products = Product::where('company_id', $companyId)->orderBy('name')->get();
-        $units = Unit::all();
+        $units = Unit::where('company_id', $companyId)->where('is_active', true)->orderBy('name')->get();
         $salesPersons = Employee::where('company_id', $companyId)->orderBy('first_name')->get();
 
         // สร้างเลขที่เอกสารอัตโนมัติตามรูปแบบใหม่: QT + ปี + เดือน + 4 หลัก
@@ -277,23 +277,48 @@ class QuotationController extends Controller
      */
     public function edit($id)
     {
-        // แก้ไขจาก placeholder เป็นการดึงข้อมูลจริง
-        $quotation = Quotation::with(['items.product', 'items.unit'])->findOrFail($id);
+        $companyId = session('company_id');
         
-        // ตรวจสอบว่าสถานะยังเป็น draft อยู่หรือไม่
-        if ($quotation->status !== 'draft') {
-            return redirect()->route('quotations.show', $quotation)
-                ->with('error', 'ไม่สามารถแก้ไขใบเสนอราคาที่อนุมัติหรือปฏิเสธแล้วได้');
-        }
+        // โหลดพร้อมความสัมพันธ์ทั้ง product และ unit แบบเจาะจง
+        $quotation = Quotation::with([
+            'items.product', 
+            'items.unit:id,name,code', // เพิ่ม code และระบุฟิลด์ที่ต้องการอย่างชัดเจน
+            'customer', 
+            'salesPerson'
+        ])->findOrFail($id);
         
-        $companyId = session('company_id', 1);
+        // เพิ่มการล็อกข้อมูลเพื่อดีบั๊ก
+        Log::debug('Quotation items with relationship: ', [
+            'items_count' => $quotation->items->count(),
+            'sample_item' => $quotation->items->first() ? [
+                'product' => $quotation->items->first()->product ? $quotation->items->first()->product->name : 'No product',
+                'unit' => $quotation->items->first()->unit ? [
+                    'id' => $quotation->items->first()->unit->id,
+                    'name' => $quotation->items->first()->unit->name,
+                    'code' => $quotation->items->first()->unit->code ?? null
+                ] : 'No unit'
+            ] : 'No items'
+        ]);
         
-        // เตรียมข้อมูลที่จำเป็นสำหรับฟอร์มแก้ไข
         $customers = Customer::where('company_id', $companyId)->orderBy('name')->get();
         $products = Product::where('company_id', $companyId)->orderBy('name')->get();
-        $units = Unit::all();
-        
-        return view('quotations.edit', compact('quotation', 'customers', 'products', 'units'));
+        $units = Unit::where('company_id', $companyId)->where('is_active', true)->orderBy('name')->get();
+        $salesPersons = Employee::where('company_id', $companyId)->orderBy('first_name')->get();
+
+        // เพิ่มการล็อกข้อมูลเพื่อดีบั๊ก
+        Log::debug('Quotation items with relationship: ', [
+            'items_count' => $quotation->items->count(),
+            'sample_item' => $quotation->items->first() ? [
+                'product' => $quotation->items->first()->product ? $quotation->items->first()->product->name : 'No product',
+                'unit' => $quotation->items->first()->unit ? [
+                    'id' => $quotation->items->first()->unit->id,
+                    'name' => $quotation->items->first()->unit->name,
+                    'code' => $quotation->items->first()->unit->code ?? null
+                ] : 'No unit'
+            ] : 'No items'
+        ]);
+
+        return view('quotations.edit', compact('quotation', 'customers', 'products', 'units', 'salesPersons'));
     }
 
     /**

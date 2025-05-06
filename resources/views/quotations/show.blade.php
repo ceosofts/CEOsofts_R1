@@ -131,17 +131,24 @@
                         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                             <thead>
                                 <tr class="bg-gray-50 dark:bg-gray-700">
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ลำดับ</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">รหัส</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">รายการ</th>
                                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">จำนวน</th>
+                                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">หน่วยสินค้า</th>
                                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ราคาต่อหน่วย</th>
                                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ส่วนลด</th>
                                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">รวม</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                @forelse($quotation->items as $item)
+                                @forelse($quotation->items as $index => $item)
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    <td class="px-6 py-4 whitespace-normal">
+                                        <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                            {{ $index + 1 }}
+                                        </div>
+                                    </td>
                                     <td class="px-6 py-4 whitespace-normal">
                                         <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
                                             {{ $item->product->code ?? 'N/A' }}
@@ -151,7 +158,10 @@
                                         <div class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $item->description }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right">
-                                        <div class="text-sm text-gray-900 dark:text-gray-100">{{ number_format($item->quantity, 2) }} {{ $item->unit->name ?? '' }}</div>
+                                        <div class="text-sm text-gray-900 dark:text-gray-100">{{ number_format($item->quantity, 2) }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                                        <div class="text-sm text-gray-900 dark:text-gray-100">{{ $item->unit->name ?? 'N/A' }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right">
                                         <div class="text-sm text-gray-900 dark:text-gray-100">{{ number_format($item->unit_price, 2) }}</div>
@@ -169,7 +179,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                                    <td colspan="8" class="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
                                         ไม่พบรายการสินค้า
                                     </td>
                                 </tr>
@@ -328,6 +338,7 @@
                             <th class="py-2 px-4 border text-left">รหัสสินค้า</th>
                             <th class="py-2 px-4 border text-left">รายการ</th>
                             <th class="py-2 px-4 border text-right">จำนวน</th>
+                            <th class="py-2 px-4 border text-center">หน่วยสินค้า</th>
                             <th class="py-2 px-4 border text-right">ราคาต่อหน่วย</th>
                             <th class="py-2 px-4 border text-right">ส่วนลด</th>
                             <th class="py-2 px-4 border text-right">จำนวนเงิน</th>
@@ -340,6 +351,7 @@
                             <td class="py-2 px-4 border">{{ $item->product->code ?? '-' }}</td>
                             <td class="py-2 px-4 border">{{ $item->description }}</td>
                             <td class="py-2 px-4 border text-right">{{ number_format($item->quantity, 2) }} {{ $item->unit->name ?? '' }}</td>
+                            <td class="py-2 px-4 border text-center">{{ $item->unit->name ?? 'N/A' }}</td>
                             <td class="py-2 px-4 border text-right">{{ number_format($item->unit_price, 2) }}</td>
                             <td class="py-2 px-4 border text-right">
                                 @if($item->discount_percentage > 0)
@@ -352,7 +364,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" class="py-2 px-4 border text-center">ไม่มีรายการสินค้า</td>
+                            <td colspan="8" class="py-2 px-4 border text-center">ไม่มีรายการสินค้า</td>
                         </tr>
                         @endforelse
                     </tbody>

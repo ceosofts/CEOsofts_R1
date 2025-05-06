@@ -138,6 +138,7 @@
                             <table class="min-w-full bg-white dark:bg-gray-700">
                                 <thead>
                                     <tr class="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300">
+                                        <th class="py-2 px-4 border-b text-center">ลำดับ</th>
                                         <th class="py-2 px-4 border-b text-left">สินค้า</th>
                                         <th class="py-2 px-4 border-b text-right">จำนวน</th>
                                         <th class="py-2 px-4 border-b text-right">หน่วย</th>
@@ -148,7 +149,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="product-list">
-                                    <!-- รายการสินค้าจะถูกเพิ่มที่นี่ด้วย JavaScript -->
+                                    <!-- รายการสินค้าจะถูกเพิ่มที่นี่ -->
                                 </tbody>
                             </table>
                         </div>
@@ -243,6 +244,9 @@
     <!-- Template สำหรับแถวสินค้า -->
     <template id="product-row-template">
         <tr class="product-row hover:bg-gray-50 dark:hover:bg-gray-600">
+            <td class="py-2 px-4 border-b dark:border-gray-700 text-center item-sequence">
+                <!-- ลำดับจะถูกใส่ผ่าน JavaScript -->
+            </td>
             <td class="py-2 px-4 border-b dark:border-gray-700">
                 <select name="products[INDEX][product_id]" class="product-select block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
                     <option value="">-- เลือกสินค้า --</option>
@@ -359,6 +363,22 @@
                 const template = productRowTemplate.innerHTML;
                 const newRow = template.replace(/INDEX/g, productIndex++);
                 productList.insertAdjacentHTML('beforeend', newRow);
+                
+                // อัพเดทเลขลำดับในทุกแถว
+                updateSequenceNumbers();
+                
+                return productIndex - 1;
+            }
+            
+            // อัพเดทเลขลำดับในทุกแถว
+            function updateSequenceNumbers() {
+                const rows = document.querySelectorAll('.product-row');
+                rows.forEach((row, index) => {
+                    const sequenceCell = row.querySelector('.item-sequence');
+                    if (sequenceCell) {
+                        sequenceCell.textContent = index + 1;
+                    }
+                });
             }
 
             // คำนวณยอดรวมของแต่ละแถว
