@@ -721,6 +721,7 @@ class OrderController extends Controller
         $validated = $request->validate([
             'tracking_number' => 'nullable|string',
             'shipping_notes' => 'nullable|string',
+            'redirect_to_delivery' => 'nullable|boolean'
         ]);
         
         $order->update([
@@ -731,6 +732,7 @@ class OrderController extends Controller
             'shipping_notes' => $validated['shipping_notes'] ?? null,
         ]);
         
+        // กรณีไม่ต้องการ redirect ให้กลับไปหน้า order show แบบเดิม
         return redirect()->route('orders.show', $order)
             ->with('success', 'อัพเดทสถานะเป็นจัดส่งแล้วสำเร็จ');
     }
@@ -840,17 +842,22 @@ class OrderController extends Controller
             $response = [
                 'order' => [
                     'id' => $order->id,
-                    'order_number' => $order->order_number,
-                    'status' => $order->status,
                     'customer_id' => $order->customer_id,
+                    'order_number' => $order->order_number,
+                    'delivery_date' => $order->delivery_date?->format('Y-m-d'),
                     'shipping_address' => $order->shipping_address ?? '',
                     'shipping_method' => $order->shipping_method ?? '',
-                    'delivery_date' => $order->delivery_date ? $order->delivery_date->format('Y-m-d') : null,
-                    'notes' => $order->notes ?? '',
-                    'sales_person_id' => $order->sales_person_id ?? null,
+                    'tracking_number' => $order->tracking_number ?? '', // เพิ่มฟิลด์ tracking_number
+                    'shipping_notes' => $order->shipping_notes ?? '',  // เพิ่มฟิลด์ shipping_notes
+                    'status' => $order->status,
                 ],
-                'customer' => $order->customer,
-                'items' => $order->items->map(function ($item) {
+                'customer' => [
+                    'name' => $order->customer->name,
+                    'email' => $order->customer->email,
+                    'phone' => $order->customer->phone,
+                    'address' => $order->customer->address,
+                ],
+                'items' => $order->items->map(function($item) {
                     // ตรวจสอบและดึงข้อมูลหน่วยจากใบเสนอราคาหรือจากสินค้า
                     $unit = null;
                     $unitName = '';

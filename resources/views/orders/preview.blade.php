@@ -13,7 +13,7 @@
             <!-- ข้อมูลบริษัท -->
             <div class="text-center mb-6">
                 <h1 class="text-xl font-bold">{{ $order->company->name ?? 'บริษัท ซีอีโอซอฟต์ จำกัด' }}</h1>
-                <p>{{ $order->company->address ?? '123 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110' }}</p>
+                <p>{{ $order->company->address ?? '123 ถนนสุขุมวิท แขวงคลองตันเหนือ เขตวัฒนา กรุงเทพฯ 10110' }}</p>
                 <p>โทร: {{ $order->company->phone ?? '02-123-4567' }}, อีเมล: {{ $order->company->email ?? 'info@ceosofts.com' }}</p>
             </div>
 
@@ -22,14 +22,14 @@
             </div>
 
             <!-- ข้อมูลลูกค้าและเลขที่เอกสาร -->
-            <div class="grid-cols-2 mb-6">
-                <div>
+            <div class="flex justify-between mb-6">
+                <div class="w-1/2">
                     <p><strong>ลูกค้า:</strong> {{ $order->customer->name }}</p>
                     <p>{{ $order->customer->address }}</p>
                     <p>โทร: {{ $order->customer->phone }}</p>
                     <p>อีเมล: {{ $order->customer->email }}</p>
                 </div>
-                <div class="text-right">
+                <div class="w-1/2 text-right">
                     <p><strong>เลขที่:</strong> {{ $order->order_number }}</p>
                     <p><strong>วันที่:</strong> {{ $order->order_date->format('d/m/Y') }}</p>
                     <p><strong>วันที่จัดส่ง:</strong> {{ $order->delivery_date ? $order->delivery_date->format('d/m/Y') : '-' }}</p>
@@ -91,7 +91,7 @@
                             ({{ $order->discount_amount }}%)
                             @endif
                         </span>
-                        <span>{{ number_format($order->discount_amount, 2) }}</span>
+                        <span>{{ number_format($order->discount_value, 2) }}</span>
                     </div>
                     @endif
                     @if($order->tax_amount > 0)
@@ -122,13 +122,13 @@
             @endif
 
             <!-- ส่วนลงนาม -->
-            <div class="grid grid-cols-2 gap-6 mt-12">
-                <div class="text-center">
+            <div class="flex justify-between mt-12">
+                <div class="text-center w-1/3">
                     <div class="border-t border-gray-400 pt-2 mt-12 inline-block w-48">
                         <p>ผู้สั่งซื้อ</p>
                     </div>
                 </div>
-                <div class="text-center">
+                <div class="text-center w-1/3">
                     <div class="border-t border-gray-400 pt-2 mt-12 inline-block w-48">
                         <p>ผู้มีอำนาจลงนาม</p>
                     </div>

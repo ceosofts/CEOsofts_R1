@@ -469,7 +469,7 @@
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md">
             <h3 class="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">จัดส่งสินค้า</h3>
             
-            <form action="{{ route('orders.ship', $order) }}" method="POST">
+            <form action="{{ route('orders.ship', $order) }}" method="POST" id="shipForm">
                 @csrf
                 
                 <div class="mb-4">
@@ -481,6 +481,14 @@
                     <label for="shipping_notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">หมายเหตุการจัดส่ง</label>
                     <textarea id="shipping_notes" name="shipping_notes" rows="3" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
                 </div>
+                
+                <!-- เพิ่ม checkbox สำหรับเปิดหน้าจัดส่งสินค้าอัตโนมัติ -->
+                <!-- <div class="mb-4">
+                    <label class="flex items-center">
+                        <input type="checkbox" id="redirect_to_delivery" name="redirect_to_delivery" value="1" checked class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">เปิดหน้าสร้างใบส่งสินค้าอัตโนมัติ</span>
+                    </label>
+                </div> -->
                 
                 <div class="flex justify-end space-x-2">
                     <button type="button" onclick="closeShipModal()" class="px-4 py-2 bg-gray-300 dark:bg-gray-600 rounded-md text-gray-800 dark:text-gray-200 hover:bg-gray-400 dark:hover:bg-gray-500">
@@ -572,6 +580,52 @@
     <!-- เพิ่ม JavaScript สำหรับปุ่มดูตัวอย่างและพิมพ์ -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // ฟังก์ชันแสดง Modal จัดส่งสินค้า
+            window.showShipModal = function() {
+                document.getElementById('shipModal').classList.remove('modal-hidden');
+            };
+            
+            // ฟังก์ชันซ่อน Modal จัดส่งสินค้า
+            window.closeShipModal = function() {
+                document.getElementById('shipModal').classList.add('modal-hidden');
+            };
+            
+            // ฟังก์ชันแสดง Modal ยกเลิกใบสั่งขาย
+            window.showCancelModal = function() {
+                document.getElementById('cancelModal').classList.remove('modal-hidden');
+            };
+            
+            // ฟังก์ชันซ่อน Modal ยกเลิกใบสั่งขาย
+            window.closeCancelModal = function() {
+                document.getElementById('cancelModal').classList.add('modal-hidden');
+            };
+            
+            // ฟังก์ชันยืนยันการลบใบสั่งขาย
+            window.confirmDelete = function() {
+                if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบใบสั่งขายนี้?')) {
+                    document.getElementById('delete-form').submit();
+                }
+            };
+            
+            // เพิ่มการจัดการกับฟอร์มการจัดส่งสินค้า
+            const shipForm = document.getElementById('shipForm');
+            if (shipForm) {
+                shipForm.addEventListener('submit', function(e) {
+                    // ถ้า checkbox redirect_to_delivery ถูกติ๊ก
+                    if (document.getElementById('redirect_to_delivery').checked) {
+                        // เปลี่ยนเป็นไม่ต้อง prevent default เพื่อส่งฟอร์มตามปกติ
+                        // และให้ Controller จัดการการ redirect
+                    } else {
+                        // ถ้าไม่ต้องการ redirect ให้ใส่ input hidden เพื่อบอก controller
+                        const noRedirectInput = document.createElement('input');
+                        noRedirectInput.type = 'hidden';
+                        noRedirectInput.name = 'no_redirect';
+                        noRedirectInput.value = '1';
+                        shipForm.appendChild(noRedirectInput);
+                    }
+                });
+            }
+            
             // ควบคุมปุ่ม "ดูตัวอย่าง" (Preview)
             const previewButton = document.getElementById('preview-button');
             const previewModal = document.getElementById('preview-modal');
@@ -733,13 +787,13 @@
             // ซ่อน modal เมื่อกดปุ่ม Escape หรือคลิกพื้นหลัง
             document.addEventListener('keydown', function(event) {
                 if (event.key === 'Escape') {
-                    previewModal.classList.add('modal-hidden');
-                    document.getElementById('shipModal').classList.add('modal-hidden');
-                    document.getElementById('cancelModal').classList.add('modal-hidden');
+                    previewModal?.classList.add('modal-hidden');
+                    document.getElementById('shipModal')?.classList.add('modal-hidden');
+                    document.getElementById('cancelModal')?.classList.add('modal-hidden');
                 }
             });
             
-            previewModal.addEventListener('click', function(event) {
+            previewModal?.addEventListener('click', function(event) {
                 if (event.target === previewModal) {
                     previewModal.classList.add('modal-hidden');
                 }

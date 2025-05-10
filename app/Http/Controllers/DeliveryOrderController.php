@@ -74,7 +74,17 @@ class DeliveryOrderController extends Controller
         $order = null;
         
         if ($orderId) {
-            $order = Order::with(['customer', 'items.product'])->find($orderId);
+            // เพิ่มการโหลดข้อมูลให้ครบถ้วนรวมถึง items.product และ items.unit
+            $order = Order::with(['customer', 'items.product', 'items.unit'])->find($orderId);
+            
+            // บันทึก log เพื่อช่วยในการ debug
+            if ($order) {
+                Log::info('ข้อมูลใบสั่งขายที่ดึงได้', [
+                    'order_id' => $order->id,
+                    'tracking_number' => $order->tracking_number,
+                    'shipping_notes' => $order->shipping_notes
+                ]);
+            }
         }
         
         $orders = Order::where(function($query) {
@@ -395,6 +405,8 @@ class DeliveryOrderController extends Controller
                 'delivery_date' => $order->delivery_date?->format('Y-m-d'),
                 'shipping_address' => $order->shipping_address,
                 'shipping_method' => $order->shipping_method,
+                'tracking_number' => $order->tracking_number ?? '', // เพิ่มข้อมูลเลขพัสดุ
+                'shipping_notes' => $order->shipping_notes ?? '',   // เพิ่มข้อมูลหมายเหตุการจัดส่ง
                 'status' => $order->status,
             ],
             'customer' => [

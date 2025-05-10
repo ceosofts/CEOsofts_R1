@@ -115,6 +115,11 @@ Route::post('/orders/{order}/process', [OrderController::class, 'process'])
     ->name('orders.process')
     ->middleware(['auth']);
 
+// เพิ่ม route สำหรับการบันทึกว่าส่งมอบแล้ว (orders.deliver)
+Route::post('/orders/{order}/deliver', [OrderController::class, 'deliver'])
+    ->name('orders.deliver')
+    ->middleware(['auth']);
+
 // Route to generate a unique order number
 Route::get('/orders/generate-order-number', function() {
     return response()->json(['order_number' => \App\Models\Order::generateOrderNumber()]);
