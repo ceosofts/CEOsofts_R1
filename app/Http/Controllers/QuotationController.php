@@ -21,7 +21,33 @@ class QuotationController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Quotation::where('company_id', session('company_id'));
+        // ตรวจสอบและตั้งค่า company_id หากไม่มีใน session
+        $companyId = session('company_id');
+        
+        // กรณีไม่มี company_id ใน session ให้หา company แรกที่ผู้ใช้มีสิทธิ์เข้าถึง
+        if (empty($companyId)) {
+            // หา company แรกที่ผู้ใช้มีสิทธิ์เข้าถึง
+            $user = auth()->user();
+            
+            if ($user && $user->companies->isNotEmpty()) {
+                $firstCompany = $user->companies->first();
+                $companyId = $firstCompany->id;
+                
+                // บันทึกลง session
+                session(['company_id' => $companyId]);
+                
+                // Log การตั้งค่า company_id
+                \Illuminate\Support\Facades\Log::info('ตั้งค่า company_id เริ่มต้นเป็น ' . $companyId . ' สำหรับการแสดงรายการใบเสนอราคา');
+            } else {
+                // กรณีไม่พบ company ที่ผู้ใช้มีสิทธิ์เข้าถึง ใช้ค่าเริ่มต้นเป็น 1
+                $companyId = 1;
+                session(['company_id' => $companyId]);
+                
+                \Illuminate\Support\Facades\Log::warning('ไม่พบ company ที่ผู้ใช้มีสิทธิ์เข้าถึง กำหนดค่าเริ่มต้นเป็น 1');
+            }
+        }
+
+        $query = Quotation::where('company_id', $companyId);
 
         // Search by text (quotation number, reference, customer name)
         if ($request->filled('search')) {

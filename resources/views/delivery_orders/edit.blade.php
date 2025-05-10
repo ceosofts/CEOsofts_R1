@@ -154,7 +154,7 @@
                                 <div>
                                     <div class="mb-4">
                                         <x-input-label for="shipping_address" :value="__('ชื่อผู้ติดต่อและที่อยู่จัดส่ง')" class="required dark:text-gray-300" />
-                                        <textarea id="shipping_address" name="shipping_address" rows="3" class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>{{ old('shipping_address', $deliveryOrder->shipping_address) }}</textarea>
+                                        <textarea id="shipping_address" name="shipping_address" rows="3" class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>{{ old('shipping_address', $deliveryOrder->delivery_address) }}</textarea>
                                         @error('shipping_address','shipping_contact')
                                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                         @enderror
@@ -258,7 +258,7 @@
                                         </tr>
                                     </thead>
                                     <tbody id="productsList">
-                                        @foreach($deliveryOrder->deliveryOrderItems as $index => $item)
+                                        @foreach($deliveryOrder->items as $index => $item)
                                             @php
                                                 // หาข้อมูลรายการสินค้าในใบสั่งขายที่ตรงกัน
                                                 $matchingOrderItem = $deliveryOrder->order->items->first(function($orderItem) use ($item) {
@@ -283,8 +283,8 @@
                                                 <td class="py-2 px-4 border-b text-center dark:border-gray-600">
                                                     <input type="number" name="quantity[{{ $index }}]" class="quantity w-full text-center border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" min="0.01" step="any" value="{{ $item->quantity }}" required>
                                                 </td>
-                                                <td class="py-2 px-4 border-b text-right dark:border-gray-600">
-                                                    <input type="text" name="unit[{{ $index }}]" class="w-full text-right border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" value="{{ $item->unit }}" required>
+                                                <td class="py-2 px-4 border-b text-right">
+                                                    <input type="text" name="unit[{{ $index }}]" class="w-full text-right border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" value="{{ isset($unitMapping[$item->id]) ? $unitMapping[$item->id] : '' }}" required>
                                                 </td>
                                                 <td class="py-2 px-4 border-b text-center dark:border-gray-600">
                                                     <select name="status[{{ $index }}]" class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">

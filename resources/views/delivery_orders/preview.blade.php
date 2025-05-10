@@ -25,22 +25,23 @@
                 </div>
                 
                 <!-- ข้อมูลลูกค้าและเลขที่เอกสาร -->
-                <div class="grid-cols-2">
-                    <div>
-                        <p><strong>ลูกค้า:</strong> {{ $deliveryOrder->customer->name ?? '-' }}</p>
-                        <p><strong>ชื่อผู้ติดต่อและที่อยู่จัดส่ง:</strong></p>
-                        <p>{{ $deliveryOrder->shipping_address }}</p>
-                        <p><strong>โทร:</strong> {{ $deliveryOrder->customer->phone ?? '-' }}</p>
-                        <p><strong>อีเมล:</strong> {{ $deliveryOrder->customer->email ?? '-' }}</p>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                    <div style="width: 50%;">
+                        <p style="margin: 5px 0;"><strong>ลูกค้า:</strong> {{ $deliveryOrder->customer->name ?? '-' }}</p>
+                        <p style="margin: 5px 0;"><strong>ชื่อผู้ติดต่อและที่อยู่จัดส่ง:</strong></p>
+                        <p style="margin: 5px 0 10px 0;">{{ $deliveryOrder->delivery_address }}</p>
+                        <p style="margin: 5px 0;"><strong>โทร:</strong> {{ $deliveryOrder->customer->phone ?? '-' }}</p>
+                        <p style="margin: 5px 0;"><strong>อีเมล:</strong> {{ $deliveryOrder->customer->email ?? '-' }}</p>
                     </div>
-                    <div style="text-align: right;">
-                        <p><strong>เลขที่:</strong> {{ $deliveryOrder->delivery_number }}</p>
-                        <p><strong>วันที่:</strong> {{ optional($deliveryOrder->delivery_date)->format('d/m/Y') ?? date('d/m/Y') }}</p>
-                        <p><strong>เลขที่ใบสั่งขาย:</strong> 
+                    <div style="width: 45%; text-align: right;">
+                        <p style="margin: 5px 0;"><strong>เลขที่:</strong> {{ $deliveryOrder->delivery_number }}</p>
+                        <p style="margin: 5px 0;"><strong>วันที่:</strong> {{ optional($deliveryOrder->delivery_date)->format('d/m/Y') ?? date('d/m/Y') }}</p>
+                        <p style="margin: 5px 0;"><strong>เลขที่ใบสั่งขาย:</strong> 
                             {{ $deliveryOrder->order ? $deliveryOrder->order->order_number : '-' }}
                         </p>
-                        <p><strong>วิธีจัดส่ง:</strong> {{ $deliveryOrder->shipping_method ?? '-' }}</p>
-                        <p><strong>เลขพัสดุ:</strong> {{ $deliveryOrder->tracking_number ?? '-' }}</p>
+                        <p style="margin: 5px 0;"><strong>วิธีจัดส่ง:</strong> {{ $deliveryOrder->shipping_method ?? '-' }}</p>
+                        <p style="margin: 5px 0;"><strong>เลขพัสดุ:</strong> {{ $deliveryOrder->tracking_number ?? '-' }}</p>
+                        <p style="margin: 5px 0;"><strong>สถานะ:</strong> <span style="padding: 2px 8px; background-color: #f0f0f0; border-radius: 10px; font-size: 12px;">{{ ucfirst($deliveryOrder->delivery_status) }}</span></p>
                     </div>
                 </div>
                 
@@ -48,19 +49,19 @@
                 <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; margin-top: 20px;">
                     <thead>
                         <tr style="background-color: #f2f2f2;">
-                            <th style="border: 1px solid #333; padding: 8px; text-align: left;">ลำดับ</th>
-                            <th style="border: 1px solid #333; padding: 8px; text-align: left;">รหัสสินค้า</th>
-                            <th style="border: 1px solid #333; padding: 8px; text-align: left;">รายการ</th>
-                            <th style="border: 1px solid #333; padding: 8px; text-align: right;">จำนวน</th>
-                            <th style="border: 1px solid #333; padding: 8px; text-align: right;">หน่วย</th>
-                            <th style="border: 1px solid #333; padding: 8px; text-align: center;">สถานะ</th>
-                            <th style="border: 1px solid #333; padding: 8px; text-align: right;">หมายเหตุ</th>
+                            <th style="border: 1px solid #333; padding: 8px; text-align: center; width: 5%;">ลำดับ</th>
+                            <th style="border: 1px solid #333; padding: 8px; text-align: left; width: 15%;">รหัสสินค้า</th>
+                            <th style="border: 1px solid #333; padding: 8px; text-align: left; width: 30%;">รายการ</th>
+                            <th style="border: 1px solid #333; padding: 8px; text-align: right; width: 10%;">จำนวน</th>
+                            <th style="border: 1px solid #333; padding: 8px; text-align: center; width: 10%;">หน่วย</th>
+                            <th style="border: 1px solid #333; padding: 8px; text-align: center; width: 15%;">สถานะ</th>
+                            <th style="border: 1px solid #333; padding: 8px; text-align: left; width: 15%;">หมายเหตุ</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($deliveryOrder->deliveryOrderItems as $index => $item)
+                        @forelse($deliveryOrder->items as $index => $item)
                         <tr>
-                            <td style="border: 1px solid #333; padding: 8px;">{{ $index + 1 }}</td>
+                            <td style="border: 1px solid #333; padding: 8px; text-align: center;">{{ $index + 1 }}</td>
                             <td style="border: 1px solid #333; padding: 8px;">
                                 @if($item->product)
                                     {{ $item->product->code ?? $item->product->sku ?? '-' }}
@@ -70,16 +71,48 @@
                             </td>
                             <td style="border: 1px solid #333; padding: 8px;">{{ $item->description }}</td>
                             <td style="border: 1px solid #333; padding: 8px; text-align: right;">{{ number_format($item->quantity) }}</td>
-                            <td style="border: 1px solid #333; padding: 8px; text-align: right;">{{ $item->unit }}</td>
+                            <td style="border: 1px solid #333; padding: 8px; text-align: center;">{{ $item->unit }}</td>
                             <td style="border: 1px solid #333; padding: 8px; text-align: center;">
                                 @php
-                                    $statusClass = isset($statusClasses[$item->status]) ? $statusClasses[$item->status] : 'bg-gray-100 text-gray-800';
+                                    // กำหนดสีสถานะแบบ inline style แทนการใช้ class
+                                    $statusColor = '';
+                                    $textColor = '';
+                                    
+                                    switch($item->status) {
+                                        case 'pending':
+                                            $statusColor = '#fff3cd';
+                                            $textColor = '#856404';
+                                            break;
+                                        case 'processing':
+                                            $statusColor = '#cce5ff';
+                                            $textColor = '#004085';
+                                            break;
+                                        case 'shipped':
+                                            $statusColor = '#d4edda';
+                                            $textColor = '#155724';
+                                            break;
+                                        case 'delivered':
+                                            $statusColor = '#d1e7dd';
+                                            $textColor = '#0f5132';
+                                            break;
+                                        case 'partial_delivered':
+                                            $statusColor = '#fff3cd';
+                                            $textColor = '#664d03';
+                                            break;
+                                        case 'cancelled':
+                                            $statusColor = '#f8d7da';
+                                            $textColor = '#842029';
+                                            break;
+                                        default:
+                                            $statusColor = '#e2e3e5';
+                                            $textColor = '#41464b';
+                                    }
                                 @endphp
-                                <span class="px-2 py-1 rounded-full text-xs {{ $statusClass }}">
-                                    {{ ucfirst($item->status) }}
+                                <span style="display: inline-block; padding: 3px 8px; background-color: {{ $statusColor }}; color: {{ $textColor }}; border-radius: 12px; font-size: 12px;">
+                                    {{ ucfirst($item->status ?? 'pending') }}
                                 </span>
                             </td>
-                            <td style="border: 1px solid #333; padding: 8px; text-align: right;">{{ $item->notes ?? '-' }}</td>
+                            <td style="border: 1px solid #333; padding: 8px; text-align: left;">{{ $item->notes ?? '-' }}</td>
                         </tr>
                         @empty
                         <tr>
@@ -91,24 +124,40 @@
                 
                 <!-- หมายเหตุ -->
                 @if($deliveryOrder->notes)
-                <div style="margin-top: 20px; padding: 10px; border: 1px solid #ddd; background-color: #f9f9f9; border-radius: 4px;">
-                    <strong>หมายเหตุ:</strong>
-                    <p>{{ $deliveryOrder->notes }}</p>
+                <div style="margin-top: 20px; padding: 12px; border: 1px solid #ddd; background-color: #f9f9f9; border-radius: 4px;">
+                    <strong style="display: block; margin-bottom: 5px;">หมายเหตุ:</strong>
+                    <p style="margin: 0; white-space: pre-line;">{{ $deliveryOrder->notes }}</p>
                 </div>
                 @endif
+                
+                <!-- ข้อมูลเพิ่มเติม -->
+                <div style="margin-top: 30px; margin-bottom: 20px; font-size: 14px;">
+                    <p><strong>ผู้สร้างเอกสาร:</strong> {{ $deliveryOrder->creator->name ?? '-' }}</p>
+                    <p><strong>วันที่สร้างเอกสาร:</strong> {{ $deliveryOrder->created_at ? $deliveryOrder->created_at->format('d/m/Y H:i') : '-' }}</p>
+                    @if($deliveryOrder->approver)
+                    <p><strong>ผู้อนุมัติ:</strong> {{ $deliveryOrder->approver->name }}</p>
+                    @endif
+                </div>
                 
                 <!-- ส่วนลงนาม -->
                 <div style="display: flex; justify-content: space-between; margin-top: 50px;">
                     <div style="text-align: center; width: 40%;">
-                        <div style="border-top: 1px solid #000; width: 70%; margin: 50px auto 0; padding-top: 10px;">
-                            ผู้ส่งมอบสินค้า
+                        <div style="border-top: 1px solid #000; width: 80%; margin: 50px auto 0; padding-top: 10px;">
+                            <p style="margin: 0;">ผู้ส่งมอบสินค้า</p>
+                            <p style="margin: 5px 0 0 0; font-size: 14px; color: #666;">วันที่ ........./........./.........</p>
                         </div>
                     </div>
                     <div style="text-align: center; width: 40%;">
-                        <div style="border-top: 1px solid #000; width: 70%; margin: 50px auto 0; padding-top: 10px;">
-                            ผู้รับสินค้า
+                        <div style="border-top: 1px solid #000; width: 80%; margin: 50px auto 0; padding-top: 10px;">
+                            <p style="margin: 0;">ผู้รับสินค้า</p>
+                            <p style="margin: 5px 0 0 0; font-size: 14px; color: #666;">วันที่ ........./........./.........</p>
                         </div>
                     </div>
+                </div>
+                
+                <!-- ข้อความท้ายเอกสาร -->
+                <div style="margin-top: 50px; text-align: center; font-size: 12px; color: #666;">
+                    <p>เอกสารนี้ออกโดยระบบคอมพิวเตอร์ {{ date('Y-m-d H:i:s') }}</p>
                 </div>
             </div>
         </div>

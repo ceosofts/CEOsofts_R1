@@ -140,8 +140,9 @@
                                     <tr class="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300">
                                         <th class="py-2 px-4 border-b text-center">ลำดับ</th>
                                         <th class="py-2 px-4 border-b text-left">สินค้า</th>
+                                        <th class="py-2 px-4 border-b text-center">รหัสสินค้า</th>
                                         <th class="py-2 px-4 border-b text-right">จำนวน</th>
-                                        <th class="py-2 px-4 border-b text-right">หน่วย</th>
+                                        <th class="py-2 px-4 border-b text-center">หน่วย</th>
                                         <th class="py-2 px-4 border-b text-right">ราคาต่อหน่วย</th>
                                         <th class="py-2 px-4 border-b text-right">ส่วนลด (%)</th>
                                         <th class="py-2 px-4 border-b text-right">รวม</th>

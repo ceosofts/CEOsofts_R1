@@ -228,49 +228,50 @@ class Order extends Model
     }
 
     /**
-     * สร้างเลขที่ใบสั่งขายอัตโนมัติในรูปแบบ SO{YYYY}{MM}{NNNN}
-     * พร้อมตรวจสอบความซ้ำซ้อนรวมถึงรายการที่ถูก Soft Delete แล้ว
+     * สร้างเลขที่ใบสั่งขายอัตโนมัติในรูปแบบ SO + COMPANY_ID + YY + MM + SEQUENCE
+     * Example: SO0125050001 (where 01=company_id, 25=year, 05=month, 0001=sequence)
      */
     public static function generateOrderNumber(?int $companyId = null, ?string $date = null): string
     {
-        // ใช้ DB transaction เพื่อป้องกัน race condition
-        return DB::transaction(function() use ($companyId, $date) {
-            if (!$companyId) {
-                $companyId = session('company_id', 1);
+        if (!$companyId) {
+            $companyId = session('company_id', 1);
+        }
+        
+        $now = $date ? \Carbon\Carbon::parse($date) : \Carbon\Carbon::now();
+        $year = $now->format('y'); // ปี 2 หลักสุดท้าย (25 สำหรับ 2025)
+        $month = $now->format('m'); // เดือน 2 หลัก (05 สำหรับเดือนพฤษภาคม)
+        $companyIdFormatted = str_pad($companyId, 2, '0', STR_PAD_LEFT); // รหัสบริษัท 2 หลัก (01, 02, ...)
+        
+        $prefix = 'SO';
+        
+        // หาเลขลำดับสูงสุดของบริษัทในเดือนปีนี้
+        $pattern = $prefix . $companyIdFormatted . $year . $month . '%';
+        
+        $latestOrder = self::withTrashed()
+            ->where('order_number', 'LIKE', $pattern)
+            ->where('company_id', $companyId)
+            ->orderBy('order_number', 'desc')
+            ->first();
+        
+        $nextSequence = 1; // เริ่มต้นที่ 1 สำหรับเดือนใหม่
+        
+        if ($latestOrder) {
+            // ถ้ามีเลขล่าสุดในเดือนนี้ ดึง 4 หลักสุดท้ายและเพิ่มค่า
+            $lastPart = substr($latestOrder->order_number, -4);
+            if (is_numeric($lastPart)) {
+                $nextSequence = (int)$lastPart + 1;
             }
-            
-            $now = $date ? \Carbon\Carbon::parse($date) : \Carbon\Carbon::now();
-            $year = $now->format('Y');
-            $month = $now->format('m');
-            
-            // ดึงเลขที่ล่าสุดของเดือนและปีที่กำหนด รวมถึงรายการที่ถูก soft delete
-            $latestOrder = self::withTrashed()
-                ->where('company_id', $companyId)
-                ->where('order_number', 'like', "SO{$year}{$month}%")
-                ->orderByRaw('LENGTH(order_number) DESC')
-                ->orderBy('order_number', 'desc')
-                ->lockForUpdate() // ใช้ lock เพื่อป้องกัน race condition
-                ->first();
-            
-            if ($latestOrder) {
-                // ถ้ามีเลขที่ใบสั่งขายในเดือนนี้แล้ว จะดึงตัวเลขที่ต่อจาก SO{YYYY}{MM} และเพิ่มขึ้น 1
-                $lastNumber = (int) substr($latestOrder->order_number, 8);
-                $nextNumber = $lastNumber + 1;
-            } else {
-                // ถ้าไม่มีเลขที่ใบสั่งขายในเดือนนี้ จะเริ่มที่ 0001
-                $nextNumber = 1;
-            }
-            
-            // สร้างเลขที่ใบสั่งขายรูปแบบ SO{YYYY}{MM}{NNNN}
-            $orderNumber = 'SO' . $year . $month . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
-            
-            // ตรวจสอบว่าเลขที่สร้างใหม่ซ้ำหรือไม่ (ป้องกัน race condition) รวมถึงรายการที่ถูก soft delete
-            while (self::withTrashed()->where('order_number', $orderNumber)->exists()) {
-                $nextNumber++;
-                $orderNumber = 'SO' . $year . $month . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
-            }
-            
-            return $orderNumber;
-        });
+        }
+        
+        // สร้างเลขที่เอกสารในรูปแบบใหม่
+        $orderNumber = $prefix . $companyIdFormatted . $year . $month . str_pad($nextSequence, 4, '0', STR_PAD_LEFT);
+        
+        // ตรวจสอบซ้ำและเพิ่มลำดับจนกว่าจะไม่ซ้ำ
+        while (self::withTrashed()->where('order_number', $orderNumber)->exists()) {
+            $nextSequence++;
+            $orderNumber = $prefix . $companyIdFormatted . $year . $month . str_pad($nextSequence, 4, '0', STR_PAD_LEFT);
+        }
+        
+        return $orderNumber;
     }
 }

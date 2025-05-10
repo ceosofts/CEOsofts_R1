@@ -110,7 +110,7 @@
             <div>
                 <p><strong>ลูกค้า:</strong> {{ $deliveryOrder->customer->name ?? '-' }}</p>
                 <p><strong>ชื่อผู้ติดต่อและที่อยู่จัดส่ง:</strong></p>
-                <p>{{ $deliveryOrder->shipping_address }}</p>
+                <p>{{ $deliveryOrder->delivery_address }}</p>
                 <p><strong>โทร:</strong> {{ $deliveryOrder->customer->phone ?? '-' }}</p>
                 <p><strong>อีเมล:</strong> {{ $deliveryOrder->customer->email ?? '-' }}</p>
             </div>
@@ -139,7 +139,7 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse($deliveryOrder->deliveryOrderItems as $index => $item)
+                @forelse($deliveryOrder->items as $index => $item)
                 <tr>
                     <td style="text-align: center;">{{ $index + 1 }}</td>
                     <td>

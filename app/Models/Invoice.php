@@ -192,20 +192,38 @@ class Invoice extends Model
     {
         $companyId = $companyId ?? (session('company_id') ?? 1);
         $prefix = 'INV';
-        $date = date('Ym');
+        $companyIdFormatted = str_pad($companyId, 2, '0', STR_PAD_LEFT); // รหัสบริษัท 2 หลัก (01, 02, ...)
+        $year = date('y'); // ปี 2 หลักสุดท้าย (25 สำหรับ 2025)
+        $month = date('m'); // เดือน 2 หลัก (05 สำหรับเดือนพฤษภาคม)
         
-        $latestInvoice = self::where('company_id', $companyId)
-            ->where('invoice_number', 'like', "{$prefix}{$date}%")
+        // หาเลขลำดับสูงสุดของบริษัทในเดือนปีนี้
+        $pattern = $prefix . $companyIdFormatted . $year . $month . '%';
+        
+        $latestInvoice = self::withTrashed()
+            ->where('invoice_number', 'LIKE', $pattern)
+            ->where('company_id', $companyId)
             ->orderBy('invoice_number', 'desc')
             ->first();
-            
+        
+        $nextSequence = 1; // เริ่มต้นที่ 1 สำหรับเดือนใหม่
+        
         if ($latestInvoice) {
-            $num = (int) substr($latestInvoice->invoice_number, strlen($prefix.$date));
-            $nextNum = $num + 1;
-        } else {
-            $nextNum = 1;
+            // ถ้ามีเลขล่าสุดในเดือนนี้ ดึง 4 หลักสุดท้ายและเพิ่มค่า
+            $lastPart = substr($latestInvoice->invoice_number, -4);
+            if (is_numeric($lastPart)) {
+                $nextSequence = (int)$lastPart + 1;
+            }
         }
         
-        return $prefix . $date . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
+        // สร้างเลขที่เอกสารในรูปแบบใหม่
+        $invoiceNumber = $prefix . $companyIdFormatted . $year . $month . str_pad($nextSequence, 4, '0', STR_PAD_LEFT);
+        
+        // ตรวจสอบซ้ำและเพิ่มลำดับจนกว่าจะไม่ซ้ำ
+        while (self::withTrashed()->where('invoice_number', $invoiceNumber)->exists()) {
+            $nextSequence++;
+            $invoiceNumber = $prefix . $companyIdFormatted . $year . $month . str_pad($nextSequence, 4, '0', STR_PAD_LEFT);
+        }
+        
+        return $invoiceNumber;
     }
 }

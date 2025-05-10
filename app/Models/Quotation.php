@@ -128,4 +128,47 @@ class Quotation extends Model
     {
         return $this->expiry_date < now();
     }
+    
+    /**
+     * Generate a unique quotation number with format QT + COMPANY_ID + YY + MM + SEQUENCE
+     * Example: QT0125050001 (where 01=company_id, 25=year, 05=month, 0001=sequence)
+     */
+    public static function generateQuotationNumber()
+    {
+        $prefix = 'QT';
+        $companyId = session('company_id', 1);
+        $companyIdFormatted = str_pad($companyId, 2, '0', STR_PAD_LEFT); // รหัสบริษัท 2 หลัก (01, 02, ...)
+        $year = date('y'); // ปี 2 หลักสุดท้าย (25 สำหรับ 2025)
+        $month = date('m'); // เดือน 2 หลัก (05 สำหรับเดือนพฤษภาคม)
+        
+        // หาเลขลำดับสูงสุดของบริษัทในเดือนปีนี้
+        $pattern = $prefix . $companyIdFormatted . $year . $month . '%';
+        
+        $latestQuotation = self::withTrashed()
+            ->where('quotation_number', 'LIKE', $pattern)
+            ->where('company_id', $companyId)
+            ->orderBy('quotation_number', 'desc')
+            ->first();
+        
+        $nextSequence = 1; // เริ่มต้นที่ 1 สำหรับเดือนใหม่
+        
+        if ($latestQuotation) {
+            // ถ้ามีเลขล่าสุดในเดือนนี้ ดึง 4 หลักสุดท้ายและเพิ่มค่า
+            $lastPart = substr($latestQuotation->quotation_number, -4);
+            if (is_numeric($lastPart)) {
+                $nextSequence = (int)$lastPart + 1;
+            }
+        }
+        
+        // สร้างเลขที่เอกสารในรูปแบบใหม่
+        $quotationNumber = $prefix . $companyIdFormatted . $year . $month . str_pad($nextSequence, 4, '0', STR_PAD_LEFT);
+        
+        // ตรวจสอบซ้ำและเพิ่มลำดับจนกว่าจะไม่ซ้ำ
+        while (self::withTrashed()->where('quotation_number', $quotationNumber)->exists()) {
+            $nextSequence++;
+            $quotationNumber = $prefix . $companyIdFormatted . $year . $month . str_pad($nextSequence, 4, '0', STR_PAD_LEFT);
+        }
+        
+        return $quotationNumber;
+    }
 }

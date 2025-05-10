@@ -259,7 +259,7 @@
                                 </tr>
                                 <tr>
                                     <td class="py-1 text-gray-600">ชื่อผู้ติดต่อและที่อยู่จัดส่ง:</td>
-                                    <td class="py-1">{{ $deliveryOrder->shipping_address }}</td>
+                                    <td class="py-1">{{ $deliveryOrder->delivery_address }}</td>
                                 </tr>
                             </table>
                         </div>
@@ -282,7 +282,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse($deliveryOrder->deliveryOrderItems as $item)
+                                    @forelse($deliveryOrder->items as $item)
                                         <tr class="hover:bg-gray-50">
                                             <td class="py-2 px-4 border-b text-center">{{ $loop->iteration }}</td>
 

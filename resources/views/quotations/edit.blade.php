@@ -469,8 +469,71 @@
                 document.getElementById('total').textContent = totalAmount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
                 
                 // อัปเดตค่าภาษีที่แสดง
-                document.querySelector('span.text-sm.font-medium:contains("ภาษีมูลค่าเพิ่ม")').textContent = `ภาษีมูลค่าเพิ่ม (${taxRate}%):`;
+                const taxLabel = document.querySelector('.text-sm.font-medium:nth-child(1)');
+                if (taxLabel) {
+                    taxLabel.textContent = `ภาษีมูลค่าเพิ่ม (${taxRate}%):`;
+                }
             }
+
+            // เพิ่มฟังก์ชันสำหรับการส่งฟอร์ม
+            document.getElementById('quotationForm').addEventListener('submit', function(e) {
+                e.preventDefault(); // ป้องกันการส่งฟอร์มแบบปกติ
+                
+                try {
+                    // รวบรวมข้อมูลรายการสินค้าทั้งหมด
+                    const products = [];
+                    const rows = document.querySelectorAll('#product-list .product-row');
+                    
+                    rows.forEach(row => {
+                        const productId = row.querySelector('.product-select').value;
+                        
+                        if (!productId) {
+                            throw new Error('กรุณาเลือกสินค้าให้ครบทุกรายการ');
+                        }
+                        
+                        const product = {
+                            product_id: productId,
+                            quantity: parseFloat(row.querySelector('.quantity').value) || 0,
+                            unit_id: row.querySelector('.unit-select').value,
+                            unit_price: parseFloat(row.querySelector('.unit-price').value) || 0,
+                            discount_percentage: parseFloat(row.querySelector('.discount-percentage').value) || 0
+                        };
+                        
+                        // เพิ่ม ID หากเป็นรายการที่มีอยู่แล้ว
+                        const itemIdInput = row.querySelector('input[name$=".id"]');
+                        if (itemIdInput) {
+                            product.id = itemIdInput.value;
+                        }
+                        
+                        products.push(product);
+                    });
+                    
+                    if (products.length === 0) {
+                        throw new Error('กรุณาเพิ่มอย่างน้อย 1 รายการสินค้า');
+                    }
+                    
+                    // สร้าง hidden input สำหรับ products_json
+                    let productsJsonInput = document.getElementById('products_json');
+                    if (!productsJsonInput) {
+                        productsJsonInput = document.createElement('input');
+                        productsJsonInput.type = 'hidden';
+                        productsJsonInput.id = 'products_json';
+                        productsJsonInput.name = 'products_json';
+                        this.appendChild(productsJsonInput);
+                    }
+                    
+                    // แปลงข้อมูลเป็น JSON และเก็บลงใน hidden input
+                    productsJsonInput.value = JSON.stringify(products);
+                    console.log('Products JSON:', productsJsonInput.value);
+                    
+                    // ส่งฟอร์ม
+                    this.submit();
+                    
+                } catch (error) {
+                    alert(error.message);
+                    console.error(error);
+                }
+            });
         });
     </script>
 

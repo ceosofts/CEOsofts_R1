@@ -131,11 +131,9 @@ class DeliveryOrderController extends Controller
             $deliveryOrder->customer_id = $request->customer_id;
             $deliveryOrder->delivery_number = $request->delivery_number;
             $deliveryOrder->delivery_date = $request->delivery_date;
-            $deliveryOrder->expected_delivery_date = null;
+            $deliveryOrder->status = $request->delivery_status; // กำหนดค่าให้กับคอลัมน์ status
             $deliveryOrder->delivery_status = $request->delivery_status;
-            $deliveryOrder->shipping_address = $request->shipping_address;
-            // ลบบรรทัดนี้
-            // $deliveryOrder->shipping_contact = $request->shipping_contact;
+            $deliveryOrder->delivery_address = $request->shipping_address;
             $deliveryOrder->shipping_method = $request->shipping_method;
             $deliveryOrder->tracking_number = $request->tracking_number;
             
@@ -191,7 +189,7 @@ class DeliveryOrderController extends Controller
      */
     public function show(DeliveryOrder $deliveryOrder)
     {
-        $deliveryOrder->load(['order', 'customer', 'deliveryOrderItems.product', 'creator', 'approver']);
+        $deliveryOrder->load(['order', 'customer', 'items.product', 'creator', 'approver']);
         
         return view('delivery_orders.show', [
             'deliveryOrder' => $deliveryOrder
@@ -203,7 +201,29 @@ class DeliveryOrderController extends Controller
      */
     public function edit(DeliveryOrder $deliveryOrder)
     {
-        $deliveryOrder->load(['order.customer', 'order.items.product', 'deliveryOrderItems.product']);
+        // โหลดข้อมูลที่เกี่ยวข้องทั้งหมด รวมถึงความสัมพันธ์ unit ของ order item
+        $deliveryOrder->load([
+            'order.customer', 
+            'order.items.product', 
+            'order.items.unit', // เพิ่มการโหลด unit ของ order item
+            'items.product'
+        ]);
+        
+        // สร้างข้อมูลหน่วยสินค้าสำหรับแสดงในหน้า view (แทนการอัปเดตลงฐานข้อมูล)
+        $unitMapping = [];
+        foreach ($deliveryOrder->items as $item) {
+            // หาข้อมูลจากรายการในใบสั่งซื้อ
+            $orderItem = $deliveryOrder->order->items->first(function ($orderItem) use ($item) {
+                return $orderItem->product_id == $item->product_id;
+            });
+            
+            // ถ้าพบรายการใบสั่งซื้อที่ตรงกัน และมีความสัมพันธ์กับ unit ให้เก็บค่าไว้ใน array
+            if ($orderItem && $orderItem->unit) {
+                $unitMapping[$item->id] = $orderItem->unit->name;
+            } else {
+                $unitMapping[$item->id] = ''; // กำหนดค่าว่างถ้าไม่พบข้อมูล
+            }
+        }
         
         $orders = Order::where(function($query) {
             $query->where('status', 'confirmed')
@@ -222,6 +242,7 @@ class DeliveryOrderController extends Controller
             'deliveryOrder' => $deliveryOrder,
             'orders' => $orders,
             'users' => $users,
+            'unitMapping' => $unitMapping, // ส่ง mapping ของหน่วยสินค้าไปยังหน้า view
         ]);
     }
 
@@ -235,7 +256,6 @@ class DeliveryOrderController extends Controller
             'delivery_status' => 'required|in:pending,processing,shipped,delivered,partial_delivered,cancelled',
             'shipping_address' => 'required|string',
             'shipping_method' => 'required|string',
-            // ลบการตรวจสอบความถูกต้อง approved_by
         ]);
 
         try {
@@ -245,7 +265,7 @@ class DeliveryOrderController extends Controller
             // อัปเดตข้อมูลพื้นฐาน
             $deliveryOrder->delivery_date = $request->delivery_date;
             $deliveryOrder->delivery_status = $request->delivery_status;
-            $deliveryOrder->shipping_address = $request->shipping_address;
+            $deliveryOrder->delivery_address = $request->shipping_address; // ใช้ delivery_address แทน shipping_address
             $deliveryOrder->shipping_method = $request->shipping_method;
             $deliveryOrder->tracking_number = $request->tracking_number;
             
@@ -264,10 +284,6 @@ class DeliveryOrderController extends Controller
             
             $deliveryOrder->notes = $notes;
             
-            // ลบการอัพเดตคอลัมน์ approved_by และ approved_at ที่ไม่มีในฐานข้อมูล
-            // $deliveryOrder->approved_by = $request->approved_by;
-            // $deliveryOrder->approved_at = now();
-            
             $deliveryOrder->save();
 
             // อัพเดทรายการสินค้า
@@ -276,10 +292,11 @@ class DeliveryOrderController extends Controller
                     if ($itemId) {
                         $item = DeliveryOrderItem::find($itemId);
                         if ($item) {
+                            // แก้ไขการอัพเดต เพิ่มฟิลด์ unit กลับมา เนื่องจากได้เพิ่มคอลัมน์ในฐานข้อมูลแล้ว
                             $item->update([
                                 'description' => $request->input('description')[$index],
                                 'quantity' => $request->input('quantity')[$index],
-                                'unit' => $request->input('unit')[$index],
+                                'unit' => $request->input('unit')[$index], // เพิ่มฟิลด์นี้กลับมา
                                 'status' => $request->input('status')[$index] ?? 'pending',
                                 'notes' => $request->input('item_notes')[$index] ?? null,
                             ]);
@@ -297,7 +314,7 @@ class DeliveryOrderController extends Controller
                             'product_id' => $request->input('new_product_id')[$i],
                             'description' => $request->input('new_description')[$i],
                             'quantity' => $request->input('new_quantity')[$i],
-                            'unit' => $request->input('new_unit')[$i],
+                            'unit' => $request->input('new_unit')[$i], // เพิ่มฟิลด์นี้กลับมาเนื่องจากได้เพิ่มคอลัมน์ในฐานข้อมูลแล้ว
                             'status' => $request->input('new_status')[$i] ?? 'pending',
                             'notes' => $request->input('new_item_notes')[$i] ?? null,
                         ]);
@@ -347,7 +364,7 @@ class DeliveryOrderController extends Controller
             DB::beginTransaction();
             
             // ลบรายการสินค้าทั้งหมดที่เกี่ยวข้อง
-            $deliveryOrder->deliveryOrderItems()->delete();
+            $deliveryOrder->items()->delete();
             
             // ลบใบส่งสินค้า
             $deliveryOrder->delete();
@@ -437,7 +454,7 @@ class DeliveryOrderController extends Controller
         // ได้จำกัดการเข้าถึงตาม scope ของ company ที่กำหนดใน middleware แล้ว)
         
         // โหลด relation ที่จำเป็น
-        $deliveryOrder->load(['customer', 'order', 'deliveryOrderItems.product', 'company']);
+        $deliveryOrder->load(['customer', 'order', 'items.product', 'company']);
         
         // แสดงหน้า pdf-view โดยตรง
         return view('delivery_orders.pdf-view', [
