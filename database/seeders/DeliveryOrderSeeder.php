@@ -54,9 +54,10 @@ class DeliveryOrderSeeder extends Seeder
                     DB::beginTransaction();
 
                     // สร้างเลขที่ใบส่งสินค้า
-                    $year = date('Y');
+                    $companyCode = str_pad($order->company_id, 2, '0', STR_PAD_LEFT);
+                    $shortYear = date('y'); // ปีแบบย่อ 2 หลัก
                     $month = date('m');
-                    $deliveryNumber = 'DO' . $year . $month . str_pad($count + 1, 4, '0', STR_PAD_LEFT);
+                    $deliveryNumber = "DO{$companyCode}{$shortYear}{$month}" . str_pad($count + 1, 4, '0', STR_PAD_LEFT);
                     
                     // สุ่มข้อมูลต่างๆ
                     $deliveryDate = $faker->dateTimeBetween('-1 month', '+1 month')->format('Y-m-d');

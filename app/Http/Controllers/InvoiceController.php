@@ -108,7 +108,8 @@ class InvoiceController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
         
-        $invoiceNumber = $this->generateInvoiceNumber();
+        // ใช้เมธอด generateInvoiceNumber จากโมเดล Invoice
+        $invoiceNumber = Invoice::generateInvoiceNumber();
         
         return view('invoices.create', compact('customers', 'products', 'invoiceNumber', 'order', 'eligibleOrders'));
     }
@@ -131,8 +132,8 @@ class InvoiceController extends Controller
                 ->exists();
             
             if ($existingInvoice) {
-                // กรณีมีเลขซ้ำให้สร้างเลขใหม่
-                $invoiceNumber = $this->generateInvoiceNumber(true); // true = บังคับให้สร้างเลขใหม่
+                // กรณีมีเลขซ้ำให้สร้างเลขใหม่จากโมเดล
+                $invoiceNumber = Invoice::generateInvoiceNumber();
                 Log::info('พบเลขใบแจ้งหนี้ซ้ำ สร้างเลขใหม่: ' . $invoiceNumber);
             }
             

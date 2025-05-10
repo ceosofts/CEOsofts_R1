@@ -108,7 +108,9 @@ class QuotationSeeder extends Seeder
             try {
                 // สร้างเลขที่เอกสารตามรูปแบบใหม่
                 $seqNumber = str_pad($index + 1, 4, '0', STR_PAD_LEFT);
-                $quotationNumber = "QT{$year}{$month}{$seqNumber}";
+                $companyCode = str_pad($company->id, 2, '0', STR_PAD_LEFT);
+                $shortYear = date('y'); // เปลี่ยนจาก Y เป็น y เพื่อให้เป็น 2 หลัก
+                $quotationNumber = "QT{$companyCode}{$shortYear}{$month}{$seqNumber}";
                 
                 // เลือกพนักงานขายแบบสุ่ม (ถ้ามี)
                 $salesPersonId = null;
@@ -171,7 +173,9 @@ class QuotationSeeder extends Seeder
             try {
                 // สร้างเลขที่ใบเสนอราคาสำหรับใบที่ 2
                 $seqNumber = str_pad($index + 1 + count($customers), 4, '0', STR_PAD_LEFT);
-                $approvedQuotationNumber = "QT{$year}{$month}{$seqNumber}";
+                $companyCode = str_pad($company->id, 2, '0', STR_PAD_LEFT);
+                $shortYear = date('y'); // ปีแบบย่อ 2 หลัก
+                $approvedQuotationNumber = "QT{$companyCode}{$shortYear}{$month}{$seqNumber}";
                 
                 // เลือกพนักงานขายแบบสุ่ม (ถ้ามี) สำหรับใบที่ 2
                 $salesPersonId = null;

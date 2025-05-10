@@ -210,16 +210,17 @@ class OrderSeeder extends Seeder
                     
             // สุ่มวันที่สั่งซื้อในช่วง 3 เดือนที่ผ่านมา
             $orderDate = Carbon::now()->subDays(rand(0, 90));
-            $year = $orderDate->format('Y');
+            $shortYear = $orderDate->format('y');
             $month = $orderDate->format('m');
+            $companyCode = str_pad($company->id, 2, '0', STR_PAD_LEFT);
                     
-            // สร้างเลขที่ใบสั่งขายตามรูปแบบใหม่: SO{YYYY}{MM}{NNNN}
-            $orderNumber = sprintf("SO%s%s%04d", $year, $month, $i + 1);
+            // สร้างเลขที่ใบสั่งขายตามรูปแบบใหม่: SO{CC}{YY}{MM}{NNNN}
+            $orderNumber = "SO{$companyCode}{$shortYear}{$month}" . str_pad($i + 1, 4, '0', STR_PAD_LEFT);
             
             // ตรวจสอบว่าเลขที่ซ้ำหรือไม่
             while (Order::withTrashed()->where('order_number', $orderNumber)->exists()) {
                 $i++;
-                $orderNumber = sprintf("SO%s%s%04d", $year, $month, $i + 1);
+                $orderNumber = "SO{$companyCode}{$shortYear}{$month}" . str_pad($i + 1, 4, '0', STR_PAD_LEFT);
             }
                     
             // กำหนดสถานะ
