@@ -323,7 +323,7 @@
                 <div class="signature-line">ผู้เสนอราคา</div>
             </div>
             <div class="signature">
-                <div class="signature-line">ผู้มีอำนาจลงนาม</div>
+                <div class="signature-line">ลูกค้าผู้มีอำนาจลงนาม</div>
             </div>
         </div>
     </div>

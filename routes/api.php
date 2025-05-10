@@ -62,6 +62,25 @@ Route::get('/customers/{customer}', function (App\Models\Customer $customer) {
     ]);
 });
 
+// API สำหรับดึงข้อมูลสินค้า (หน่วยและราคา)
+Route::get('/products/{product}', function (App\Models\Product $product) {
+    // โหลด unit relationship เพื่อให้แน่ใจว่าได้ข้อมูลหน่วยครบถ้วน
+    $product->load('unit');
+    
+    return response()->json([
+        'id' => $product->id,
+        'name' => $product->name,
+        'code' => $product->code,
+        'sku' => $product->sku,
+        'selling_price' => $product->price, // ใช้ price แทน selling_price
+        'default_unit_id' => $product->unit_id, // ใช้ unit_id แทน default_unit_id
+        'unit' => $product->unit ? [
+            'id' => $product->unit->id,
+            'name' => $product->unit->name
+        ] : null
+    ]);
+});
+
 // แก้ไขเส้นทาง API โดยไม่ใช้ middleware web และกำหนดชื่อที่ชัดเจน
 Route::get('orders/{id}/products', [OrderController::class, 'getOrderProducts'])->name('api.orders.products');
 

@@ -304,11 +304,46 @@
                 
                 if (target.classList.contains('product-select')) {
                     const selectedOption = target.options[target.selectedIndex];
-                    if (selectedOption) {
+                    if (selectedOption && selectedOption.value) {
                         const price = selectedOption.dataset.price || 0;
                         const code = selectedOption.dataset.code || '';
                         row.querySelector('.product-code').value = code;
                         row.querySelector('.unit-price').value = price;
+                        
+                        console.log('Fetching product details for ID:', selectedOption.value);
+                        
+                        // Fetch product details via AJAX to get the default unit and price
+                        fetch(`/api/products/${selectedOption.value}`)
+                            .then(response => {
+                                console.log('API Response status:', response.status);
+                                if (!response.ok) {
+                                    throw new Error('Network response was not ok');
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                console.log('Product data received:', data);
+                                
+                                // Set unit if available
+                                if (data.default_unit_id) {
+                                    console.log('Setting default unit to:', data.default_unit_id);
+                                    const unitSelect = row.querySelector('.unit-select');
+                                    unitSelect.value = data.default_unit_id;
+                                }
+                                
+                                // Set price if available and not already set
+                                if (data.selling_price && (!row.querySelector('.unit-price').value || row.querySelector('.unit-price').value == '0')) {
+                                    console.log('Setting price to:', data.selling_price);
+                                    row.querySelector('.unit-price').value = data.selling_price;
+                                }
+                                
+                                // Recalculate row total after setting the values
+                                calculateRowTotal(row);
+                            })
+                            .catch(error => {
+                                console.error('Error fetching product details:', error);
+                            });
+                            
                         calculateRowTotal(row);
                     }
                 } else if (target.classList.contains('quantity') || 

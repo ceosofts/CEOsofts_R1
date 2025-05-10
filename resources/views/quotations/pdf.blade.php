@@ -178,7 +178,7 @@
         </div>
         <div class="text-center">
             <div class="signature-line">
-                <p>ผู้มีอำนาจลงนาม</p>
+                <p>ล๔กค้าผู้มีอำนาจลงนาม</p>
             </div>
         </div>
     </div>
