@@ -258,12 +258,8 @@
                                     <td class="py-1">{{ $deliveryOrder->customer->phone ?? '-' }}</td>
                                 </tr>
                                 <tr>
-                                    <td class="py-1 text-gray-600">ที่อยู่จัดส่ง:</td>
-                                    <td class="py-1">{{ $deliveryOrder->shipping_address }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="py-1 text-gray-600">ผู้ติดต่อ:</td>
-                                    <td class="py-1">{{ $deliveryOrder->shipping_contact }}</td>
+                                    <td class="py-1 text-gray-600">ชื่อผู้ติดต่อและที่อยู่จัดส่ง:</td>
+                                    <td class="py-1">{{ $deliveryOrder->delivery_address }}</td>
                                 </tr>
                             </table>
                         </div>
@@ -276,6 +272,7 @@
                             <table class="min-w-full bg-white">
                                 <thead class="bg-gray-100">
                                     <tr>
+                                        <th class="py-2 px-4 border-b text-center">ลำดับ</th>
                                         <th class="py-2 px-4 border-b text-left">รหัสสินค้า</th>
                                         <th class="py-2 px-4 border-b text-left">รายการ</th>
                                         <th class="py-2 px-4 border-b text-center">จำนวน</th>
@@ -285,15 +282,14 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse($deliveryOrder->deliveryOrderItems as $item)
+                                    @forelse($deliveryOrder->items as $item)
                                         <tr class="hover:bg-gray-50">
+                                            <td class="py-2 px-4 border-b text-center">{{ $loop->iteration }}</td>
+
                                             <td class="py-2 px-4 border-b">
-                                                @if($item->product)
-                                                    {{ $item->product->sku ?? '-' }}
-                                                @else
-                                                    <span class="text-red-500">ไม่พบสินค้า</span>
-                                                @endif
+                                                {{ $item->product->code ?? $item->product->sku ?? '-' }}<!-- แสดงรหัสสินค้า (code หรือ sku) -->
                                             </td>
+
                                             <td class="py-2 px-4 border-b">{{ $item->description }}</td>
                                             <td class="py-2 px-4 border-b text-center">{{ number_format($item->quantity) }}</td>
                                             <td class="py-2 px-4 border-b text-right">{{ $item->unit }}</td>
@@ -306,7 +302,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="6" class="py-4 text-center text-gray-500">ไม่พบรายการสินค้า</td>
+                                            <td colspan="7" class="py-4 text-center text-gray-500">ไม่พบรายการสินค้า</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -374,107 +370,8 @@
         </div>
     </div>
 
-    <!-- Modal สำหรับดูตัวอย่างใบส่งสินค้า -->
-    <div id="preview-modal" class="modal-hidden fixed inset-0 z-50 overflow-auto bg-black bg-opacity-50">
-        <div class="modal-content bg-white rounded-lg shadow-xl mx-auto my-8 p-6 max-w-5xl w-11/12">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">ตัวอย่างก่อนพิมพ์</h3>
-                <button type="button" id="close-preview" class="text-gray-400 hover:text-gray-500 focus:outline-none">
-                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-            <div id="preview-content" class="print-section bg-white text-black p-8">
-                <!-- ข้อมูลบริษัท -->
-                <div class="text-center mb-6">
-                    <h1 class="text-xl font-bold">{{ $deliveryOrder->company->name ?? 'บริษัท ซีอีโอซอฟต์ จำกัด' }}</h1>
-                    <p>{{ $deliveryOrder->company->address ?? '123 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110' }}</p>
-                    <p>โทร: {{ $deliveryOrder->company->phone ?? '02-123-4567' }}, อีเมล: {{ $deliveryOrder->company->email ?? 'info@ceosofts.com' }}</p>
-                </div>
-
-                <!-- หัวข้อเอกสาร -->
-                <div class="border-b-2 border-gray-800 mb-6">
-                    <h2 class="text-center text-2xl font-bold">ใบส่งสินค้า</h2>
-                </div>
-
-                <!-- ข้อมูลลูกค้าและเลขที่เอกสาร -->
-                <div class="grid-cols-2 mb-6">
-                    <div>
-                        <p><strong>ลูกค้า:</strong> {{ $deliveryOrder->customer->name ?? '-' }}</p>
-                        <p>{{ $deliveryOrder->shipping_address }}</p>
-                        <p>โทร: {{ $deliveryOrder->customer->phone ?? '-' }}</p>
-                        <p>อีเมล: {{ $deliveryOrder->customer->email ?? '-' }}</p>
-                    </div>
-                    <div class="text-right">
-                        <p><strong>เลขที่:</strong> {{ $deliveryOrder->delivery_number }}</p>
-                        <p><strong>วันที่:</strong> {{ $deliveryOrder->delivery_date->format('d/m/Y') }}</p>
-                        <p><strong>เลขที่ใบสั่งขาย:</strong> 
-                            {{ $deliveryOrder->order ? $deliveryOrder->order->order_number : '-' }}
-                        </p>
-                        <p><strong>วิธีจัดส่ง:</strong> {{ $deliveryOrder->shipping_method ?? '-' }}</p>
-                        <p><strong>เลขพัสดุ:</strong> {{ $deliveryOrder->tracking_number ?? '-' }}</p>
-                    </div>
-                </div>
-
-                <!-- รายการสินค้า -->
-                <table class="min-w-full border border-gray-300 mb-6">
-                    <thead>
-                        <tr class="bg-gray-200">
-                            <th class="py-2 px-4 border text-left">ลำดับ</th>
-                            <th class="py-2 px-4 border text-left">รายการ</th>
-                            <th class="py-2 px-4 border text-right">จำนวน</th>
-                            <th class="py-2 px-4 border text-right">หน่วย</th>
-                            <th class="py-2 px-4 border text-right">สถานะ</th>
-                            <th class="py-2 px-4 border text-right">หมายเหตุ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($deliveryOrder->deliveryOrderItems as $index => $item)
-                        <tr>
-                            <td class="py-2 px-4 border">{{ $index + 1 }}</td>
-                            <td class="py-2 px-4 border">{{ $item->description }}</td>
-                            <td class="py-2 px-4 border text-right">{{ number_format($item->quantity) }}</td>
-                            <td class="py-2 px-4 border text-right">{{ $item->unit }}</td>
-                            <td class="py-2 px-4 border text-center">
-                                <span class="px-2 py-1 rounded-full text-xs font-semibold {{ getStatusClass($item->status, $statusClasses) }}">
-                                    {{ ucfirst($item->status) }}
-                                </span>
-                            </td>
-                            <td class="py-2 px-4 border text-right">{{ $item->notes ?? '-' }}</td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="6" class="py-2 px-4 border text-center">ไม่มีรายการสินค้า</td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-
-                <!-- หมายเหตุ -->
-                @if($deliveryOrder->notes)
-                <div class="mb-6">
-                    <h4 class="font-semibold mb-2">หมายเหตุ</h4>
-                    <p class="p-3 border rounded">{{ $deliveryOrder->notes }}</p>
-                </div>
-                @endif
-
-                <!-- ส่วนลงนาม -->
-                <div class="grid grid-cols-2 gap-6 mt-12">
-                    <div class="text-center">
-                        <div class="border-t border-gray-400 pt-2 mt-12 inline-block w-48">
-                            <p>ผู้ส่งมอบสินค้า</p>
-                        </div>
-                    </div>
-                    <div class="text-center">
-                        <div class="border-t border-gray-400 pt-2 mt-12 inline-block w-48">
-                            <p>ผู้รับสินค้า</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- นำเข้าส่วน Modal Preview -->
+    @include('delivery_orders.preview', ['deliveryOrder' => $deliveryOrder, 'statusClasses' => $statusClasses])
 
     <!-- เรียกใช้ไฟล์ CSS สำหรับการแสดงตัวอย่างก่อนพิมพ์ -->
     <link rel="stylesheet" href="{{ asset('css/quotation-preview.css') }}">
@@ -514,119 +411,41 @@
                 }
             });
             
-            // ปุ่มพิมพ์
+            // ปุ่มพิมพ์ - แก้ไขใหม่
             document.getElementById('print-button').addEventListener('click', function() {
-                const printWindow = window.open('', '_blank');
-                const printContent = document.getElementById('preview-content').cloneNode(true);
+                // แสดงสถานะกำลังโหลด
+                this.disabled = true;
+                const originalHtml = this.innerHTML;
+                this.innerHTML = `
+                    <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    กำลังโหลด...
+                `;
                 
-                printWindow.document.write(`
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <title>พิมพ์ใบส่งสินค้า</title>
-                        <meta charset="utf-8">
-                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                        <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
-                        <style>
-                            @page {
-                                size: A4;
-                                margin: 10mm;
-                            }
-                            body {
-                                font-family: 'Sarabun', sans-serif;
-                                margin: 0;
-                                padding: 0;
-                                font-size: 10pt;
-                                line-height: 1.3;
-                            }
-                            .container {
-                                max-width: 190mm;
-                                margin: 0 auto;
-                                padding: 0;
-                            }
-                            .grid-cols-2 {
-                                display: flex;
-                                justify-content: space-between;
-                                width: 100%;
-                                margin-bottom: 15px;
-                            }
-                            .grid-cols-2 > div {
-                                width: 48%;
-                            }
-                            .text-right {
-                                text-align: right;
-                            }
-                            .text-center {
-                                text-align: center;
-                            }
-                            .font-bold {
-                                font-weight: bold;
-                            }
-                            .mb-6 {
-                                margin-bottom: 15px;
-                            }
-                            .border-b-2 {
-                                border-bottom: 2px solid #000;
-                                margin-bottom: 15px;
-                                padding-bottom: 5px;
-                            }
-                            table {
-                                width: 100%;
-                                border-collapse: collapse;
-                            }
-                            th, td {
-                                border: 1px solid #ddd;
-                                padding: 4px 6px;
-                                font-size: 9pt;
-                            }
-                            th {
-                                background-color: #f0f0f0;
-                                font-weight: bold;
-                            }
-                            .mt-12 {
-                                margin-top: 30px;
-                            }
-                            .w-48 {
-                                width: 48mm;
-                            }
-                            .border-t {
-                                border-top: 1px solid #ddd;
-                            }
-                            .pt-2 {
-                                padding-top: 5px;
-                            }
-                            .inline-block {
-                                display: inline-block;
-                            }
-                            h1 { font-size: 14pt; margin-bottom: 5px; }
-                            h2 { font-size: 12pt; margin-bottom: 5px; }
-                            p { margin: 1px 0; font-size: 9pt; }
-                            .bg-amber-100 { background-color: #FEF3C7; }
-                            .text-amber-800 { color: #92400E; }
-                            .rounded-full { border-radius: 9999px; }
-                            .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
-                            .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
-                            .text-xs { font-size: 0.75rem; }
-                            .font-semibold { font-weight: 600; }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="container">
-                            ${printContent.outerHTML}
-                        </div>
-                        <script>
-                            window.onload = function() {
-                                window.print();
-                                setTimeout(function() { window.close(); }, 500);
-                            };
-                        </script>
-                    </body>
-                    </html>
-                `);
+                // เปิด URL โดยตรงในหน้าต่างใหม่แทนการใช้ fetch API
+                const printUrl = "{{ route('delivery-orders.print', $deliveryOrder) }}";
+                const printWindow = window.open(printUrl, '_blank');
                 
-                printWindow.document.close();
+                if (!printWindow) {
+                    alert('โปรดอนุญาตให้เว็บไซต์เปิดป๊อปอัพหน้าต่างใหม่');
+                }
+                
+                // คืนสถานะปุ่ม
+                setTimeout(() => {
+                    this.disabled = false;
+                    this.innerHTML = originalHtml;
+                }, 1000);
             });
         });
+
+        // เพิ่มฟังก์ชันสำหรับการลบใบส่งสินค้า
+        function confirmDelete() {
+            if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบใบส่งสินค้านี้?')) {
+                document.getElementById('delete-form').submit();
+            }
+        }
     </script>
 
     <style>

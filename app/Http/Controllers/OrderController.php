@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Quotation;
+use App\Models\Company;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,32 +20,189 @@ use Illuminate\Support\Facades\Schema; // เพิ่มบรรทัดน�
 class OrderController extends Controller
 {
     /**
-     * Display a listing of the orders.
+     * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $query = Order::query()->with('customer');
+        // ดำเนินการสร้างข้อมูลตัวอย่างถ้ามีการร้องขอ (เฉพาะโหมด debug)
+        if ($request->has('seed_sample')) {
+            try {
+                // รันคำสั่ง migration เพื่อเพิ่มคอลัมน์ที่จำเป็นก่อน
+                if (config('app.debug')) {
+                    if (!Schema::hasColumn('orders', 'tax_rate')) {
+                        \Illuminate\Support\Facades\Artisan::call('migrate', [
+                            '--path' => 'database/migrations/0001_01_01_00070_add_tax_rate_to_orders_table.php',
+                            '--force' => true
+                        ]);
+                        Log::info('เพิ่มคอลัมน์ tax_rate ในตาราง orders เรียบร้อยแล้ว');
+                    }
+                    
+                    if (!Schema::hasColumn('orders', 'shipping_cost')) {
+                        \Illuminate\Support\Facades\Artisan::call('migrate', [
+                            '--path' => 'database/migrations/0001_01_01_00071_add_shipping_cost_to_orders_table.php',
+                            '--force' => true
+                        ]);
+                        Log::info('เพิ่มคอลัมน์ shipping_cost ในตาราง orders เรียบร้อยแล้ว');
+                    }
+                }
+                
+                // เลือกบริษัทหลัก
+                $companyId = session('company_id') ?? session('current_company_id') ?? 1;
+                $company = \App\Models\Company::find($companyId);
+                
+                Log::info('เริ่มการทำงานสร้างข้อมูลตัวอย่าง', [
+                    'company_id' => $companyId,
+                    'company' => $company ? $company->name : 'ไม่พบบริษัท'
+                ]);
+                
+                // สร้างข้อมูลตัวอย่างโดยเรียกใช้ OrderSeeder โดยตรง
+                $seeder = new \Database\Seeders\OrderSeeder();
+                $seeder->run($companyId);
+                
+                // รีเซ็ต Cache สำหรับ Order
+                if (method_exists(\App\Models\Order::class, 'flushCache')) {
+                    \App\Models\Order::flushCache();
+                }
+                
+                return redirect()->route('orders.index')
+                    ->with('success', 'สร้างข้อมูลตัวอย่างเรียบร้อยแล้ว กรุณารีเฟรชหน้าเพื่อดูข้อมูล');
+            } catch (\Exception $e) {
+                Log::error('เกิดข้อผิดพลาดในการสร้างข้อมูลตัวอย่าง', [
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                
+                return redirect()->route('orders.index')
+                    ->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage() . '. กรุณาตรวจสอบ log ไฟล์');
+            }
+        }
 
-        // ค้นหาจากคำค้น
+        // ปรับปรุงการดึงค่า company ID ให้ทำงานได้ดีขึ้น
+        $companyId = session('company_id') ?? session('current_company_id');
+        
+        // กรณีไม่มี company ID ในระบบ แต่เป็น admin ให้ดึงบริษัทแรกในระบบ
+        if (empty($companyId) && Auth::check() && Auth::user()->hasRole('Super Admin')) {
+            $firstCompany = \App\Models\Company::first();
+            if ($firstCompany) {
+                $companyId = $firstCompany->id;
+                // ทำการตั้งค่า session เพื่อให้การใช้งานต่อไปได้ผลลัพธ์
+                session(['company_id' => $companyId]);
+                session(['current_company_id' => $companyId]);
+                
+                Log::info('Auto-setting company_id for Admin', [
+                    'company_id' => $companyId,
+                    'company_name' => $firstCompany->name,
+                    'user_id' => Auth::id(),
+                    'user_email' => Auth::user()->email
+                ]);
+            } else {
+                Log::warning('No companies found in the system');
+            }
+        }
+
+        // เพิ่มการตรวจสอบค่า companyId อีกครั้ง และกำหนดค่าเริ่มต้นเป็น 1 ถ้ายังไม่มี
+        $companyId = $companyId ?? 1;
+        
+        // เริ่ม direct query เพื่อตรวจสอบว่ามีข้อมูลหรือไม่
+        $checkOrdersExist = \App\Models\Order::where('company_id', $companyId)->exists();
+        
+        // บันทึก log เพื่อตรวจสอบค่า company_id
+        Log::info('Orders index called', [
+            'company_id' => $companyId,
+            'session_company_id' => session('company_id'),
+            'current_company_id' => session('current_company_id'),
+            'user_id' => Auth::id(),
+            'orders_exist' => $checkOrdersExist ? 'Yes' : 'No'
+        ]);
+        
+        // เริ่มต้น query
+        $query = \App\Models\Order::query();
+        
+        // ถ้ามี company_id และไม่ใช่ Super Admin ให้กรองตาม company_id
+        // ถ้าเป็น Super Admin และไม่มี company_id ให้แสดงทั้งหมด
+        if ($companyId && !(Auth::check() && Auth::user()->hasRole('Super Admin') && $request->has('show_all'))) {
+            $query->where('company_id', $companyId);
+        }
+        
+        // เพิ่ม eager loading ความสัมพันธ์ที่จำเป็น
+        $query->with(['customer', 'salesPerson']);
+
+        // Search parameter handling
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('order_number', 'like', "%{$search}%")
                   ->orWhere('customer_po_number', 'like', "%{$search}%")
-                  ->orWhereHas('customer', function($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%");
+                  ->orWhereHas('customer', function ($q2) use ($search) {
+                      $q2->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('salesPerson', function ($q2) use ($search) {
+                      $q2->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%");
                   });
             });
         }
 
-        // เรียงลำดับหมายเลขใบสั่งขายล่าสุด (order_number) มาก่อน
-        $orders = $query->orderBy('order_number', 'desc')->paginate(10);
+        // Customer filter
+        if ($request->filled('customer_id')) {
+            $query->where('customer_id', $request->customer_id);
+        }
+
+        // Status filter
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Date range filter
+        if ($request->filled('from_date')) {
+            $query->whereDate('order_date', '>=', $request->from_date);
+        }
+        if ($request->filled('to_date')) {
+            $query->whereDate('order_date', '<=', $request->to_date);
+        }
+
+        // Apply sorting
+        $sortField = $request->input('sort', 'order_number');
+        $sortDirection = $request->input('direction', 'desc');
+        $query->orderBy($sortField, $sortDirection);
+
+        // ก่อนเรียก paginate(), ให้บันทึก raw SQL query เพื่อตรวจสอบ
+        Log::info('Order query', [
+            'sql' => $query->toSql(),
+            'bindings' => $query->getBindings()
+        ]);
         
+        // ใช้ try/catch เพื่อจับ errors ที่อาจเกิดขึ้น
+        try {
+            $orders = $query->paginate(15)->withQueryString();
+            
+            // บันทึกจำนวนใบสั่งขายที่พบ
+            Log::info('Orders found', ['count' => $orders->total()]);
+            
+            // ถ้าไม่พบข้อมูล แต่มีการค้นหา เพิ่มข้อความแจ้งเตือน
+            if ($orders->total() === 0 && $request->anyFilled(['search', 'customer_id', 'status', 'from_date', 'to_date'])) {
+                session()->flash('info', 'ไม่พบข้อมูลใบสั่งขายจากเงื่อนไขที่ระบุ กรุณาลองใหม่อีกครั้ง');
+            }
+        } catch (\Exception $e) {
+            // กรณีมี error ให้เตรียม collection ว่าง
+            Log::error('Error getting orders', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            $orders = collect(); // สร้าง collection ว่าง
+            session()->flash('error', 'เกิดข้อผิดพลาดในการดึงข้อมูล: ' . $e->getMessage());
+        }
+
         return view('orders.index', compact('orders'));
     }
 
     /**
-     * Show the form for creating a new order.
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
      */
     public function create(Request $request)
     {
@@ -73,7 +231,10 @@ class OrderController extends Controller
     }
 
     /**
-     * Store a newly created order in storage.
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
@@ -91,7 +252,7 @@ class OrderController extends Controller
             if ($existingOrder) {
                 // ถ้าเลขซ้ำ ให้สร้างเลขใหม่ทันที
                 $orderNumber = Order::generateOrderNumber();
-                Log::info('เลขใบสั่งขายซ้ำ (รวมถึงรายการที่ถูกลบ) สร้างเลขใหม่: ' . $orderNumber);
+                Log::info('เลขใบสั่งขายซ้ำ สร้างเลขใหม่: ' . $orderNumber);
             }
 
             // ปรับปรุงการ validate ให้มีความยืดหยุ่นมากขึ้น
@@ -100,10 +261,7 @@ class OrderController extends Controller
                 'order_number' => [
                     'required',
                     'string',
-                    // ตรวจสอบซ้ำเฉพาะ order ที่ deleted_at เป็น null
-                    \Illuminate\Validation\Rule::unique('orders')->where(function ($query) {
-                        return $query->whereNull('deleted_at');
-                    }),
+                    Rule::unique('orders')->whereNull('deleted_at'),
                 ],
                 'order_date' => 'required|date',
                 'delivery_date' => 'nullable|date',
@@ -121,17 +279,10 @@ class OrderController extends Controller
                 'discount_type' => 'nullable|in:fixed,percentage',
                 'discount_amount' => 'nullable|numeric|min:0',
                 'customer_po_number' => 'nullable|string',
-                'sales_person_id' => 'nullable|exists:employees,id', // เพิ่ม validation rule
-                // ...existing validation rules...
-            ], [
-                'customer_id.required' => 'กรุณาเลือกลูกค้า',
-                'products.required' => 'กรุณาเพิ่มสินค้าอย่างน้อย 1 รายการ',
-                'products.min' => 'กรุณาเพิ่มสินค้าอย่างน้อย 1 รายการ',
-                'products.*.quantity.min' => 'จำนวนสินค้าต้องมากกว่า 0',
-                'products.*.unit_price.min' => 'ราคาสินค้าต้องไม่ติดลบ',
-                // เพิ่มข้อความแจ้งเตือนสำหรับ validation rules อื่นๆ
+                'sales_person_id' => 'nullable|exists:employees,id',
             ]);
 
+            // เริ่ม transaction
             DB::beginTransaction();
             
             // คำนวณยอดรวม
@@ -158,16 +309,15 @@ class OrderController extends Controller
             // คำนวณยอดรวม
             $totalAmount = $subtotal - $discountValue + $taxAmount + floatval($validated['shipping_cost'] ?? 0);
             
-            // เตรียมข้อมูลสำหรับสร้าง Order ด้วยการกำหนดค่าเริ่มต้นให้ทุกฟิลด์ที่จำเป็น
+            // เตรียมข้อมูลสำหรับสร้าง Order
             $orderData = [
                 'company_id' => session('current_company_id') ?? session('company_id') ?? Auth::user()->company_id ?? 1,
                 'customer_id' => $validated['customer_id'],
-                'order_number' => $orderNumber, // Use the verified order number
+                'order_number' => $orderNumber,
                 'order_date' => $validated['order_date'],
                 'status' => $validated['status'] ?? 'draft',
                 'total_amount' => $totalAmount,
                 'subtotal' => $subtotal,
-                'discount_type' => $discountType,
                 'discount_amount' => $discountValue,
                 'tax_rate' => $taxRate,
                 'tax_amount' => $taxAmount,
@@ -180,102 +330,124 @@ class OrderController extends Controller
                 'customer_po_number' => $validated['customer_po_number'] ?? null,
                 'quotation_id' => $request->quotation_id ?? null,
                 'created_by' => Auth::id(),
-                'sales_person_id' => $request->sales_person_id, // เพิ่มฟิลด์พนักงานขาย
+                'sales_person_id' => $request->sales_person_id,
             ];
             
-            // กำหนด created_at และ updated_at ให้กับ orderData
-            $now = now();
+            // เพิ่มตรวจสอบว่าคอลัมน์ discount_type มีอยู่หรือไม่
+            if (Schema::hasColumn('orders', 'discount_type')) {
+                $orderData['discount_type'] = $discountType;
+            }
+            
+            // กำหนด created_at และ updated_at เป็นรูปแบบที่ SQLite รองรับ
+            $now = now()->format('Y-m-d H:i:s');
             $orderData['created_at'] = $now;
             $orderData['updated_at'] = $now;
 
-            // พยายามสร้าง Record โดยตรงและเก็บ ID ไว้
             Log::info('Creating order with data', ['order_data' => $orderData]);
             
-            // แก้ไขจุดนี้: ใช้ insert แทน create เพื่อข้าม model events และ traits
-            $orderId = DB::table('orders')->insertGetId($orderData);
-            $order = Order::find($orderId);
-            
-            if (!$order) {
-                throw new \Exception('ไม่สามารถสร้างใบสั่งขายได้');
-            }
-            
-            Log::info('Order created', ['order_id' => $order->id]);
-            
-            // สร้างรายการสินค้า
-            foreach ($validated['products'] as $productData) {
-                $product = Product::find($productData['id']);
+            try {
+                // แทนที่จะใช้ DB::table('orders')->insertGetId เราจะใช้ Order::create เพื่อให้ Eloquent จัดการ
+                $order = new Order($orderData);
+                $order->save();
                 
-                // สร้าง OrderItem โดยตรงใน database เพื่อข้าม model events
-                DB::table('order_items')->insert([
-                    'order_id' => $order->id,
-                    'product_id' => $product->id,
-                    'description' => $product->name,
-                    'quantity' => $productData['quantity'],
-                    'unit_price' => $productData['unit_price'],
-                    'unit_id' => $product->unit_id ?? null, // เพิ่ม unit_id
-                    'total' => $productData['quantity'] * $productData['unit_price'],
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
-            
-            // ถ้ามีการสร้างจากใบเสนอราคา ให้อัพเดทสถานะใบเสนอราคา
-            if ($request->quotation_id) {
-                $quotation = Quotation::find($request->quotation_id);
-                if ($quotation) {
-                    $quotation->update(['status' => 'converted']);
+                Log::info('Order created successfully', ['order_id' => $order->id]);
+                
+                // สร้างรายการสินค้า
+                foreach ($validated['products'] as $productData) {
+                    $product = Product::find($productData['id']);
+                    
+                    if (!$product) {
+                        throw new \Exception('ไม่พบข้อมูลสินค้า ID: ' . $productData['id']);
+                    }
+                    
+                    $orderItemData = [
+                        'order_id' => $order->id,
+                        'product_id' => $product->id,
+                        'description' => $product->name,
+                        'quantity' => $productData['quantity'],
+                        'unit_price' => $productData['unit_price'],
+                        'price' => $productData['unit_price'],
+                        'unit_id' => $product->unit_id ?? null,
+                        'total' => $productData['quantity'] * $productData['unit_price'],
+                    ];
+                    
+                    OrderItem::create($orderItemData);
                 }
+                
+                // ถ้ามีการสร้างจากใบเสนอราคา ให้อัพเดทสถานะใบเสนอราคา
+                if ($request->quotation_id) {
+                    $quotation = Quotation::find($request->quotation_id);
+                    if ($quotation) {
+                        $quotation->update(['status' => 'converted']);
+                    }
+                }
+                    
+                // ยืนยันการทำรายการ
+                DB::commit();
+                
+                Log::info('Order process completed successfully', ['order_id' => $order->id]);
+                
+                return redirect()->route('orders.show', $order)
+                    ->with('success', 'สร้างใบสั่งขายสำเร็จ');
+                
+            } catch (\Exception $innerException) {
+                // ถ้าเกิด error ให้ rollback transaction และ throw exception ขึ้นไปให้ catch ข้างนอก
+                DB::rollBack();
+                Log::error('Error creating order or order items', [
+                    'message' => $innerException->getMessage(),
+                    'trace' => $innerException->getTraceAsString()
+                ]);
+                throw $innerException;
             }
-                
-            DB::commit();
             
-            Log::info('Order process completed successfully', ['order_id' => $order->id]);
-            
-            return redirect()->route('orders.show', $order)
-                ->with('success', 'สร้างใบสั่งขายสำเร็จ');
-                
         } catch (\Illuminate\Validation\ValidationException $e) {
-            // เพิ่มการเก็บ log เพื่อ debug
-            Log::warning('Order validation failed with errors:', [
-                'validation_errors_details' => $e->errors()
+            Log::warning('Order validation failed', [
+                'errors' => $e->errors()
             ]);
-            
-            // ใช้ flash session เพื่อให้แน่ใจว่าข้อความผิดพลาดจะแสดง
-            session()->flash('error_message', 'กรุณาตรวจสอบข้อมูลให้ถูกต้อง');
             
             return redirect()->back()
                 ->withErrors($e->errors())
-                ->withInput();
+                ->withInput()
+                ->with('error_message', 'กรุณาตรวจสอบข้อมูลให้ถูกต้อง');
             
         } catch (\Exception $e) {
-            DB::rollBack();
+            // กรณี transaction ยังไม่ถูก rollback
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
             
-            Log::error('Order creation failed with exception:', [
+            Log::error('Order creation failed with exception', [
                 'exception_class' => get_class($e),
                 'message' => $e->getMessage(),
                 'file' => $e->getFile(),
-                'line' => $e->getLine()
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
             ]);
             
-            session()->flash('error_message', 'เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' . $e->getMessage());
-            
             return redirect()->back()
-                ->withInput();
+                ->withInput()
+                ->with('error_message', 'เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' . $e->getMessage());
         }
     }
 
     /**
-     * Display the specified order.
+     * Display the specified resource.
+     *
+     * @param  \App\Models\Order  $order
+     * @return \Illuminate\Http\Response
      */
     public function show(Order $order)
     {
-        $order->load(['customer', 'items.product', 'creator']);
+        $order->load(['customer', 'items.product', 'creator', 'deliveryOrders']);
         
         return view('orders.show', compact('order'));
     }
 
     /**
-     * Show the form for editing the specified order.
+     * Show the form for editing the specified resource.
+     *
+     * @param  \App\Models\Order  $order
+     * @return \Illuminate\Http\Response
      */
     public function edit(Order $order)
     {
@@ -293,7 +465,11 @@ class OrderController extends Controller
     }
 
     /**
-     * Update the specified order in storage.
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Order  $order
+     * @return \Illuminate\Http\Response
      */
     public function update(Request $request, Order $order)
     {
@@ -374,7 +550,7 @@ class OrderController extends Controller
             $totalAmount = $subtotal - $discountAmount + $taxAmount + ($validated['shipping_cost'] ?? 0);
             
             // อัพเดทใบสั่งขาย
-            $order->update([
+            $updateData = [
                 'customer_id' => $validated['customer_id'],
                 'order_number' => $validated['order_number'],
                 'order_date' => $validated['order_date'],
@@ -384,17 +560,30 @@ class OrderController extends Controller
                 'shipping_address' => $validated['shipping_address'] ?? null,
                 'shipping_method' => $validated['shipping_method'] ?? null,
                 'shipping_cost' => $validated['shipping_cost'] ?? 0,
-                // ลบ field ที่ไม่มีในฐานข้อมูลออกชั่วคราว หรือใช้เงื่อนไข Schema::hasColumn
-                // 'subtotal' => $subtotal,
-                // 'discount_type' => $validated['discount_type'] ?? null,
-                // 'discount_amount' => $discountAmount,
-                // 'tax_rate' => $taxRate,
-                // 'tax_amount' => $taxAmount,
                 'total_amount' => $totalAmount,
                 'payment_terms' => $validated['payment_terms'] ?? null,
                 'customer_po_number' => $validated['customer_po_number'] ?? null,
-                'sales_person_id' => $request->sales_person_id, // เพิ่มฟิลด์พนักงานขาย
-            ]);
+                'sales_person_id' => $request->sales_person_id,
+            ];
+            
+            // เพิ่มตรวจสอบคอลัมน์ก่อนอัพเดท
+            if (Schema::hasColumn('orders', 'discount_type')) {
+                $updateData['discount_type'] = $validated['discount_type'] ?? null;
+            }
+            if (Schema::hasColumn('orders', 'subtotal')) {
+                $updateData['subtotal'] = $subtotal;
+            }
+            if (Schema::hasColumn('orders', 'discount_amount')) {
+                $updateData['discount_amount'] = $discountAmount;
+            }
+            if (Schema::hasColumn('orders', 'tax_rate')) {
+                $updateData['tax_rate'] = $taxRate;
+            }
+            if (Schema::hasColumn('orders', 'tax_amount')) {
+                $updateData['tax_amount'] = $taxAmount;
+            }
+            
+            $order->update($updateData);
             
             // ลบรายการสินค้าเก่า (ใช้เทคนิคลบชั่วคราวแทนการลบถาวร)
             foreach ($order->items as $item) {
@@ -455,7 +644,10 @@ class OrderController extends Controller
     }
 
     /**
-     * Remove the specified order from storage.
+     * Remove the specified resource from storage.
+     *
+     * @param  \App\Models\Order  $order
+     * @return \Illuminate\Http\Response
      */
     public function destroy(Order $order)
     {
@@ -514,8 +706,9 @@ class OrderController extends Controller
             'processed_at' => now(),
         ]);
         
-        return redirect()->route('orders.show', $order)
-            ->with('success', 'อัพเดทสถานะเป็นกำลังดำเนินการสำเร็จ');
+        // เปลี่ยนเส้นทางการ redirect เป็นไปที่หน้าสร้างใบส่งสินค้า พร้อมส่ง ID ของ order ไปด้วย
+        return redirect()->route('delivery-orders.create', ['order_id' => $order->id])
+            ->with('success', 'อัพเดทสถานะเป็นกำลังดำเนินการสำเร็จ กรุณาสร้างใบส่งสินค้า');
     }
 
     /**
@@ -530,6 +723,7 @@ class OrderController extends Controller
         $validated = $request->validate([
             'tracking_number' => 'nullable|string',
             'shipping_notes' => 'nullable|string',
+            'redirect_to_delivery' => 'nullable|boolean'
         ]);
         
         $order->update([
@@ -540,8 +734,9 @@ class OrderController extends Controller
             'shipping_notes' => $validated['shipping_notes'] ?? null,
         ]);
         
+        // กรณีไม่ต้องการ redirect ให้กลับไปหน้า order show แบบเดิม
         return redirect()->route('orders.show', $order)
-            ->with('success', 'อัพเดทสถานะเป็นจัดส่งแล้วสำเร็จ');
+            ->with('success', 'บันทึกการจัดส่งสินค้าเรียบร้อยแล้ว ระบบได้อัพเดทสถานะเป็นจัดส่งแล้ว');
     }
 
     /**
@@ -649,17 +844,22 @@ class OrderController extends Controller
             $response = [
                 'order' => [
                     'id' => $order->id,
-                    'order_number' => $order->order_number,
-                    'status' => $order->status,
                     'customer_id' => $order->customer_id,
+                    'order_number' => $order->order_number,
+                    'delivery_date' => $order->delivery_date?->format('Y-m-d'),
                     'shipping_address' => $order->shipping_address ?? '',
                     'shipping_method' => $order->shipping_method ?? '',
-                    'delivery_date' => $order->delivery_date ? $order->delivery_date->format('Y-m-d') : null,
-                    'notes' => $order->notes ?? '',
-                    'sales_person_id' => $order->sales_person_id ?? null,
+                    'tracking_number' => $order->tracking_number ?? '', // เพิ่มฟิลด์ tracking_number
+                    'shipping_notes' => $order->shipping_notes ?? '',  // เพิ่มฟิลด์ shipping_notes
+                    'status' => $order->status,
                 ],
-                'customer' => $order->customer,
-                'items' => $order->items->map(function ($item) {
+                'customer' => [
+                    'name' => $order->customer->name,
+                    'email' => $order->customer->email,
+                    'phone' => $order->customer->phone,
+                    'address' => $order->customer->address,
+                ],
+                'items' => $order->items->map(function($item) {
                     // ตรวจสอบและดึงข้อมูลหน่วยจากใบเสนอราคาหรือจากสินค้า
                     $unit = null;
                     $unitName = '';
@@ -676,6 +876,7 @@ class OrderController extends Controller
                         'id' => $item->id,
                         'product_id' => $item->product_id,
                         'product_code' => $item->product ? $item->product->code ?? $item->product->sku ?? '' : '',
+                        'code' => $item->product ? $item->product->code ?? $item->product->sku ?? '' : '',
                         'description' => $item->description ?? '',
                         'quantity' => $item->quantity,
                         'unit_price' => $item->unit_price,
@@ -712,5 +913,34 @@ class OrderController extends Controller
             ]);
             return response()->json(['error' => 'เกิดข้อผิดพลาดในการดึงข้อมูล: ' . $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Show the print view for an order.
+     *
+     * @param  \App\Models\Order  $order
+     * @return \Illuminate\View\View
+     */
+    public function printView(Order $order)
+    {
+        // Ensure the user has access to this order
+        $currentCompanyId = session('current_company_id') ?? session('company_id');
+        
+        // Skip company check for Super Admin users
+        if (!auth()->user()->hasRole('Super Admin') && $order->company_id != $currentCompanyId) {
+            abort(403, 'Unauthorized access to order from a different company');
+        }
+        
+        // Load required relationships
+        $order->load(['customer', 'items.product.unit', 'items.unit']);
+        
+        // Load company data
+        try {
+            $company = Company::find($order->company_id);
+        } catch (\Exception $e) {
+            $company = null;
+        }
+        
+        return view('orders.print', compact('order', 'company'));
     }
 }

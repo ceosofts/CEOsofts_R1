@@ -40,6 +40,16 @@ class EmployeeWorkShiftSeeder extends Seeder
         $primaryShift = $workShifts->where('code', 'REG')->first()
             ?? $workShifts->first();
 
+        // ดึงรายการกะงานที่มีอยู่แล้วของพนักงานในช่วงเวลาที่ต้องการ
+        // - เก็บทั้ง employee_id, work_shift_id, และ effective_date เพื่อเช็คว่ามีอยู่แล้วหรือไม่
+        $existingShifts = EmployeeWorkShift::where('employee_id', $employee->id)
+            ->whereBetween('effective_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->get(['employee_id', 'work_shift_id', 'effective_date'])
+            ->map(function($shift) {
+                return $shift->employee_id . '-' . $shift->work_shift_id . '-' . Carbon::parse($shift->effective_date)->format('Y-m-d');
+            })
+            ->toArray();
+        
         $currentDate = clone $startDate;
         while ($currentDate <= $endDate) {
             // ข้ามวันเสาร์-อาทิตย์ถ้าเป็นกะปกติ
@@ -48,19 +58,31 @@ class EmployeeWorkShiftSeeder extends Seeder
                 continue;
             }
 
-            EmployeeWorkShift::firstOrCreate([
-                'employee_id' => $employee->id,
-                'work_shift_id' => $primaryShift->id,
-                'effective_date' => $currentDate->format('Y-m-d'),
-            ], [
-                'status' => 'scheduled',
-                'notes' => null,
-                'metadata' => json_encode([
-                    'assigned_by' => 'system',
-                    'assigned_at' => now()->toDateTimeString(),
-                    'shift_type' => 'regular'
-                ])
-            ]);
+            // ตรวจสอบว่ามีกะงานในวันนี้อยู่แล้วหรือไม่
+            $dateString = $currentDate->format('Y-m-d');
+            $shiftKey = $employee->id . '-' . $primaryShift->id . '-' . $dateString;
+            
+            if (!in_array($shiftKey, $existingShifts)) {
+                try {
+                    EmployeeWorkShift::create([
+                        'employee_id' => $employee->id,
+                        'work_shift_id' => $primaryShift->id,
+                        'effective_date' => $dateString,
+                        'status' => 'scheduled',
+                        'notes' => null,
+                        'metadata' => json_encode([
+                            'assigned_by' => 'system',
+                            'assigned_at' => now()->toDateTimeString(),
+                            'shift_type' => 'regular'
+                        ])
+                    ]);
+                } catch (\Illuminate\Database\QueryException $e) {
+                    // ถ้าเกิด unique constraint violation ให้ข้ามไป
+                    if (strpos($e->getMessage(), 'UNIQUE constraint failed') === false) {
+                        throw $e;
+                    }
+                }
+            }
 
             $currentDate->addDay();
         }

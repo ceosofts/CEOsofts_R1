@@ -21,88 +21,76 @@ class QuotationController extends Controller
      */
     public function index(Request $request)
     {
-        try {
-            // แก้ไขการดึงค่า company_id ให้มีค่าเริ่มต้นเป็น 1 ถ้าไม่มีค่า
-            $companyId = session('company_id');
+        // ตรวจสอบและตั้งค่า company_id หากไม่มีใน session
+        $companyId = session('company_id');
+        
+        // กรณีไม่มี company_id ใน session ให้หา company แรกที่ผู้ใช้มีสิทธิ์เข้าถึง
+        if (empty($companyId)) {
+            // หา company แรกที่ผู้ใช้มีสิทธิ์เข้าถึง
+            $user = auth()->user();
             
-            // ถ้า session ไม่มีค่า ลองดึงจาก user
-            if (empty($companyId) && Auth::check()) {
-                $companyId = Auth::user()->company_id;
-            }
-            
-            // ถ้ายังไม่มีค่า ให้ใช้ค่าเริ่มต้นเป็น 1
-            if (empty($companyId)) {
-                $companyId = 1; // ค่าเริ่มต้นกรณีไม่พบ company_id
-                // บันทึก session เพื่อใช้ในครั้งต่อไป
+            if ($user && $user->companies->isNotEmpty()) {
+                $firstCompany = $user->companies->first();
+                $companyId = $firstCompany->id;
+                
+                // บันทึกลง session
                 session(['company_id' => $companyId]);
-            }
-            
-            // สร้าง query builder เริ่มต้น - ต้องแน่ใจว่า $query ถูกกำหนดค่า
-            $query = Quotation::with(['customer', 'creator', 'salesPerson'])
-                    ->where('company_id', $companyId);
-            
-            // ...existing code for filters...
-            
-            // กรองตามพนักงานขาย
-            if ($request->filled('sales_person_id')) {
-                $query->where('sales_person_id', $request->sales_person_id);
-            }
-            
-            // จัดเรียงข้อมูล - เปลี่ยนค่าเริ่มต้นเป็น quotation_number
-            $sort = $request->input('sort', 'quotation_number');
-            $direction = $request->input('direction', 'desc');
-            
-            // ตรวจสอบ column ที่อนุญาตให้เรียงลำดับ
-            $allowedSortColumns = ['quotation_number', 'issue_date', 'expiry_date', 'total_amount', 'created_at'];
-            
-            if (in_array($sort, $allowedSortColumns)) {
-                $query->orderBy($sort, $direction);
+                
+                // Log การตั้งค่า company_id
+                \Illuminate\Support\Facades\Log::info('ตั้งค่า company_id เริ่มต้นเป็น ' . $companyId . ' สำหรับการแสดงรายการใบเสนอราคา');
             } else {
-                $query->orderBy('quotation_number', 'desc');
+                // กรณีไม่พบ company ที่ผู้ใช้มีสิทธิ์เข้าถึง ใช้ค่าเริ่มต้นเป็น 1
+                $companyId = 1;
+                session(['company_id' => $companyId]);
+                
+                \Illuminate\Support\Facades\Log::warning('ไม่พบ company ที่ผู้ใช้มีสิทธิ์เข้าถึง กำหนดค่าเริ่มต้นเป็น 1');
             }
-            
-            // ดึงข้อมูลพร้อม pagination
-            $quotations = $query->paginate(10);
-            
-            // นับจำนวนตามสถานะ (เพิ่มบรรทัดนี้เพื่อให้แน่ใจว่ามี $statusCounts)
-            $statusCounts = [
-                'all' => Quotation::where('company_id', $companyId)->count(),
-                'draft' => Quotation::where('company_id', $companyId)->where('status', 'draft')->count(),
-                'approved' => Quotation::where('company_id', $companyId)->where('status', 'approved')->count(),
-                'rejected' => Quotation::where('company_id', $companyId)->where('status', 'rejected')->count(),
-            ];
-            
-            // เตรียมข้อมูล debug (ถ้าจำเป็น)
-            $debugInfo = null;
-            if (config('app.env') === 'local') {
-                $debugInfo = [
-                    'total_count' => $quotations->total(),
-                    'query_count' => $quotations->count(),
-                    // ...additional debug info...
-                ];
-            }
-            
-            return view('quotations.index', compact('quotations', 'statusCounts', 'debugInfo'));
-        } catch (\Exception $e) {
-            // ใช้ LengthAwarePaginator แทน collect()->paginate()
-            $perPage = 10;
-            $currentPage = $request->input('page', 1);
-            $path = route('quotations.index');
-            
-            $quotations = new LengthAwarePaginator(
-                [], // empty array
-                0, // total items
-                $perPage,
-                $currentPage,
-                ['path' => $path]
-            );
-            
-            return view('quotations.index', [
-                'quotations' => $quotations,
-                'statusCounts' => ['all' => 0, 'draft' => 0, 'approved' => 0, 'rejected' => 0],
-                'error' => 'เกิดข้อผิดพลาดในการดึงข้อมูลใบเสนอราคา: ' . $e->getMessage()
-            ]);
         }
+
+        $query = Quotation::where('company_id', $companyId);
+
+        // Search by text (quotation number, reference, customer name)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('quotation_number', 'like', "%{$search}%")
+                  ->orWhere('reference', 'like', "%{$search}%")
+                  ->orWhereHas('customer', function ($q2) use ($search) {
+                      $q2->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('salesPerson', function ($q2) use ($search) {
+                      $q2->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Filter by customer
+        if ($request->filled('customer')) {
+            $query->where('customer_id', $request->customer);
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by date range
+        if ($request->filled('date_from')) {
+            $query->whereDate('issue_date', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('issue_date', '<=', $request->date_to);
+        }
+
+        // Apply sorting
+        $sortField = $request->input('sort', 'quotation_number');
+        $sortDirection = $request->input('direction', 'desc');
+        $query->orderBy($sortField, $sortDirection);
+
+        $quotations = $query->paginate(15)->withQueryString();
+
+        return view('quotations.index', compact('quotations'));
     }
 
     /**
@@ -113,27 +101,11 @@ class QuotationController extends Controller
         $companyId = session('company_id', 1);
         $customers = Customer::where('company_id', $companyId)->orderBy('name')->get();
         $products = Product::where('company_id', $companyId)->orderBy('name')->get();
-        $units = Unit::all();
+        $units = Unit::where('company_id', $companyId)->where('is_active', true)->orderBy('name')->get();
         $salesPersons = Employee::where('company_id', $companyId)->orderBy('first_name')->get();
 
-        // สร้างเลขที่เอกสารอัตโนมัติตามรูปแบบใหม่: QT + ปี + เดือน + 4 หลัก
-        $currentYear = date('Y');
-        $currentMonth = date('m');
-        
-        // หาเลขที่ล่าสุดที่ขึ้นต้นด้วยรหัสเดือนปีปัจจุบัน
-        $prefix = "QT{$currentYear}{$currentMonth}";
-        $latestQuotation = Quotation::where('quotation_number', 'like', $prefix.'%')
-            ->orderBy('quotation_number', 'desc')
-            ->first();
-        
-        if ($latestQuotation) {
-            // ดึงเลขลำดับล่าสุดและเพิ่มอีก 1
-            $lastNumber = intval(substr($latestQuotation->quotation_number, -4));
-            $nextNumber = $prefix . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
-        } else {
-            // ถ้าไม่มีเลขที่ในเดือนนี้ เริ่มที่ 0001
-            $nextNumber = $prefix . '0001';
-        }
+        // สร้างเลขที่เอกสารอัตโนมัติโดยเรียกใช้เมธอดใหม่จากโมเดล Quotation
+        $nextNumber = Quotation::generateQuotationNumber();
 
         return view('quotations.create', compact('customers', 'products', 'units', 'nextNumber', 'salesPersons'));
     }
@@ -315,23 +287,48 @@ class QuotationController extends Controller
      */
     public function edit($id)
     {
-        // แก้ไขจาก placeholder เป็นการดึงข้อมูลจริง
-        $quotation = Quotation::with(['items.product', 'items.unit'])->findOrFail($id);
+        $companyId = session('company_id');
         
-        // ตรวจสอบว่าสถานะยังเป็น draft อยู่หรือไม่
-        if ($quotation->status !== 'draft') {
-            return redirect()->route('quotations.show', $quotation)
-                ->with('error', 'ไม่สามารถแก้ไขใบเสนอราคาที่อนุมัติหรือปฏิเสธแล้วได้');
-        }
+        // โหลดพร้อมความสัมพันธ์ทั้ง product และ unit แบบเจาะจง
+        $quotation = Quotation::with([
+            'items.product', 
+            'items.unit:id,name,code', // เพิ่ม code และระบุฟิลด์ที่ต้องการอย่างชัดเจน
+            'customer', 
+            'salesPerson'
+        ])->findOrFail($id);
         
-        $companyId = session('company_id', 1);
+        // เพิ่มการล็อกข้อมูลเพื่อดีบั๊ก
+        Log::debug('Quotation items with relationship: ', [
+            'items_count' => $quotation->items->count(),
+            'sample_item' => $quotation->items->first() ? [
+                'product' => $quotation->items->first()->product ? $quotation->items->first()->product->name : 'No product',
+                'unit' => $quotation->items->first()->unit ? [
+                    'id' => $quotation->items->first()->unit->id,
+                    'name' => $quotation->items->first()->unit->name,
+                    'code' => $quotation->items->first()->unit->code ?? null
+                ] : 'No unit'
+            ] : 'No items'
+        ]);
         
-        // เตรียมข้อมูลที่จำเป็นสำหรับฟอร์มแก้ไข
         $customers = Customer::where('company_id', $companyId)->orderBy('name')->get();
         $products = Product::where('company_id', $companyId)->orderBy('name')->get();
-        $units = Unit::all();
-        
-        return view('quotations.edit', compact('quotation', 'customers', 'products', 'units'));
+        $units = Unit::where('company_id', $companyId)->where('is_active', true)->orderBy('name')->get();
+        $salesPersons = Employee::where('company_id', $companyId)->orderBy('first_name')->get();
+
+        // เพิ่มการล็อกข้อมูลเพื่อดีบั๊ก
+        Log::debug('Quotation items with relationship: ', [
+            'items_count' => $quotation->items->count(),
+            'sample_item' => $quotation->items->first() ? [
+                'product' => $quotation->items->first()->product ? $quotation->items->first()->product->name : 'No product',
+                'unit' => $quotation->items->first()->unit ? [
+                    'id' => $quotation->items->first()->unit->id,
+                    'name' => $quotation->items->first()->unit->name,
+                    'code' => $quotation->items->first()->unit->code ?? null
+                ] : 'No unit'
+            ] : 'No items'
+        ]);
+
+        return view('quotations.edit', compact('quotation', 'customers', 'products', 'units', 'salesPersons'));
     }
 
     /**
@@ -549,12 +546,24 @@ class QuotationController extends Controller
     }
 
     /**
-     * แสดงใบเสนอราคาในรูปแบบ PDF View
+     * แสดงใบเสนอราคาในรูปแบบ PDF View (รีไดเร็กต์ไปยังมุมมองพิมพ์)
      *
      * @param  \App\Models\Quotation  $quotation
      * @return \Illuminate\Http\Response
      */
     public function viewAsPdf(Quotation $quotation)
+    {
+        // เปลี่ยนการเรียกใช้จาก pdf-view เป็น print view แทน
+        return $this->printView($quotation);
+    }
+
+    /**
+     * แสดงใบเสนอราคาในรูปแบบพร้อมพิมพ์
+     *
+     * @param  \App\Models\Quotation  $quotation
+     * @return \Illuminate\Http\Response
+     */
+    public function printView(Quotation $quotation)
     {
         // โหลดความสัมพันธ์ที่จำเป็น
         $quotation->load(['customer', 'items.product', 'items.unit']);
@@ -562,8 +571,8 @@ class QuotationController extends Controller
         // หาข้อมูลบริษัท
         $company = \App\Models\Company::find($quotation->company_id);
         
-        // ส่ง view pdf-view ที่มีอยู่แล้ว
-        return view('quotations.pdf-view', [
+        // ส่ง view print ที่สร้างใหม่
+        return view('quotations.print', [
             'quotation' => $quotation,
             'company' => $company,
         ]);

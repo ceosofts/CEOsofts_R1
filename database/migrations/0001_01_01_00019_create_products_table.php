@@ -19,110 +19,41 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // สร้างตารางหมวดหมู่สินค้า
-        if (!Schema::hasTable('product_categories')) {
-            Schema::create('product_categories', function (Blueprint $table) {
+        // สร้างตาราง units ก่อนถ้ายังไม่มี 
+        if (!Schema::hasTable('units')) {
+            Schema::create('units', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('company_id')->constrained()->onDelete('cascade');
                 $table->string('name');
-                $table->string('code', 30)->nullable();
+                $table->string('abbreviation')->nullable();
                 $table->text('description')->nullable();
                 $table->boolean('is_active')->default(true);
-                $table->unsignedBigInteger('parent_id')->nullable();
-                $table->foreign('parent_id')->references('id')->on('product_categories')->onDelete('set null');
-                $table->json('metadata')->nullable();
-                // คอลัมน์เพิ่มเติมที่ย้ายมาจาก add_missing_columns_to_product_categories_table.php
-                $table->string('icon')->nullable();  // ไอคอนสำหรับหมวดหมู่
-                $table->string('image')->nullable(); // รูปภาพสำหรับหมวดหมู่
-                $table->string('slug')->nullable(); // URL-friendly name
-                $table->integer('display_order')->default(0); // ลำดับการแสดงผล
-                $table->boolean('is_featured')->default(false); // หมวดหมู่แนะนำหรือไม่
-                $table->boolean('is_visible')->default(true); // แสดงบนหน้าเว็บหรือไม่
-                
-                // เพิ่มคอลัมน์ที่ขาดและใช้ในการ seed
-                $table->integer('level')->default(0);  // ระดับความลึกของหมวดหมู่
-                $table->string('path')->nullable();    // เส้นทางแบบ hierarchical
-                
+                $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
+                $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('set null');
                 $table->timestamps();
                 $table->softDeletes();
-
-                // Indexes
-                $table->index('company_id');
-                $table->index('name');
-                $table->index('code');
-                $table->index('parent_id');
-                $table->index('is_active');
-                // Index เพิ่มเติมสำหรับคอลัมน์ใหม่
-                $table->index('slug');
-                $table->index('display_order');
-                $table->index('is_featured');
-                $table->index('is_visible');
             });
-
-            Log::info('สร้างตาราง product_categories เรียบร้อยแล้ว');
-        } else {
-            // ตรวจสอบและเพิ่มคอลัมน์ที่หายไปในกรณีที่ตารางมีอยู่แล้ว (จากไฟล์ add_missing_columns_to_product_categories_table.php)
-            Schema::table('product_categories', function (Blueprint $table) {
-                // เพิ่มคอลัมน์ที่อาจหายไป
-                if (!Schema::hasColumn('product_categories', 'icon')) {
-                    $table->string('icon')->nullable();
-                }
-                if (!Schema::hasColumn('product_categories', 'image')) {
-                    $table->string('image')->nullable();
-                }
-                if (!Schema::hasColumn('product_categories', 'slug')) {
-                    $table->string('slug')->nullable();
-                }
-                if (!Schema::hasColumn('product_categories', 'display_order')) {
-                    $table->integer('display_order')->default(0);
-                }
-                if (!Schema::hasColumn('product_categories', 'is_featured')) {
-                    $table->boolean('is_featured')->default(false);
-                }
-                if (!Schema::hasColumn('product_categories', 'is_visible')) {
-                    $table->boolean('is_visible')->default(true);
-                }
-                
-                // เพิ่มคอลัมน์ที่ขาดสำหรับการ seed
-                if (!Schema::hasColumn('product_categories', 'level')) {
-                    $table->integer('level')->default(0);
-                }
-                if (!Schema::hasColumn('product_categories', 'path')) {
-                    $table->string('path')->nullable();
-                }
-
-                // เพิ่ม index สำหรับคอลัมน์ใหม่
-                if (!Schema::hasIndex('product_categories', 'product_categories_slug_index')) {
-                    $table->index('slug');
-                }
-                if (!Schema::hasIndex('product_categories', 'product_categories_display_order_index')) {
-                    $table->index('display_order');
-                }
-                if (!Schema::hasIndex('product_categories', 'product_categories_is_featured_index')) {
-                    $table->index('is_featured');
-                }
-                if (!Schema::hasIndex('product_categories', 'product_categories_is_visible_index')) {
-                    $table->index('is_visible');
-                }
-            });
-
-            Log::info('อัปเดตโครงสร้างตาราง product_categories เรียบร้อยแล้ว');
+            echo "สร้างตาราง units ก่อนสร้างตาราง products\n";
         }
-
-        // สร้างตารางสินค้า
+        
+        // สร้างตาราง products
         if (!Schema::hasTable('products')) {
             Schema::create('products', function (Blueprint $table) {
                 $table->id();
                 $table->string('uuid', 36)->unique(); // จาก add_uuid_to_products_table.php
                 $table->foreignId('company_id')->constrained()->onDelete('cascade');
                 $table->foreignId('category_id')->nullable()->constrained('product_categories')->onDelete('set null');
-                $table->foreignId('unit_id')->nullable(); // จาก 0001_01_01_00045_add_unit_id_to_products_table.php
+                // foreign key ไปยังตาราง units
+                if (Schema::hasTable('units')) {
+                    $table->foreignId('unit_id')->nullable()->constrained()->nullOnDelete();
+                } else {
+                    $table->unsignedBigInteger('unit_id')->nullable();
+                }
                 $table->string('name');
                 $table->string('code', 30)->nullable();
                 $table->text('description')->nullable();
                 $table->decimal('price', 15, 2)->default(0);
                 $table->decimal('cost', 15, 2)->default(0);
-                $table->string('unit', 30)->nullable();
                 $table->string('sku', 50)->nullable();
                 $table->string('barcode', 50)->nullable();
                 $table->integer('stock_quantity')->default(0); // จำนวนสต็อกเริ่มต้น

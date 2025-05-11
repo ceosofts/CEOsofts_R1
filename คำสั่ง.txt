@@ -16,6 +16,8 @@ npm run watch
 npm run build                                       # Build Production Mode
 php artisan migrate:fresh --seed                    # รีเซ็ตฐานข้อมูลและ Seed ข้อมูลใหม่
 
+php artisan project:structure --output=project_structure_$(date +%Y_%m_%d).txt
+
 # หากพบปัญหา "table orders has no column named delivery_date"
 # 1. ตรวจสอบว่ามีการเพิ่มคอลัมน์ delivery_date ในไฟล์ migrations/0001_01_01_00016_create_orders_table.php แล้ว
 # 2. รันคำสั่งต่อไปนี้เพื่อลบและสร้างฐานข้อมูลใหม่

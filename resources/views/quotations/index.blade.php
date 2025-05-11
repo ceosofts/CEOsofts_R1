@@ -30,14 +30,14 @@
             @endif
 
             <!-- ฟอร์มค้นหาและตัวกรอง -->
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
                 <div class="p-6">
                     <form action="{{ route('quotations.index') }}" method="GET">
-                        <!-- Grid layout สำหรับจัดเรียงอินพุตในฟอร์มค้นหา -->
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <!-- ช่อง "ค้นหา" -->
-                            <div class="col-span-1">
-                                <label for="search" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ค้นหา</label>
+                        <!-- Grid layout แบบแถวเดียว -->
+                        <div class="flex flex-wrap items-end gap-3">
+                            <!-- ช่อง "ค้นหา" - ปรับให้กว้างขึ้นและรองรับค้นหาชื่อพนักงานขาย -->
+                            <div class="w-full md:w-64 lg:w-70">
+                                <label for="search" class="block text-sm font-medium text-gray-700 mb-1">ค้นหา</label>
                                 <div class="relative rounded-md shadow-sm">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -45,16 +45,16 @@
                                         </svg>
                                     </div>
                                     <input type="text" name="search" id="search" value="{{ request('search') }}"
-                                        class="block w-full pl-10 pr-3 py-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                        placeholder="เลขที่, อ้างอิง, ชื่อลูกค้า">
+                                        class="block w-full pl-10 pr-3 py-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                        placeholder="เลขที่, อ้างอิง, ชื่อลูกค้า, ชื่อพนักงานขาย">
                                 </div>
                             </div>
 
                             <!-- ช่อง "ลูกค้า" -->
-                            <div class="col-span-1">
-                                <label for="customer" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ลูกค้า</label>
+                            <div class="w-full md:w-40 lg:w-52">
+                                <label for="customer" class="block text-sm font-medium text-gray-700 mb-1">ลูกค้า</label>
                                 <select name="customer" id="customer"
-                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                                     <option value="">-- ทั้งหมด --</option>
                                     @foreach(\App\Models\Customer::where('company_id', session('company_id'))->orderBy('name')->get() as $customer)
                                     <option value="{{ $customer->id }}" {{ request('customer') == $customer->id ? 'selected' : '' }}>
@@ -65,10 +65,10 @@
                             </div>
 
                             <!-- ช่อง "สถานะ" -->
-                            <div class="col-span-1">
-                                <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">สถานะ</label>
+                            <div class="w-full md:w-36 lg:w-40">
+                                <label for="status" class="block text-sm font-medium text-gray-700 mb-1">สถานะ</label>
                                 <select name="status" id="status"
-                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                                     <option value="">-- ทั้งหมด --</option>
                                     <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>กำลังเสนอลูกค้า</option>
                                     <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>อนุมัติแล้ว</option>
@@ -76,95 +76,79 @@
                                 </select>
                             </div>
 
-                            <!-- ช่อง "พนักงานขาย" เพิ่มในส่วนฟิลเตอร์ -->
-                            <div class="col-span-1">
-                                <label for="sales_person_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">พนักงานขาย</label>
-                                <select name="sales_person_id" id="sales_person_id"
-                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                    <option value="">-- ทั้งหมด --</option>
-                                    @foreach(\App\Models\Employee::where('company_id', session('company_id'))->orderBy('first_name')->get() as $employee)
-                                    <option value="{{ $employee->id }}" {{ request('sales_person_id') == $employee->id ? 'selected' : '' }}>
-                                        {{ $employee->employee_code }} - {{ $employee->first_name }} {{ $employee->last_name }}
-                                    </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <!-- ช่วงวันที่ - กินพื้นที่ 2 คอลัมน์ -->
-                            <div class="col-span-1 md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ช่วงวันที่</label>
-                                <div class="flex space-x-2">
-                                    <div class="w-1/2 relative rounded-md shadow-sm">
-                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
-                                            </svg>
-                                        </div>
-                                        <input type="date" name="date_from" id="date_from" value="{{ request('date_from') }}"
-                                            class="block w-full pl-10 pr-3 py-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                    </div>
-                                    <div class="flex items-center">
-                                        <span class="text-gray-500 dark:text-gray-400">ถึง</span>
-                                    </div>
-                                    <div class="w-1/2 relative rounded-md shadow-sm">
-                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
-                                            </svg>
-                                        </div>
-                                        <input type="date" name="date_to" id="date_to" value="{{ request('date_to') }}"
-                                            class="block w-full pl-10 pr-3 py-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                    </div>
+                            <!-- วันที่ (ย่อให้สั้นลง) -->
+                            <div class="w-full md:w-44 lg:w-60">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">ช่วงวันที่</label>
+                                <div class="flex space-x-1">
+                                    <input type="date" name="date_from" id="date_from" value="{{ request('date_from') }}"
+                                        class="block w-1/2 py-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                    <input type="date" name="date_to" id="date_to" value="{{ request('date_to') }}"
+                                        class="block w-1/2 py-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                                 </div>
                             </div>
 
-                            <!-- การเรียงลำดับ -->
-                            <div class="col-span-1">
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">เรียงลำดับ</label>
-                                <div class="flex space-x-2">
-                                    <select id="sort" name="sort" class="w-2/3 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                        <option value="quotation_number" {{ request('sort') == 'quotation_number' ? 'selected' : '' }}>เลขที่ใบเสนอราคา</option>
-                                        <option value="issue_date" {{ request('sort') == 'issue_date' ? 'selected' : '' }}>วันที่ออก</option>
-                                        <option value="expiry_date" {{ request('sort') == 'expiry_date' ? 'selected' : '' }}>วันที่หมดอายุ</option>
-                                        <option value="total_amount" {{ request('sort') == 'total_amount' ? 'selected' : '' }}>จำนวนเงิน</option>
-                                        <option value="created_at" {{ request('sort') == 'created_at' ? 'selected' : '' }}>วันที่สร้าง</option>
-                                    </select>
-                                    <select id="direction" name="direction" class="w-1/3 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                        <option value="asc" {{ request('direction') == 'asc' ? 'selected' : '' }}>↑</option>
-                                        <option value="desc" {{ request('direction') == 'desc' ? 'selected' : '' }}>↓</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- ปุ่มค้นหา วางชิดขวา -->
-                        <div class="mt-6 flex justify-end space-x-3">
-                            <a href="{{ route('quotations.index') }}" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600">
-                                <div class="flex items-center">
+                            <!-- ปุ่มค้นหาและรีเซ็ตอยู่ในระดับเดียวกับช่องกรอกข้อมูล -->
+                            <div class="flex space-x-2">
+                                <button type="submit" class="inline-flex items-center px-4 h-10 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                    ค้นหา
+                                </button>
+                                <a href="{{ route('quotations.index') }}" class="inline-flex items-center px-4 h-10 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
                                     <svg class="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
                                     </svg>
                                     รีเซ็ต
-                                </div>
-                            </a>
-                            <button type="submit" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
-                                ค้นหา
-                            </button>
+                                </a>
+                            </div>
+                        
+
+                        <!-- Hidden sort fields to maintain ordering -->
+                        <input type="hidden" name="sort" value="{{ request('sort', 'quotation_number') }}">
+                        <input type="hidden" name="direction" value="{{ request('direction', 'desc') }}">
+                        
+                        <!-- For debugging purposes - hidden by default -->
+                        @if(config('app.debug'))
+                        <div class="mt-2 text-right">
+                            <button type="button" id="toggleDebug" class="text-xs text-gray-500 hover:underline">Debug</button>
                         </div>
+                        <div id="debugInfo" class="hidden mt-2 p-3 bg-gray-100 text-xs rounded">
+                            <p class="font-semibold mb-1">Debug: Search Parameters</p>
+                            <ul>
+                                <li>Search: {{ request('search') ?? 'null' }}</li>
+                                <li>Customer: {{ request('customer') ?? 'null' }}</li>
+                                <li>Status: {{ request('status') ?? 'null' }}</li>
+                                <li>Date From: {{ request('date_from') ?? 'null' }}</li>
+                                <li>Date To: {{ request('date_to') ?? 'null' }}</li>
+                                <li>Sort: {{ request('sort') ?? 'null' }}</li>
+                                <li>Direction: {{ request('direction') ?? 'null' }}</li>
+                                <li>Current URL: {{ url()->full() }}</li>
+                            </ul>
+                        </div>
+
+                        </div>
+
+                        <script>
+                            document.getElementById('toggleDebug').addEventListener('click', function() {
+                                const debugInfo = document.getElementById('debugInfo');
+                                const isHidden = debugInfo.classList.contains('hidden');
+                                debugInfo.classList.toggle('hidden');
+                                this.textContent = isHidden ? 'Hide Debug Info' : 'Debug';
+                            });
+                        </script>
+                        @endif
                     </form>
                 </div>
             </div>
 
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900">
                     <div class="overflow-x-auto">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-lg font-semibold">รายการใบเสนอราคา</h3>
                             <div class="flex items-center">
-                                <span class="text-sm text-gray-600 dark:text-gray-400 mr-2">เรียงตาม:</span>
+                                <span class="text-sm text-gray-600 mr-2">เรียงตาม:</span>
                                 <a href="{{ request()->fullUrlWithQuery(['sort' => 'quotation_number', 'direction' => 'asc']) }}"
                                     class="{{ request('sort') == 'quotation_number' && request('direction') == 'asc' ? 'text-blue-600 font-medium' : 'text-gray-600' }} text-sm mx-1">
                                     เลขที่ ↑
@@ -184,21 +168,21 @@
                             </div>
                         </div>
 
-                        <table class="min-w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
+                        <table class="min-w-full bg-white border border-gray-300">
                             <thead>
-                                <tr class="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-200">
-                                    <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-left">เลขที่</th>
-                                    <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-left">วันที่</th>
-                                    <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-left">ลูกค้า</th>
-                                    <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-left">พนักงานขาย</th>
-                                    <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-right">ยอดรวม</th>
-                                    <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-left">สถานะ</th>
-                                    <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-center">จัดการ</th>
+                                <tr class="bg-gray-100 text-gray-700">
+                                    <th class="py-2 px-4 border-b border-gray-300 text-left">เลขที่</th>
+                                    <th class="py-2 px-4 border-b border-gray-300 text-left">วันที่</th>
+                                    <th class="py-2 px-4 border-b border-gray-300 text-left">ลูกค้า</th>
+                                    <th class="py-2 px-4 border-b border-gray-300 text-left">พนักงานขาย</th>
+                                    <th class="py-2 px-4 border-b border-gray-300 text-right">ยอดรวม</th>
+                                    <th class="py-2 px-4 border-b border-gray-300 text-left">สถานะ</th>
+                                    <th class="py-2 px-4 border-b border-gray-300 text-center">จัดการ</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse($quotations as $quotation)
-                                <tr class="hover:bg-gray-200 dark:hover:bg-gray-600 border-b border-gray-200 dark:border-gray-700">
+                                <tr class="hover:bg-gray-200 border-b border-gray-200">
                                     <td class="py-2 px-4">{{ $quotation->quotation_number }}</td>
                                     <td class="py-2 px-4">{{ $quotation->issue_date ? $quotation->issue_date->format('d/m/Y') : '-' }}</td>
                                     <td class="py-2 px-4">{{ $quotation->customer->name ?? 'ไม่ระบุ' }}</td>
@@ -263,7 +247,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="6" class="py-4 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="6" class="py-4 text-center text-gray-500">
                                         <div class="flex flex-col items-center justify-center py-8">
                                             <svg class="h-12 w-12 text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

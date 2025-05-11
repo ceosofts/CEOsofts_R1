@@ -51,8 +51,11 @@ use Illuminate\Support\Facades\Auth;
                                 <x-dropdown-link :href="route('delivery-orders.index')">
                                     ใบส่งของ
                                 </x-dropdown-link>
-                                <x-dropdown-link href="{{ route('coming-soon', ['feature' => 'invoices']) }}">
+                                <x-dropdown-link :href="route('invoices.index')">
                                     ใบแจ้งหนี้
+                                </x-dropdown-link>
+                                <x-dropdown-link href="{{ route('coming-soon', ['feature' => 'credit-notes']) }}">
+                                    ใบลดหนี้
                                 </x-dropdown-link>
                                 <x-dropdown-link href="{{ route('coming-soon', ['feature' => 'receipts']) }}">
                                     ใบเสร็จรับเงิน

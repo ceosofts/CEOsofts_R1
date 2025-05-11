@@ -10,10 +10,11 @@ class AuthServiceProvider extends ServiceProvider
     /**
      * The policy mappings for the application.
      *
-     * @var array<class-string, class-string>
+     * @var array
      */
     protected $policies = [
-        // 'App\Models\Model' => 'App\Policies\ModelPolicy',
+        // ...existing policies...
+        \App\Models\DeliveryOrder::class => \App\Policies\DeliveryOrderPolicy::class,
     ];
 
     /**

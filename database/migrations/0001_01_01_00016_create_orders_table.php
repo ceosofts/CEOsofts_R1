@@ -26,9 +26,12 @@ return new class extends Migration
                 $table->dateTime('delivery_date')->nullable();
                 $table->string('status')->check("status IN ('draft', 'pending', 'approved', 'processing', 'shipped', 'completed', 'canceled')");
                 $table->decimal('subtotal', 15, 2)->default(0);
+                $table->string('discount_type')->default('fixed'); 
                 $table->decimal('discount_amount', 15, 2)->default(0);
+                $table->decimal('tax_rate', 15, 2)->default(0);  // เพิ่มคอลัมน์ tax_rate ตรงนี้
                 $table->decimal('tax_amount', 15, 2)->default(0);
                 $table->decimal('total_amount', 15, 2)->default(0);
+                $table->decimal('shipping_cost', 15, 2)->default(0); // เพิ่มคอลัมน์ shipping_cost
                 $table->text('remarks')->nullable();
                 $table->date('expected_delivery_date')->nullable();
                 
@@ -39,6 +42,7 @@ return new class extends Migration
                 $table->string('shipping_state')->nullable();
                 $table->string('shipping_postal_code')->nullable();
                 $table->string('shipping_country')->default('Thailand');
+                $table->string('shipping_method')->nullable(); // เพิ่มคอลัมน์ shipping_method
                 
                 // ข้อมูลเพิ่มเติมเกี่ยวกับออเดอร์
                 $table->text('notes')->nullable();
@@ -53,13 +57,97 @@ return new class extends Migration
                 $table->foreignId('last_modified_by')->nullable()->constrained('users')->onDelete('set null');
                 $table->timestamp('approved_at')->nullable();
                 
+                // เพิ่มคอลัมน์จาก 0001_01_01_00060_add_missing_columns_to_orders_table.php
+                $table->decimal('shipping_fee', 15, 2)->default(0);
+                $table->decimal('other_fees', 15, 2)->default(0);
+                $table->string('payment_status')->default('unpaid')->check("payment_status IN ('unpaid', 'partial', 'paid', 'refunded')");
+                $table->decimal('paid_amount', 15, 2)->default(0);
+                $table->decimal('balance_due', 15, 2)->default(0);
+                
+                // เพิ่มคอลัมน์จาก 0001_01_01_00061_add_status_related_columns_to_orders_table.php
+                $table->string('fulfillment_status')->default('pending')->check("fulfillment_status IN ('pending', 'partial', 'fulfilled', 'returned')");
+                $table->string('tracking_number')->nullable();
+                $table->string('carrier')->nullable();
+                $table->timestamp('shipped_at')->nullable();
+                $table->timestamp('delivered_at')->nullable();
+                $table->foreignId('delivery_order_id')->nullable();
+                
                 $table->timestamps();
                 $table->softDeletes();
             });
-        } else if (!Schema::hasColumn('orders', 'sales_person_id')) {
-            // เพิ่มคอลัมน์ sales_person_id ถ้าตารางมีอยู่แล้วแต่ยังไม่มีคอลัมน์นี้
+        } else {
+            // ตรวจสอบว่ามีคอลัมน์ที่จำเป็นหรือไม่ ถ้าไม่มีให้เพิ่ม
             Schema::table('orders', function (Blueprint $table) {
-                $table->foreignId('sales_person_id')->nullable()->constrained('employees')->onDelete('set null');
+                // เพิ่มคอลัมน์ discount_type ถ้ายังไม่มี
+                if (!Schema::hasColumn('orders', 'discount_type')) {
+                    $table->string('discount_type')->default('fixed')->after('subtotal');
+                }
+                
+                // เพิ่มฟิลด์พนักงานขาย ถ้ายังไม่มี
+                if (!Schema::hasColumn('orders', 'sales_person_id')) {
+                    $table->foreignId('sales_person_id')->nullable()->constrained('employees')->onDelete('set null');
+                }
+                
+                // เพิ่มคอลัมน์จาก 0001_01_01_00060_add_missing_columns_to_orders_table.php ถ้ายังไม่มี
+                if (!Schema::hasColumn('orders', 'shipping_fee')) {
+                    $table->decimal('shipping_fee', 15, 2)->default(0);
+                }
+                
+                if (!Schema::hasColumn('orders', 'other_fees')) {
+                    $table->decimal('other_fees', 15, 2)->default(0);
+                }
+                
+                if (!Schema::hasColumn('orders', 'payment_status')) {
+                    $table->string('payment_status')->default('unpaid')->check("payment_status IN ('unpaid', 'partial', 'paid', 'refunded')");
+                }
+                
+                if (!Schema::hasColumn('orders', 'paid_amount')) {
+                    $table->decimal('paid_amount', 15, 2)->default(0);
+                }
+                
+                if (!Schema::hasColumn('orders', 'balance_due')) {
+                    $table->decimal('balance_due', 15, 2)->default(0);
+                }
+                
+                // เพิ่มคอลัมน์จาก 0001_01_01_00061_add_status_related_columns_to_orders_table.php ถ้ายังไม่มี
+                if (!Schema::hasColumn('orders', 'fulfillment_status')) {
+                    $table->string('fulfillment_status')->default('pending')->check("fulfillment_status IN ('pending', 'partial', 'fulfilled', 'returned')");
+                }
+                
+                if (!Schema::hasColumn('orders', 'tracking_number')) {
+                    $table->string('tracking_number')->nullable();
+                }
+                
+                if (!Schema::hasColumn('orders', 'carrier')) {
+                    $table->string('carrier')->nullable();
+                }
+                
+                if (!Schema::hasColumn('orders', 'shipped_at')) {
+                    $table->timestamp('shipped_at')->nullable();
+                }
+                
+                if (!Schema::hasColumn('orders', 'delivered_at')) {
+                    $table->timestamp('delivered_at')->nullable();
+                }
+                
+                if (!Schema::hasColumn('orders', 'delivery_order_id')) {
+                    $table->foreignId('delivery_order_id')->nullable();
+                }
+                
+                // เพิ่มคอลัมน์ tax_rate ถ้ายังไม่มี
+                if (!Schema::hasColumn('orders', 'tax_rate')) {
+                    $table->decimal('tax_rate', 15, 2)->default(0)->after('discount_amount');
+                }
+                
+                // เพิ่มคอลัมน์ shipping_cost ถ้ายังไม่มี
+                if (!Schema::hasColumn('orders', 'shipping_cost')) {
+                    $table->decimal('shipping_cost', 15, 2)->default(0)->after('tax_amount');
+                }
+                
+                // เพิ่มคอลัมน์ shipping_method ถ้ายังไม่มี
+                if (!Schema::hasColumn('orders', 'shipping_method')) {
+                    $table->string('shipping_method')->nullable()->after('shipping_country');
+                }
             });
         }
 
@@ -251,6 +339,91 @@ return new class extends Migration
             Log::error('เกิดข้อผิดพลาดในการปรับปรุงตาราง order_items: ' . $e->getMessage());
             echo "เกิดข้อผิดพลาดในการปรับปรุงตาราง order_items: " . $e->getMessage() . "\n";
         }
+
+        // สร้างตาราง delivery_orders
+        if (!Schema::hasTable('delivery_orders')) {
+            try {
+                Schema::create('delivery_orders', function (Blueprint $table) {
+                    $table->id();
+                    $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
+                    $table->foreignId('order_id')->nullable()->constrained('orders')->onDelete('set null');
+                    $table->foreignId('customer_id')->nullable()->constrained('customers')->onDelete('set null');
+                    $table->string('delivery_number')->unique();
+                    $table->dateTime('delivery_date');
+                    $table->string('status')->check("status IN ('draft', 'pending', 'in_transit', 'delivered', 'failed', 'canceled')");
+                    $table->string('delivery_status')->nullable(); // เพิ่ม delivery_status เพื่อให้เข้ากับ seeder
+                    $table->text('delivery_address')->nullable();
+                    $table->string('shipping_method')->nullable(); // เพิ่ม shipping_method
+                    $table->string('receiver_name')->nullable();
+                    $table->string('receiver_contact')->nullable();
+                    $table->text('notes')->nullable();
+                    $table->string('tracking_number')->nullable();
+                    $table->string('carrier')->nullable();
+                    $table->dateTime('delivered_at')->nullable();
+                    $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
+                    $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('set null');
+                    $table->timestamps();
+                    $table->softDeletes();
+                });
+                
+                Log::info('สร้างตาราง delivery_orders เรียบร้อยแล้ว');
+            } catch (\Exception $e) {
+                Log::error('เกิดข้อผิดพลาดในการสร้างตาราง delivery_orders: ' . $e->getMessage());
+                echo "เกิดข้อผิดพลาดในการสร้างตาราง delivery_orders: " . $e->getMessage() . "\n";
+            }
+        } else {
+            // ถ้าตารางมีอยู่แล้ว ตรวจสอบและเพิ่มคอลัมน์
+            try {
+                Schema::table('delivery_orders', function (Blueprint $table) {
+                    if (!Schema::hasColumn('delivery_orders', 'customer_id')) {
+                        $table->foreignId('customer_id')->nullable()->after('order_id')->constrained('customers')->onDelete('set null');
+                        echo "เพิ่มคอลัมน์ customer_id ในตาราง delivery_orders เรียบร้อยแล้ว\n";
+                    }
+                    
+                    if (!Schema::hasColumn('delivery_orders', 'delivery_status')) {
+                        $table->string('delivery_status')->nullable()->after('status');
+                        echo "เพิ่มคอลัมน์ delivery_status ในตาราง delivery_orders เรียบร้อยแล้ว\n";
+                    }
+                    
+                    if (!Schema::hasColumn('delivery_orders', 'shipping_method')) {
+                        $table->string('shipping_method')->nullable()->after('delivery_address');
+                        echo "เพิ่มคอลัมน์ shipping_method ในตาราง delivery_orders เรียบร้อยแล้ว\n";
+                    }
+                });
+            } catch (\Exception $e) {
+                Log::error('เกิดข้อผิดพลาดในการเพิ่มคอลัมน์: ' . $e->getMessage());
+                echo "เกิดข้อผิดพลาดในการเพิ่มคอลัมน์: " . $e->getMessage() . "\n";
+            }
+        }
+
+        // สร้างตาราง delivery_order_items 
+        if (!Schema::hasTable('delivery_order_items')) {
+            try {
+                Schema::create('delivery_order_items', function (Blueprint $table) {
+                    $table->id();
+                    $table->foreignId('delivery_order_id')->constrained('delivery_orders')->onDelete('cascade');
+                    $table->foreignId('order_item_id')->nullable()->constrained('order_items')->onDelete('set null');
+                    $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
+                    $table->decimal('quantity', 15, 2);
+                    $table->string('description')->nullable();
+                    $table->string('serial_number')->nullable();
+                    $table->string('batch_number')->nullable();
+                    $table->date('expiry_date')->nullable();
+                    $table->integer('item_order')->default(0);
+                    $table->json('metadata')->nullable();
+                    $table->timestamps();
+                    $table->softDeletes();
+                    
+                    $table->index('delivery_order_id');
+                    $table->index('product_id');
+                });
+                
+                Log::info('สร้างตาราง delivery_order_items เรียบร้อยแล้ว');
+            } catch (\Exception $e) {
+                Log::error('เกิดข้อผิดพลาดในการสร้างตาราง delivery_order_items: ' . $e->getMessage());
+                echo "เกิดข้อผิดพลาดในการสร้างตาราง delivery_order_items: " . $e->getMessage() . "\n";
+            }
+        }
     }
 
     /**
@@ -258,6 +431,8 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('delivery_order_items');
+        Schema::dropIfExists('delivery_orders');
         Schema::dropIfExists('order_items');
         Schema::dropIfExists('orders');
     }

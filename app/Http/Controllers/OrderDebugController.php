@@ -3,120 +3,136 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\Customer;
+use App\Models\Company;
 use App\Models\Product;
-use App\Models\Unit;
+use App\Models\Employee;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
 
 class OrderDebugController extends Controller
 {
-    public function testUpdate(Request $request, Order $order)
+    public function checkConnection()
     {
+        $result = [
+            'success' => false,
+            'connection' => null,
+            'table_exists' => false,
+            'order_columns' => [],
+            'session' => [
+                'company_id' => session('company_id'),
+                'current_company_id' => session('current_company_id')
+            ],
+            'auth' => [
+                'logged_in' => Auth::check(),
+                'user_id' => Auth::id(),
+                'user_name' => Auth::check() ? Auth::user()->name : null
+            ],
+            'tables' => [],
+            'orders_count' => 0,
+            'errors' => []
+        ];
+        
         try {
-            // จำลองการตรวจสอบเงื่อนไขการอัปเดต แต่ไม่ได้อัปเดตจริง
-            $validated = $request->validate([
-                'customer_id' => 'required|exists:customers,id',
-                'order_number' => 'required|unique:orders,order_number,' . $order->id,
-                // ... ลดรายการ validation rule ลงเพื่อทดสอบ
-            ]);
+            // ตรวจสอบการเชื่อมต่อฐานข้อมูล
+            $connection = DB::connection()->getPdo();
+            $result['success'] = true;
+            $result['connection'] = [
+                'driver' => DB::connection()->getDriverName(),
+                'database' => DB::connection()->getDatabaseName()
+            ];
             
-            // เพิ่มข้อมูลสินค้าพร้อมรหัสสินค้าและหน่วย
-            $productsData = [];
-            if ($order->items) {
-                foreach ($order->items as $item) {
-                    $product = Product::find($item->product_id);
-                    $unit = null;
-                    
-                    // ดึงข้อมูลหน่วยจากหลายแหล่ง (item, product, quotation)
-                    if ($item->unit_id) {
-                        $unit = Unit::find($item->unit_id);
-                    } elseif ($product && $product->unit_id) {
-                        $unit = Unit::find($product->unit_id);
-                    }
-                    
-                    $productsData[] = [
-                        'id' => $item->id,
-                        'product_id' => $item->product_id,
-                        'product_name' => $product ? $product->name : 'Unknown',
-                        'product_code' => $product ? $product->code ?? $product->sku ?? '' : '',
-                        'quantity' => $item->quantity,
-                        'unit_id' => $item->unit_id ?? ($product ? $product->unit_id : null),
-                        'unit_name' => $unit ? $unit->name : '',
-                    ];
-                }
+            // ตรวจสอบตาราง orders
+            $result['table_exists'] = Schema::hasTable('orders');
+            
+            if ($result['table_exists']) {
+                $result['order_columns'] = Schema::getColumnListing('orders');
+                
+                // นับจำนวน orders
+                $companyId = session('company_id') ?? session('current_company_id') ?? 1;
+                $result['orders_count'] = Order::where('company_id', $companyId)->count();
+                $result['orders_sample'] = Order::where('company_id', $companyId)->take(5)->get(['id', 'order_number', 'customer_id', 'company_id']);
             }
             
-            return response()->json([
-                'success' => true,
-                'message' => 'ข้อมูลถูกต้อง สามารถอัปเดตได้',
-                'validated_data' => $validated,
-                'original_request' => $request->all(),
-                'products_data' => $productsData // แสดงข้อมูลสินค้าพร้อมรหัสและหน่วย
-            ]);
+            // ดึงรายชื่อตารางทั้งหมด
+            if (DB::connection()->getDriverName() === 'sqlite') {
+                $tables = DB::select("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name");
+                $result['tables'] = array_map(function($table) {
+                    return $table->name;
+                }, $tables);
+            } else {
+                $tables = DB::select('SHOW TABLES');
+                $result['tables'] = array_map(function($table) {
+                    $table = (array) $table;
+                    return reset($table);
+                }, $tables);
+            }
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ], 422);
+            $result['errors'][] = $e->getMessage();
         }
+        
+        return response()->json($result);
     }
     
-    /**
-     * แสดงรายละเอียดสินค้าในใบสั่งขายพร้อมรหัสสินค้าและหน่วย
-     */
-    public function showOrderItems(Order $order)
+    public function fixCompanyId()
     {
-        $order->load(['items.product.unit', 'customer', 'quotation.items']);
+        $result = [
+            'success' => false,
+            'previous_company_id' => session('company_id'),
+            'user_companies' => [],
+            'actions' => []
+        ];
         
-        $items = $order->items->map(function ($item) {
-            // ดึงข้อมูลหน่วยจากหลายแหล่ง
-            $unitName = '';
-            
-            if ($item->unit_id && $unit = \App\Models\Unit::find($item->unit_id)) {
-                $unitName = $unit->name;
-            } elseif ($item->product && $item->product->unit) {
-                $unitName = $item->product->unit->name;
-            }
-            
-            // ดึงข้อมูลจากใบเสนอราคา (ถ้ามี)
-            $quotationItemData = null;
-            if ($order->quotation) {
-                foreach ($order->quotation->items as $quotationItem) {
-                    if ($quotationItem->product_id == $item->product_id) {
-                        $quotationItemData = [
-                            'quantity' => $quotationItem->quantity,
-                            'unit_price' => $quotationItem->unit_price,
-                            'unit' => $quotationItem->unit ? $quotationItem->unit->name : ''
-                        ];
-                        break;
+        try {
+            if (Auth::check()) {
+                $user = Auth::user();
+                $companies = $user->companies;
+                
+                $result['user_companies'] = $companies->map(function($company) {
+                    return [
+                        'id' => $company->id,
+                        'name' => $company->name
+                    ];
+                });
+                
+                if ($companies->count() > 0) {
+                    // กำหนดบริษัทแรกเป็น company_id ปัจจุบัน
+                    $firstCompany = $companies->first();
+                    Session::put('company_id', $firstCompany->id);
+                    Session::put('current_company_id', $firstCompany->id);
+                    $result['actions'][] = "Set company_id to {$firstCompany->id}";
+                    $result['success'] = true;
+                } else {
+                    // ถ้าไม่มีบริษัท ให้สร้างบริษัทตัวอย่าง
+                    $result['actions'][] = "No companies found for user";
+                    
+                    // ตรวจสอบว่ามีบริษัทในระบบหรือไม่
+                    $anyCompany = Company::first();
+                    if ($anyCompany) {
+                        Session::put('company_id', $anyCompany->id);
+                        Session::put('current_company_id', $anyCompany->id);
+                        $result['actions'][] = "Set company_id to existing company {$anyCompany->id}";
+                        $result['success'] = true;
+                    } else {
+                        $result['actions'][] = "No companies exist in system";
                     }
                 }
+            } else {
+                $result['actions'][] = "User not logged in";
             }
             
-            return [
-                'id' => $item->id,
-                'product_id' => $item->product_id,
-                'product_code' => $item->product ? $item->product->code ?? $item->product->sku ?? '' : '',
-                'product_name' => $item->product ? $item->product->name : 'Unknown',
-                'description' => $item->description ?? '',
-                'quantity' => $item->quantity,
-                'unit_price' => $item->unit_price,
-                'unit_id' => $item->unit_id ?? ($item->product ? $item->product->unit_id : null),
-                'unit_name' => $unitName,
-                'total' => $item->quantity * $item->unit_price,
-                'from_quotation' => $quotationItemData,
-            ];
-        });
+            // อัพเดทค่าหลังจากการแก้ไข
+            $result['new_company_id'] = session('company_id');
+            $result['new_current_company_id'] = session('current_company_id');
+            
+        } catch (\Exception $e) {
+            $result['errors'][] = $e->getMessage();
+        }
         
-        return response()->json([
-            'order' => [
-                'id' => $order->id,
-                'order_number' => $order->order_number,
-                'customer_name' => $order->customer ? $order->customer->name : 'Unknown',
-                'quotation_number' => $order->quotation ? $order->quotation->quotation_number : null,
-            ],
-            'items' => $items
-        ]);
+        return response()->json($result);
     }
 }

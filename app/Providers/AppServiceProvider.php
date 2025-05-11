@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Company;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Database\QueryException;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -13,10 +15,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // เพิ่มค่า company_id เริ่มต้นใน container
-        $this->app->singleton('company_id', function ($app) {
-            return session('company_id') ?? config('company.default_id', 1);
-        });
+        //
     }
 
     /**
@@ -24,21 +23,32 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // กำหนด company_id เริ่มต้นถ้าไม่มี
-        $this->app->booted(function () {
-            if (Auth::check() && !session()->has('company_id')) {
-                $user = Auth::user();
-                $isAdmin = $user->hasRole(['superadmin', 'admin']);
-                
-                // ดึงบริษัททั้งหมดที่ผู้ใช้มีสิทธิ์เข้าถึง
-                $companies = $isAdmin ? Company::all() : $user->companies;
-                
-                if ($companies->isNotEmpty()) {
-                    $companyId = $companies->first()->id;
-                    session(['company_id' => $companyId]);
-                    config(['company.id' => $companyId]);
-                }
+        Schema::defaultStringLength(191);
+
+        // ถ้าอยู่ในโหมด local ให้แสดง error ทั้งหมด
+        if (app()->environment('local')) {
+            error_reporting(E_ALL);
+            ini_set('display_errors', '1');
+        }
+        
+        // บันทึก SQL query ที่ผิดพลาดเพื่อช่วยในการ debug
+        DB::listen(function ($query) {
+            if ($query->time > 1000) { // บันทึกเฉพาะ query ที่ใช้เวลามากกว่า 1 วินาที
+                Log::channel('daily')->info('Slow Query', [
+                    'sql' => $query->sql,
+                    'bindings' => $query->bindings,
+                    'time' => $query->time . 'ms'
+                ]);
             }
+        });
+        
+        // จับ query exception และบันทึกลง log
+        DB::getEventDispatcher()->listen('illuminate.query.failed', function ($sql, $bindings, $error) {
+            Log::error('SQL Error', [
+                'sql' => $sql,
+                'bindings' => $bindings,
+                'error' => $error
+            ]);
         });
     }
 }
