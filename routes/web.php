@@ -83,6 +83,7 @@ Route::get('/quotations/{quotation}/get-data', [\App\Http\Controllers\QuotationA
     ->middleware(['auth']);
 
 Route::get('/quotations/{quotation}/pdf', [App\Http\Controllers\QuotationController::class, 'viewAsPdf'])->name('quotations.pdf');
+Route::get('/quotations/{quotation}/print', [App\Http\Controllers\QuotationController::class, 'printView'])->name('quotations.print');
 
 // เพิ่ม route สำหรับการอนุมัติและปฏิเสธใบเสนอราคา
 Route::post('/quotations/{quotation}/approve', [App\Http\Controllers\QuotationController::class, 'approve'])

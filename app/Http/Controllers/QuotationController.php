@@ -546,12 +546,24 @@ class QuotationController extends Controller
     }
 
     /**
-     * แสดงใบเสนอราคาในรูปแบบ PDF View
+     * แสดงใบเสนอราคาในรูปแบบ PDF View (รีไดเร็กต์ไปยังมุมมองพิมพ์)
      *
      * @param  \App\Models\Quotation  $quotation
      * @return \Illuminate\Http\Response
      */
     public function viewAsPdf(Quotation $quotation)
+    {
+        // เปลี่ยนการเรียกใช้จาก pdf-view เป็น print view แทน
+        return $this->printView($quotation);
+    }
+
+    /**
+     * แสดงใบเสนอราคาในรูปแบบพร้อมพิมพ์
+     *
+     * @param  \App\Models\Quotation  $quotation
+     * @return \Illuminate\Http\Response
+     */
+    public function printView(Quotation $quotation)
     {
         // โหลดความสัมพันธ์ที่จำเป็น
         $quotation->load(['customer', 'items.product', 'items.unit']);
@@ -559,8 +571,8 @@ class QuotationController extends Controller
         // หาข้อมูลบริษัท
         $company = \App\Models\Company::find($quotation->company_id);
         
-        // ส่ง view pdf-view ที่มีอยู่แล้ว
-        return view('quotations.pdf-view', [
+        // ส่ง view print ที่สร้างใหม่
+        return view('quotations.print', [
             'quotation' => $quotation,
             'company' => $company,
         ]);

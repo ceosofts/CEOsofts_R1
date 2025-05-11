@@ -23,8 +23,8 @@
             </div>
             @endif
 
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900">
                     <form action="{{ route('quotations.update', $quotation) }}" method="POST" id="quotationForm">
                         @csrf
                         @method('PUT')
@@ -33,8 +33,8 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                             <div>
                                 <div class="mb-4">
-                                    <label for="customer_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">ลูกค้า <span class="text-red-600">*</span></label>
-                                    <select id="customer_id" name="customer_id" required class="block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('customer_id') border-red-500 @enderror">
+                                    <label for="customer_id" class="block text-sm font-medium text-gray-700 mb-2">ลูกค้า <span class="text-red-600">*</span></label>
+                                    <select id="customer_id" name="customer_id" required class="block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50 @error('customer_id') border-red-500 @enderror">
                                         <option value="">-- เลือกลูกค้า --</option>
                                         @foreach($customers as $customer)
                                         <option value="{{ $customer->id }}" {{ old('customer_id', $quotation->customer_id) == $customer->id ? 'selected' : '' }}>
@@ -48,8 +48,8 @@
                                 </div>
 
                                 <div class="mb-4">
-                                    <label for="reference_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">เลขที่อ้างอิง</label>
-                                    <input type="text" id="reference_number" name="reference_number" value="{{ old('reference_number', $quotation->reference_number) }}" class="block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('reference_number') border-red-500 @enderror">
+                                    <label for="reference_number" class="block text-sm font-medium text-gray-700 mb-2">เลขที่อ้างอิง</label>
+                                    <input type="text" id="reference_number" name="reference_number" value="{{ old('reference_number', $quotation->reference_number) }}" class="block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50 @error('reference_number') border-red-500 @enderror">
                                     @error('reference_number')
                                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                     @enderror
@@ -57,8 +57,8 @@
                                 
                                 <!-- เพิ่มฟิลด์พนักงานขาย -->
                                 <div class="mb-4">
-                                    <label for="sales_person_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">พนักงานขาย</label>
-                                    <select id="sales_person_id" name="sales_person_id" class="block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('sales_person_id') border-red-500 @enderror">
+                                    <label for="sales_person_id" class="block text-sm font-medium text-gray-700 mb-2">พนักงานขาย</label>
+                                    <select id="sales_person_id" name="sales_person_id" class="block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50 @error('sales_person_id') border-red-500 @enderror">
                                         <option value="">-- เลือกพนักงานขาย --</option>
                                         @foreach(\App\Models\Employee::where('company_id', session('company_id'))->orderBy('first_name')->get() as $employee)
                                         <option value="{{ $employee->id }}" {{ old('sales_person_id', $quotation->sales_person_id) == $employee->id ? 'selected' : '' }}>
@@ -74,22 +74,22 @@
 
                             <div>
                                 <div class="mb-4">
-                                    <label for="quotation_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">เลขที่ใบเสนอราคา <span class="text-red-600">*</span></label>
-                                    <input type="text" id="quotation_number" name="quotation_number" value="{{ $quotation->quotation_number }}" readonly class="block w-full rounded-md shadow-sm bg-gray-100 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300">
+                                    <label for="quotation_number" class="block text-sm font-medium text-gray-700 mb-2">เลขที่ใบเสนอราคา <span class="text-red-600">*</span></label>
+                                    <input type="text" id="quotation_number" name="quotation_number" value="{{ $quotation->quotation_number }}" readonly class="block w-full rounded-md shadow-sm bg-gray-100 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                                 </div>
 
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div class="mb-4">
-                                        <label for="issue_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">วันที่ <span class="text-red-600">*</span></label>
-                                        <input type="date" id="issue_date" name="issue_date" value="{{ old('issue_date', $quotation->issue_date->format('Y-m-d')) }}" required class="block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('issue_date') border-red-500 @enderror">
+                                        <label for="issue_date" class="block text-sm font-medium text-gray-700 mb-2">วันที่ <span class="text-red-600">*</span></label>
+                                        <input type="date" id="issue_date" name="issue_date" value="{{ old('issue_date', $quotation->issue_date->format('Y-m-d')) }}" required class="block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50 @error('issue_date') border-red-500 @enderror">
                                         @error('issue_date')
                                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                         @enderror
                                     </div>
 
                                     <div class="mb-4">
-                                        <label for="expiry_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">วันที่หมดอายุ <span class="text-red-600">*</span></label>
-                                        <input type="date" id="expiry_date" name="expiry_date" value="{{ old('expiry_date', $quotation->expiry_date->format('Y-m-d')) }}" required class="block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('expiry_date') border-red-500 @enderror">
+                                        <label for="expiry_date" class="block text-sm font-medium text-gray-700 mb-2">วันที่หมดอายุ <span class="text-red-600">*</span></label>
+                                        <input type="date" id="expiry_date" name="expiry_date" value="{{ old('expiry_date', $quotation->expiry_date->format('Y-m-d')) }}" required class="block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50 @error('expiry_date') border-red-500 @enderror">
                                         @error('expiry_date')
                                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                         @enderror
@@ -111,9 +111,9 @@
                             </h3>
 
                             <div class="overflow-x-auto">
-                                <table class="min-w-full bg-white dark:bg-gray-700">
+                                <table class="min-w-full bg-white">
                                     <thead>
-                                        <tr class="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300">
+                                        <tr class="bg-gray-100 text-gray-700">
                                             <th class="py-2 px-4 border-b text-center">ลำดับ</th>
                                             <th class="py-2 px-4 border-b text-left">สินค้า</th>
                                             <th class="py-2 px-4 border-b text-right">จำนวน</th>
@@ -135,20 +135,20 @@
                         <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <div class="mb-4">
-                                    <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">หมายเหตุ</label>
-                                    <textarea id="notes" name="notes" rows="4" class="block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">{{ old('notes', $quotation->notes) }}</textarea>
+                                    <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">หมายเหตุ</label>
+                                    <textarea id="notes" name="notes" rows="4" class="block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50">{{ old('notes', $quotation->notes) }}</textarea>
                                 </div>
 
                                 <div class="mb-4">
-                                    <label for="shipping_method" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">วิธีการจัดส่ง</label>
-                                    <input type="text" id="shipping_method" name="shipping_method" value="{{ old('shipping_method', $quotation->shipping_method) }}" class="block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    <label for="shipping_method" class="block text-sm font-medium text-gray-700 mb-2">วิธีการจัดส่ง</label>
+                                    <input type="text" id="shipping_method" name="shipping_method" value="{{ old('shipping_method', $quotation->shipping_method) }}" class="block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                                 </div>
                             </div>
 
                             <div>
-                                <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                <div class="bg-gray-50 p-4 rounded-lg">
                                     <div class="mb-4">
-                                        <label for="discount_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">ประเภทส่วนลด</label>
+                                        <label for="discount_type" class="block text-sm font-medium text-gray-700 mb-2">ประเภทส่วนลด</label>
                                         <div class="flex space-x-4">
                                             <label class="inline-flex items-center">
                                                 <input type="radio" name="discount_type" value="fixed" {{ old('discount_type', $quotation->discount_type) == 'fixed' ? 'checked' : '' }} class="form-radio">
@@ -162,18 +162,18 @@
                                     </div>
 
                                     <div class="mb-4">
-                                        <label for="discount_amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        <label for="discount_amount" class="block text-sm font-medium text-gray-700 mb-2">
                                             <span id="discount_label">{{ $quotation->discount_type == 'percentage' ? 'ส่วนลด (%)' : 'ส่วนลด (บาท)' }}</span>
                                         </label>
-                                        <input type="number" id="discount_amount" name="discount_amount" value="{{ old('discount_amount', $quotation->discount_amount) }}" min="0" step="0.01" class="block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                        <input type="number" id="discount_amount" name="discount_amount" value="{{ old('discount_amount', $quotation->discount_amount) }}" min="0" step="0.01" class="block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                                     </div>
 
                                     <div class="mb-4">
-                                        <label for="tax_rate" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">ภาษีมูลค่าเพิ่ม (%)</label>
-                                        <input type="number" id="tax_rate" name="tax_rate" value="{{ old('tax_rate', $quotation->tax_rate) }}" min="0" max="100" step="0.01" class="block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                        <label for="tax_rate" class="block text-sm font-medium text-gray-700 mb-2">ภาษีมูลค่าเพิ่ม (%)</label>
+                                        <input type="number" id="tax_rate" name="tax_rate" value="{{ old('tax_rate', $quotation->tax_rate) }}" min="0" max="100" step="0.01" class="block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                                     </div>
 
-                                    <div class="border-t border-gray-200 dark:border-gray-600 pt-4 mt-4">
+                                    <div class="border-t border-gray-200 pt-4 mt-4">
                                         <div class="flex justify-between">
                                             <span class="text-sm font-medium">ยอดรวมก่อนภาษี:</span>
                                             <span id="subtotal">{{ number_format($quotation->subtotal, 2) }}</span>
@@ -186,7 +186,7 @@
                                             <span class="text-sm font-medium">ภาษีมูลค่าเพิ่ม ({{ $quotation->tax_rate }}%):</span>
                                             <span id="tax">{{ number_format($quotation->tax_amount, 2) }}</span>
                                         </div>
-                                        <div class="flex justify-between mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+                                        <div class="flex justify-between mt-2 pt-2 border-t border-gray-200">
                                             <span class="font-bold">ยอดรวมทั้งสิ้น:</span>
                                             <span id="total" class="font-bold">{{ number_format($quotation->total_amount, 2) }}</span>
                                         </div>
@@ -212,12 +212,12 @@
 
     <!-- Template สำหรับแถวสินค้า -->
     <template id="productRowTemplate">
-        <tr class="product-row border-b dark:border-gray-600">
+        <tr class="product-row border-b">
             <td class="py-2 px-4 text-center item-sequence">
                 <!-- ลำดับจะถูกใส่ผ่าน JavaScript -->
             </td>
             <td class="py-2">
-                <select name="products[INDEX].product_id" class="product-select block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                <select name="products[INDEX].product_id" class="product-select block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50" required>
                     <option value="">-- เลือกสินค้า --</option>
                     @foreach($products as $product)
                     <option value="{{ $product->id }}" data-price="{{ $product->selling_price }}" data-code="{{ $product->code }}">
@@ -228,10 +228,10 @@
                 <input type="hidden" name="products[INDEX].product_code" class="product-code">
             </td>
             <td class="py-2">
-                <input type="number" name="products[INDEX].quantity" class="quantity block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" min="0.01" step="0.01" value="1" required>
+                <input type="number" name="products[INDEX].quantity" class="quantity block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50" min="0.01" step="0.01" value="1" required>
             </td>
             <td class="py-2">
-                <select name="products[INDEX].unit_id" class="unit-select block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                <select name="products[INDEX].unit_id" class="unit-select block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50" required>
                     <option value="">-- เลือกหน่วย --</option>
                     @foreach($units as $unit)
                     <option value="{{ $unit->id }}">{{ $unit->name }}</option>
@@ -239,16 +239,16 @@
                 </select>
             </td>
             <td class="py-2">
-                <input type="number" name="products[INDEX].unit_price" class="unit-price block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" min="0" step="0.01" required>
+                <input type="number" name="products[INDEX].unit_price" class="unit-price block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50" min="0" step="0.01" required>
             </td>
             <td class="py-2">
-                <input type="number" name="products[INDEX].discount_percentage" class="discount-percentage block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" min="0" max="100" step="0.01" value="0">
+                <input type="number" name="products[INDEX].discount_percentage" class="discount-percentage block w-full rounded-md shadow-sm focus:ring focus:ring-blue-200 focus:ring-opacity-50" min="0" max="100" step="0.01" value="0">
             </td>
             <td class="py-2">
-                <input type="text" class="subtotal block w-full rounded-md bg-gray-100 border-gray-300 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-300" readonly>
+                <input type="text" class="subtotal block w-full rounded-md bg-gray-100 border-gray-300" readonly>
             </td>
             <td class="py-2">
-                <button type="button" class="remove-row text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
+                <button type="button" class="remove-row text-red-600 hover:text-red-800">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                     </svg>
@@ -279,7 +279,7 @@
             // ปุ่มเพิ่มแถวสินค้า
             document.getElementById('addProductRow').addEventListener('click', function() {
                 addProductRow();
-                updateSequenceNumbers(); // เรียกใช้ฟังก์ชันอัพเดทเลขลำดับ
+                updateSequenceNumbers; // เรียกใช้ฟังก์ชันอัพเดทเลขลำดับ
             });
 
             // เปลี่ยนฉลากของส่วนลดเมื่อเปลี่ยนประเภทส่วนลด

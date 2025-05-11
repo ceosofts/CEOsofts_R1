@@ -1,0 +1,14 @@
+/* 
+การแก้ไขปุ่ม "ดูตัวอย่าง" ที่ไม่ทำงาน
+
+ปัญหา:
+- ปุ่มดูตัวอย่างในหน้าใบเสนอราคาไม่ทำงาน เนื่องจากไม่มีการโหลด CSS ที่มีคลาส modal-hidden
+
+การแก้ไข:
+1. เพิ่ม CSS inline ใน header ของหน้า show.blade.php เพื่อกำหนดรูปแบบการแสดงผลของ modal
+2. กำหนดให้ #preview-modal และ #rejection-modal ใช้ style แบบ fixed position และแสดงเต็มหน้าจอ
+3. กำหนด class modal-hidden ให้ซ่อน modal ด้วย display: none;
+4. ล้าง view cache ด้วยคำสั่ง php artisan view:clear เพื่อให้การเปลี่ยนแปลงมีผลทันที
+
+ลองทดสอบเข้าที่ URL: http://ceosofts.test/quotations/44 แล้วคลิกที่ปุ่ม "ดูตัวอย่าง" ควรจะสามารถแสดง modal ได้อย่างถูกต้อง
+*/

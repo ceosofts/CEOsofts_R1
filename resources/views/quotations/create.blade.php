@@ -32,27 +32,27 @@
                 @csrf
 
                 <!-- ข้อมูลทั่วไปของใบเสนอราคา -->
-                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
-                    <div class="p-6 text-gray-900 dark:text-gray-100">
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
+                    <div class="p-6 text-gray-900">
                         <h3 class="text-lg font-semibold mb-4">ข้อมูลเอกสาร</h3>
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <div>
-                                <label for="quotation_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">เลขที่เอกสาร <span class="text-red-600">*</span></label>
+                                <label for="quotation_number" class="block text-sm font-medium text-gray-700 mb-1">เลขที่เอกสาร <span class="text-red-600">*</span></label>
                                 <input type="text" name="quotation_number" id="quotation_number" value="{{ old('quotation_number', $nextNumber) }}" required
-                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                             </div>
 
                             <div>
-                                <label for="reference_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">เลขที่อ้างอิง</label>
+                                <label for="reference_number" class="block text-sm font-medium text-gray-700 mb-1">เลขที่อ้างอิง</label>
                                 <input type="text" name="reference_number" id="reference_number" value="{{ old('reference_number') }}"
-                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                             </div>
 
                             <div>
-                                <label for="customer_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ลูกค้า <span class="text-red-600">*</span></label>
+                                <label for="customer_id" class="block text-sm font-medium text-gray-700 mb-1">ลูกค้า <span class="text-red-600">*</span></label>
                                 <select name="customer_id" id="customer_id" required
-                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                                     <option value="">-- เลือกลูกค้า --</option>
                                     @foreach($customers as $customer)
                                     <option value="{{ $customer->id }}" {{ old('customer_id') == $customer->id ? 'selected' : '' }}>
@@ -63,20 +63,20 @@
                             </div>
 
                             <div>
-                                <label for="issue_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">วันที่ออกเอกสาร <span class="text-red-600">*</span></label>
+                                <label for="issue_date" class="block text-sm font-medium text-gray-700 mb-1">วันที่ออกเอกสาร <span class="text-red-600">*</span></label>
                                 <input type="date" name="issue_date" id="issue_date" value="{{ old('issue_date', date('Y-m-d')) }}" required
-                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                             </div>
 
                             <div>
-                                <label for="expiry_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">วันที่หมดอายุ <span class="text-red-600">*</span></label>
+                                <label for="expiry_date" class="block text-sm font-medium text-gray-700 mb-1">วันที่หมดอายุ <span class="text-red-600">*</span></label>
                                 <input type="date" name="expiry_date" id="expiry_date" value="{{ old('expiry_date', date('Y-m-d', strtotime('+30 days'))) }}" required
-                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                             </div>
 
                             <!-- เพิ่มฟิลด์พนักงานขาย - กรองเฉพาะพนักงานในแผนกการตลาดและขาย -->
                             <div>
-                                <label for="sales_person_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">พนักงานขาย</label>
+                                <label for="sales_person_id" class="block text-sm font-medium text-gray-700 mb-1">พนักงานขาย</label>
                                 @php
                                 // ค้นหาแผนกการตลาดและขาย
                                 $salesDepartmentId = \App\Models\Department::where('company_id', session('company_id'))
@@ -96,7 +96,7 @@
                                 $salesPersons = $salesPersons->orderBy('first_name')->get();
                                 @endphp
                                 <select name="sales_person_id" id="sales_person_id"
-                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                                     <option value="">-- เลือกพนักงานขาย --</option>
                                     @foreach($salesPersons as $employee)
                                     <option value="{{ $employee->id }}" {{ old('sales_person_id') == $employee->id ? 'selected' : '' }}>
@@ -141,9 +141,9 @@
                                         <th class="py-2 px-4 border-b text-center">ลำดับ</th>
                                         <th class="py-2 px-4 border-b text-left">สินค้า</th>
                                         <th class="py-2 px-4 border-b text-center">รหัสสินค้า</th>
-                                        <th class="py-2 px-4 border-b text-right">จำนวน</th>
-                                        <th class="py-2 px-4 border-b text-center">หน่วย</th>
-                                        <th class="py-2 px-4 border-b text-right">ราคาต่อหน่วย</th>
+                                        <th class="py-2 px-4 border-b text-right w-25">จำนวน</th>
+                                        <th class="py-2 px-4 border-b text-center w-32">หน่วย</th>
+                                        <th class="py-2 px-4 border-b text-right w-25">ราคาต่อหน่วย</th>
                                         <th class="py-2 px-4 border-b text-right">ส่วนลด (%)</th>
                                         <th class="py-2 px-4 border-b text-right">รวม</th>
                                         <th class="py-2 px-4 border-b text-center">จัดการ</th>

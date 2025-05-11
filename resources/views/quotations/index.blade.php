@@ -30,14 +30,14 @@
             @endif
 
             <!-- ฟอร์มค้นหาและตัวกรอง -->
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
                 <div class="p-6">
                     <form action="{{ route('quotations.index') }}" method="GET">
                         <!-- Grid layout แบบแถวเดียว -->
                         <div class="flex flex-wrap items-end gap-3">
                             <!-- ช่อง "ค้นหา" - ปรับให้กว้างขึ้นและรองรับค้นหาชื่อพนักงานขาย -->
                             <div class="w-full md:w-64 lg:w-70">
-                                <label for="search" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ค้นหา</label>
+                                <label for="search" class="block text-sm font-medium text-gray-700 mb-1">ค้นหา</label>
                                 <div class="relative rounded-md shadow-sm">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -45,16 +45,16 @@
                                         </svg>
                                     </div>
                                     <input type="text" name="search" id="search" value="{{ request('search') }}"
-                                        class="block w-full pl-10 pr-3 py-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        class="block w-full pl-10 pr-3 py-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                                         placeholder="เลขที่, อ้างอิง, ชื่อลูกค้า, ชื่อพนักงานขาย">
                                 </div>
                             </div>
 
                             <!-- ช่อง "ลูกค้า" -->
                             <div class="w-full md:w-40 lg:w-52">
-                                <label for="customer" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ลูกค้า</label>
+                                <label for="customer" class="block text-sm font-medium text-gray-700 mb-1">ลูกค้า</label>
                                 <select name="customer" id="customer"
-                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                                     <option value="">-- ทั้งหมด --</option>
                                     @foreach(\App\Models\Customer::where('company_id', session('company_id'))->orderBy('name')->get() as $customer)
                                     <option value="{{ $customer->id }}" {{ request('customer') == $customer->id ? 'selected' : '' }}>
@@ -66,9 +66,9 @@
 
                             <!-- ช่อง "สถานะ" -->
                             <div class="w-full md:w-36 lg:w-40">
-                                <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">สถานะ</label>
+                                <label for="status" class="block text-sm font-medium text-gray-700 mb-1">สถานะ</label>
                                 <select name="status" id="status"
-                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                                     <option value="">-- ทั้งหมด --</option>
                                     <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>กำลังเสนอลูกค้า</option>
                                     <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>อนุมัติแล้ว</option>
@@ -78,12 +78,12 @@
 
                             <!-- วันที่ (ย่อให้สั้นลง) -->
                             <div class="w-full md:w-44 lg:w-60">
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ช่วงวันที่</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">ช่วงวันที่</label>
                                 <div class="flex space-x-1">
                                     <input type="date" name="date_from" id="date_from" value="{{ request('date_from') }}"
-                                        class="block w-1/2 py-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                        class="block w-1/2 py-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                                     <input type="date" name="date_to" id="date_to" value="{{ request('date_to') }}"
-                                        class="block w-1/2 py-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                        class="block w-1/2 py-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
                                 </div>
                             </div>
 
@@ -95,7 +95,7 @@
                                     </svg>
                                     ค้นหา
                                 </button>
-                                <a href="{{ route('quotations.index') }}" class="inline-flex items-center px-4 h-10 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600">
+                                <a href="{{ route('quotations.index') }}" class="inline-flex items-center px-4 h-10 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
                                     <svg class="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
                                     </svg>
@@ -111,9 +111,9 @@
                         <!-- For debugging purposes - hidden by default -->
                         @if(config('app.debug'))
                         <div class="mt-2 text-right">
-                            <button type="button" id="toggleDebug" class="text-xs text-gray-500 dark:text-gray-400 hover:underline">Debug</button>
+                            <button type="button" id="toggleDebug" class="text-xs text-gray-500 hover:underline">Debug</button>
                         </div>
-                        <div id="debugInfo" class="hidden mt-2 p-3 bg-gray-100 dark:bg-gray-700 text-xs rounded">
+                        <div id="debugInfo" class="hidden mt-2 p-3 bg-gray-100 text-xs rounded">
                             <p class="font-semibold mb-1">Debug: Search Parameters</p>
                             <ul>
                                 <li>Search: {{ request('search') ?? 'null' }}</li>
@@ -142,13 +142,13 @@
                 </div>
             </div>
 
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900">
                     <div class="overflow-x-auto">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-lg font-semibold">รายการใบเสนอราคา</h3>
                             <div class="flex items-center">
-                                <span class="text-sm text-gray-600 dark:text-gray-400 mr-2">เรียงตาม:</span>
+                                <span class="text-sm text-gray-600 mr-2">เรียงตาม:</span>
                                 <a href="{{ request()->fullUrlWithQuery(['sort' => 'quotation_number', 'direction' => 'asc']) }}"
                                     class="{{ request('sort') == 'quotation_number' && request('direction') == 'asc' ? 'text-blue-600 font-medium' : 'text-gray-600' }} text-sm mx-1">
                                     เลขที่ ↑
@@ -168,21 +168,21 @@
                             </div>
                         </div>
 
-                        <table class="min-w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
+                        <table class="min-w-full bg-white border border-gray-300">
                             <thead>
-                                <tr class="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-200">
-                                    <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-left">เลขที่</th>
-                                    <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-left">วันที่</th>
-                                    <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-left">ลูกค้า</th>
-                                    <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-left">พนักงานขาย</th>
-                                    <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-right">ยอดรวม</th>
-                                    <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-left">สถานะ</th>
-                                    <th class="py-2 px-4 border-b border-gray-300 dark:border-gray-600 text-center">จัดการ</th>
+                                <tr class="bg-gray-100 text-gray-700">
+                                    <th class="py-2 px-4 border-b border-gray-300 text-left">เลขที่</th>
+                                    <th class="py-2 px-4 border-b border-gray-300 text-left">วันที่</th>
+                                    <th class="py-2 px-4 border-b border-gray-300 text-left">ลูกค้า</th>
+                                    <th class="py-2 px-4 border-b border-gray-300 text-left">พนักงานขาย</th>
+                                    <th class="py-2 px-4 border-b border-gray-300 text-right">ยอดรวม</th>
+                                    <th class="py-2 px-4 border-b border-gray-300 text-left">สถานะ</th>
+                                    <th class="py-2 px-4 border-b border-gray-300 text-center">จัดการ</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse($quotations as $quotation)
-                                <tr class="hover:bg-gray-200 dark:hover:bg-gray-600 border-b border-gray-200 dark:border-gray-700">
+                                <tr class="hover:bg-gray-200 border-b border-gray-200">
                                     <td class="py-2 px-4">{{ $quotation->quotation_number }}</td>
                                     <td class="py-2 px-4">{{ $quotation->issue_date ? $quotation->issue_date->format('d/m/Y') : '-' }}</td>
                                     <td class="py-2 px-4">{{ $quotation->customer->name ?? 'ไม่ระบุ' }}</td>
@@ -247,7 +247,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="6" class="py-4 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="6" class="py-4 text-center text-gray-500">
                                         <div class="flex flex-col items-center justify-center py-8">
                                             <svg class="h-12 w-12 text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
