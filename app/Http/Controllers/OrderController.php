@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Quotation;
+use App\Models\Company;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -437,7 +438,7 @@ class OrderController extends Controller
      */
     public function show(Order $order)
     {
-        $order->load(['customer', 'items.product', 'creator']);
+        $order->load(['customer', 'items.product', 'creator', 'deliveryOrders']);
         
         return view('orders.show', compact('order'));
     }
@@ -705,8 +706,9 @@ class OrderController extends Controller
             'processed_at' => now(),
         ]);
         
-        return redirect()->route('orders.show', $order)
-            ->with('success', 'อัพเดทสถานะเป็นกำลังดำเนินการสำเร็จ');
+        // เปลี่ยนเส้นทางการ redirect เป็นไปที่หน้าสร้างใบส่งสินค้า พร้อมส่ง ID ของ order ไปด้วย
+        return redirect()->route('delivery-orders.create', ['order_id' => $order->id])
+            ->with('success', 'อัพเดทสถานะเป็นกำลังดำเนินการสำเร็จ กรุณาสร้างใบส่งสินค้า');
     }
 
     /**
@@ -734,7 +736,7 @@ class OrderController extends Controller
         
         // กรณีไม่ต้องการ redirect ให้กลับไปหน้า order show แบบเดิม
         return redirect()->route('orders.show', $order)
-            ->with('success', 'อัพเดทสถานะเป็นจัดส่งแล้วสำเร็จ');
+            ->with('success', 'บันทึกการจัดส่งสินค้าเรียบร้อยแล้ว ระบบได้อัพเดทสถานะเป็นจัดส่งแล้ว');
     }
 
     /**
@@ -874,6 +876,7 @@ class OrderController extends Controller
                         'id' => $item->id,
                         'product_id' => $item->product_id,
                         'product_code' => $item->product ? $item->product->code ?? $item->product->sku ?? '' : '',
+                        'code' => $item->product ? $item->product->code ?? $item->product->sku ?? '' : '',
                         'description' => $item->description ?? '',
                         'quantity' => $item->quantity,
                         'unit_price' => $item->unit_price,
@@ -910,5 +913,34 @@ class OrderController extends Controller
             ]);
             return response()->json(['error' => 'เกิดข้อผิดพลาดในการดึงข้อมูล: ' . $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Show the print view for an order.
+     *
+     * @param  \App\Models\Order  $order
+     * @return \Illuminate\View\View
+     */
+    public function printView(Order $order)
+    {
+        // Ensure the user has access to this order
+        $currentCompanyId = session('current_company_id') ?? session('company_id');
+        
+        // Skip company check for Super Admin users
+        if (!auth()->user()->hasRole('Super Admin') && $order->company_id != $currentCompanyId) {
+            abort(403, 'Unauthorized access to order from a different company');
+        }
+        
+        // Load required relationships
+        $order->load(['customer', 'items.product.unit', 'items.unit']);
+        
+        // Load company data
+        try {
+            $company = Company::find($order->company_id);
+        } catch (\Exception $e) {
+            $company = null;
+        }
+        
+        return view('orders.print', compact('order', 'company'));
     }
 }

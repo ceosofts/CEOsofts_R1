@@ -75,14 +75,15 @@ class DeliveryOrderController extends Controller
         
         if ($orderId) {
             // เพิ่มการโหลดข้อมูลให้ครบถ้วนรวมถึง items.product และ items.unit
-            $order = Order::with(['customer', 'items.product', 'items.unit'])->find($orderId);
+            $order = Order::with(['customer', 'items.product.unit', 'items.unit'])->find($orderId);
             
             // บันทึก log เพื่อช่วยในการ debug
             if ($order) {
                 Log::info('ข้อมูลใบสั่งขายที่ดึงได้', [
                     'order_id' => $order->id,
                     'tracking_number' => $order->tracking_number,
-                    'shipping_notes' => $order->shipping_notes
+                    'shipping_notes' => $order->shipping_notes,
+                    'items_count' => $order->items->count()
                 ]);
             }
         }
@@ -115,6 +116,13 @@ class DeliveryOrderController extends Controller
      */
     public function store(Request $request)
     {
+        // บันทึก log เพื่อตรวจสอบข้อมูลที่ส่งมา
+        Log::info('DeliveryOrder store method called with data:', [
+            'request_data' => $request->all(),
+            'has_product_id' => $request->has('product_id'),
+            'product_id_count' => is_array($request->input('product_id')) ? count($request->input('product_id')) : 0
+        ]);
+        
         // ปรับการ validate ให้ตรงกับชื่อฟิลด์ในฐานข้อมูล
         $validated = $request->validate([
             'order_id' => 'required|exists:orders,id',
@@ -395,7 +403,13 @@ class DeliveryOrderController extends Controller
      */
     public function getOrderProducts($order_id)
     {
-        $order = Order::with(['customer', 'items.product'])->findOrFail($order_id);
+        $order = Order::with(['customer', 'items.product.unit', 'items.unit'])->findOrFail($order_id);
+        
+        // บันทึก log เพื่อตรวจสอบข้อมูล
+        Log::info('getOrderProducts API called', [
+            'order_id' => $order_id,
+            'items_count' => $order->items->count()
+        ]);
         
         return response()->json([
             'order' => [
@@ -416,16 +430,33 @@ class DeliveryOrderController extends Controller
                 'address' => $order->customer->address,
             ],
             'items' => $order->items->map(function($item) {
+                // ตรวจสอบและดึงข้อมูลหน่วย
+                $unitName = $item->unit_name ?? '';
+                if (!$unitName && $item->unit_id) {
+                    $unit = \App\Models\Unit::find($item->unit_id);
+                    $unitName = $unit ? $unit->name : '';
+                } elseif (!$unitName && $item->product && $item->product->unit_id) {
+                    $unit = $item->product->unit;
+                    $unitName = $unit ? $unit->name : '';
+                }
+                
                 return [
                     'id' => $item->id,
                     'product_id' => $item->product_id,
+                    'code' => $item->product ? $item->product->code ?? '' : '',
+                    'product_code' => $item->product ? $item->product->code ?? $item->product->sku ?? '' : '',
                     'description' => $item->description,
                     'quantity' => $item->quantity,
-                    'unit_name' => $item->unit_name,
-                    'sku' => $item->product ? $item->product->sku : null,  // แน่ใจว่าใช้ชื่อฟิลด์เดียวกับใน DB
+                    'unit_name' => $unitName,
+                    'unit_id' => $item->unit_id ?? ($item->product ? $item->product->unit_id : null),
+                    'sku' => $item->product ? $item->product->sku ?? '' : '',
                     'product' => $item->product ? [
                         'id' => $item->product->id,
-                        'sku' => $item->product->sku
+                        'name' => $item->product->name ?? '',
+                        'sku' => $item->product->sku ?? '',
+                        'code' => $item->product->code ?? '',
+                        'unit_id' => $item->product->unit_id ?? null,
+                        'unit_name' => $item->product->unit ? $item->product->unit->name : ''
                     ] : null
                 ];
             }),

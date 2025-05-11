@@ -150,6 +150,14 @@ class Order extends Model
     }
 
     /**
+     * Get the company associated with the order.
+     */
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    /**
      * Get the sales person associated with the order.
      */
     public function salesPerson()

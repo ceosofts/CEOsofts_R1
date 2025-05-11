@@ -4,7 +4,21 @@
             <h2 class="font-extrabold text-4xl text-blue-800 dark:text-blue-300">
                 {{ __('สร้างใบส่งสินค้า') }}
             </h2>
-            <a href="{{ route('delivery-orders.index') }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600">
+            <a href="{{ route('delivery-orders.index') }}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-                    // ดึงค่า SKU โดยใช้ชื่อฟิลด์ที่ถูกต้อง
+                    console.log(`Item ${index}:`, item);
+                    
+                    // ดึงค่า SKU/Code โดยใช้ชื่อฟิลด์ที่ถูกต้อง
+                    let sku = '-';
+                    if (item.product_code) {
+                        sku = item.product_code;
+                    } else if (item.code) {
+                        sku = item.code;
+                    } else if (item.product && item.product.code) {
+                        sku = item.product.code;
+                    } else if (item.product && item.product.sku) {
+                        sku = item.product.sku;
+                    }
+                    console.log(`Item ${index} final SKU:`, sku);g-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
@@ -33,8 +47,7 @@
                 </div>
             @endif
 
-            <!-- ส่วนของการเลือกใบสั่งขาย -->
-            <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6 rounded dark:bg-blue-900 dark:border-blue-700 dark:text-blue-200">
+            <!-- ส่วนของการเลือกใบสั่งขาย -->                <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6 rounded dark:bg-blue-900 dark:border-blue-700 dark:text-blue-200">
                 <div class="flex">
                     <div class="flex-shrink-0 text-blue-400 dark:text-blue-300">
                         <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
@@ -43,7 +56,8 @@
                     </div>
                     <div class="ml-3 w-full">
                         <p class="text-sm text-blue-800 mb-2 dark:text-blue-200">
-                            เลือกใบสั่งขายที่อนุมัติแล้วเพื่อสร้างใบส่งสินค้า
+                            กำลังสร้างใบส่งสินค้า - ขั้นตอนที่ 1 จาก 2 ในกระบวนการจัดส่ง<br>
+                            <span class="text-xs">หลังจากสร้างใบส่งสินค้าแล้ว คุณจะสามารถคลิกปุ่ม "จัดส่งสินค้า" ในหน้ารายละเอียดใบสั่งขาย เพื่อบันทึกข้อมูลการจัดส่งในขั้นตอนที่ 2</span>
                         </p>
                         <div class="flex flex-wrap gap-2">
                             <select id="order_id_selector" class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
@@ -227,19 +241,21 @@
                                         @if($selectedOrder && $selectedOrder->items->count())
                                             @foreach($selectedOrder->items as $index => $item)
                                                 <tr class="product-row hover:bg-gray-50 dark:hover:bg-gray-600">
+                                                    <input type="hidden" name="product_id[{{ $index }}]" value="{{ $item->product_id }}">
+                                                    <input type="hidden" name="order_item_id[{{ $index }}]" value="{{ $item->id }}">
                                                     <td class="py-2 px-4 border-b dark:border-gray-700 text-center">{{ $index + 1 }}</td>
-                                                    <td class="py-2 px-4 border-b dark:border-gray-700">{{ $item->product->sku ?? '-' }}</td>
+                                                    <td class="py-2 px-4 border-b dark:border-gray-700">{{ $item->product->code ?? $item->product->sku ?? '-' }}</td>
                                                     <td class="py-2 px-4 border-b dark:border-gray-700">
                                                         <input type="text" name="description[{{ $index }}]" class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" value="{{ $item->description }}" required>
                                                     </td>
                                                     <td class="py-2 px-4 border-b dark:border-gray-700 text-center bg-gray-50 dark:bg-gray-800">
-                                                        {{ $item->quantity }} {{ $item->unit_name ?? '' }}
+                                                        {{ $item->quantity }} {{ $item->unit_name ?? ($item->unit ? $item->unit->name : '') }}
                                                     </td>
                                                     <td class="py-2 px-4 border-b dark:border-gray-700 text-center">
                                                         <input type="number" name="quantity[{{ $index }}]" class="quantity w-full text-center border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" min="0.01" step="any" value="{{ $item->quantity }}" required>
                                                     </td>
                                                     <td class="py-2 px-4 border-b dark:border-gray-700 text-right">
-                                                        <input type="text" name="unit[{{ $index }}]" class="w-full text-right border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" value="{{ $item->unit_name ?? '' }}" required>
+                                                        <input type="text" name="unit[{{ $index }}]" class="w-full text-right border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" value="{{ $item->unit_name ?? ($item->unit ? $item->unit->name : '') }}" required>
                                                     </td>
                                                     <td class="py-2 px-4 border-b dark:border-gray-700 text-center">
                                                         <select name="status[{{ $index }}]" class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
@@ -490,32 +506,34 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     const newRow = document.createElement('tr');
                     newRow.classList.add('product-row');
+                    newRow.classList.add('hover:bg-gray-50');
+                    newRow.classList.add('dark:hover:bg-gray-600');
                     newRow.innerHTML = `
                         <input type="hidden" name="product_id[${index}]" value="${item.product_id}">
                         <input type="hidden" name="order_item_id[${index}]" value="${item.id}">
                         
-                        <td class="py-2 px-4 border-b text-center">${index + 1}</td>
-                        <td class="py-2 px-4 border-b text-left">${sku}</td>
-                        <td class="py-2 px-4 border-b">
+                        <td class="py-2 px-4 border-b dark:border-gray-700 text-center">${index + 1}</td>
+                        <td class="py-2 px-4 border-b dark:border-gray-700 text-left">${sku}</td>
+                        <td class="py-2 px-4 border-b dark:border-gray-700">
                             <input type="text" name="description[${index}]" class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" value="${item.description || ''}" required>
                         </td>
-                        <td class="py-2 px-4 border-b text-center bg-gray-50 dark:bg-gray-800">
+                        <td class="py-2 px-4 border-b dark:border-gray-700 text-center bg-gray-50 dark:bg-gray-800">
                             ${item.quantity} ${item.unit_name || ''}
                         </td>
-                        <td class="py-2 px-4 border-b text-center">
+                        <td class="py-2 px-4 border-b dark:border-gray-700 text-center">
                             <input type="number" name="quantity[${index}]" class="quantity w-full text-center border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" min="0.01" step="any" value="${item.quantity}" required>
                         </td>
-                        <td class="py-2 px-4 border-b text-right">
+                        <td class="py-2 px-4 border-b dark:border-gray-700 text-right">
                             <input type="text" name="unit[${index}]" class="w-full text-right border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" value="${item.unit_name || ''}" required>
                         </td>
-                        <td class="py-2 px-4 border-b text-center">
+                        <td class="py-2 px-4 border-b dark:border-gray-700 text-center">
                             <select name="status[${index}]" class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                 <option value="pending">รอดำเนินการ</option>
                                 <option value="delivered">ส่งมอบแล้ว</option>
                                 <option value="partial">ส่งมอบบางส่วน</option>
                             </select>
                         </td>
-                        <td class="py-2 px-4 border-b">
+                        <td class="py-2 px-4 border-b dark:border-gray-700">
                             <input type="text" name="item_notes[${index}]" class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                         </td>
                     `;
@@ -539,42 +557,53 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function addProductItems(items) {
         items.forEach((item, index) => {
-            // ดึงค่า SKU อย่างปลอดภัยเช่นกันในฟังก์ชันนี้
-            const sku = item.sku || (item.product && item.product.sku) || '-';
+            // ดึงค่า SKU อย่างปลอดภัย
+            let sku = '-';
+            if (item.product_code) {
+                sku = item.product_code;
+            } else if (item.code) {
+                sku = item.code;
+            } else if (item.product && item.product.code) {
+                sku = item.product.code;
+            } else if (item.product && item.product.sku) {
+                sku = item.product.sku;
+            }
             
             const newRow = document.createElement('tr');
             newRow.classList.add('product-row');
+            newRow.classList.add('hover:bg-gray-50');
+            newRow.classList.add('dark:hover:bg-gray-600');
             newRow.innerHTML = `
                 <input type="hidden" name="product_id[${index}]" value="${item.product_id}">
                 <input type="hidden" name="order_item_id[${index}]" value="${item.id}">
                 
-                <td class="py-2 px-4 border-b text-center">
+                <td class="py-2 px-4 border-b dark:border-gray-700 text-center">
                     ${index + 1}
                 </td>
-                <td class="py-2 px-4 border-b text-left">
+                <td class="py-2 px-4 border-b dark:border-gray-700 text-left">
                     ${sku}
                 </td>
-                <td class="py-2 px-4 border-b">
-                    <input type="text" name="description[${index}]" class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" value="${item.description || ''}" required>
+                <td class="py-2 px-4 border-b dark:border-gray-700">
+                    <input type="text" name="description[${index}]" class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" value="${item.description || ''}" required>
                 </td>
-                <td class="py-2 px-4 border-b text-center bg-gray-50 dark:bg-gray-800">
+                <td class="py-2 px-4 border-b dark:border-gray-700 text-center bg-gray-50 dark:bg-gray-800">
                     ${item.quantity} ${item.unit_name || ''}
                 </td>
-                <td class="py-2 px-4 border-b text-center">
-                    <input type="number" name="quantity[${index}]" class="quantity w-full text-center border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" min="0.01" step="any" value="${item.quantity}" required>
+                <td class="py-2 px-4 border-b dark:border-gray-700 text-center">
+                    <input type="number" name="quantity[${index}]" class="quantity w-full text-center border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" min="0.01" step="any" value="${item.quantity}" required>
                 </td>
-                <td class="py-2 px-4 border-b text-right">
-                    <input type="text" name="unit[${index}]" class="w-full text-right border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" value="${item.unit_name || ''}" required>
+                <td class="py-2 px-4 border-b dark:border-gray-700 text-right">
+                    <input type="text" name="unit[${index}]" class="w-full text-right border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" value="${item.unit_name || ''}" required>
                 </td>
-                <td class="py-2 px-4 border-b text-center">
-                    <select name="status[${index}]" class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                <td class="py-2 px-4 border-b dark:border-gray-700 text-center">
+                    <select name="status[${index}]" class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                         <option value="pending">รอดำเนินการ</option>
                         <option value="delivered">ส่งมอบแล้ว</option>
                         <option value="partial">ส่งมอบบางส่วน</option>
                     </select>
                 </td>
-                <td class="py-2 px-4 border-b">
-                    <input type="text" name="item_notes[${index}]" class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                <td class="py-2 px-4 border-b dark:border-gray-700">
+                    <input type="text" name="item_notes[${index}]" class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                 </td>
             `;
             productsList.appendChild(newRow);
@@ -640,8 +669,14 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // ตรวจสอบว่ามีข้อมูล product_id และ quantity
         let hasProduct = false;
-        document.querySelectorAll('input[name^="product_id["]').forEach(function(input) {
-            hasProduct = true;
+        const productIdInputs = document.querySelectorAll('input[name^="product_id["]');
+        console.log('Product ID inputs found:', productIdInputs.length);
+        
+        productIdInputs.forEach(function(input) {
+            console.log('Product ID value:', input.value);
+            if (input.value) {
+                hasProduct = true;
+            }
         });
         
         if (!hasProduct) {

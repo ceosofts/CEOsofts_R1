@@ -13,22 +13,13 @@
                     {{ __('กลับไปรายการ') }}
                 </a>
                 
-                <!-- ปุ่ม Preview -->
-                <button id="preview-button" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    <svg class="-ml-1 mr-2 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                    {{ __('ดูตัวอย่าง') }}
-                </button>
-                
                 <!-- ปุ่ม Print -->
-                <button id="print-button" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <a href="{{ route('orders.print', $order) }}" target="_blank" onclick="return openPrintWindow(event)" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                     <svg class="-ml-1 mr-2 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                     </svg>
                     {{ __('พิมพ์') }}
-                </button>
+                </a>
                 
                 {{-- ปุ่มแก้ไข --}}
                 @if(!in_array($order->status, ['shipped', 'delivered', 'cancelled']))
@@ -112,6 +103,7 @@
                             @endif
                             
                             @if(in_array($order->status, ['confirmed', 'processing']))
+                                @if($order->deliveryOrders()->count() > 0)
                                 <button type="button" onclick="showShipModal()" class="inline-flex items-center px-4 py-2 bg-purple-600 border border-transparent rounded-md font-semibold text-xs text-white tracking-widest hover:bg-purple-700">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -119,6 +111,15 @@
                                     </svg>
                                     จัดส่งสินค้า
                                 </button>
+                                @else
+                                <a href="{{ route('delivery-orders.create', ['order_id' => $order->id]) }}" class="inline-flex items-center px-4 py-2 bg-purple-600 border border-transparent rounded-md font-semibold text-xs text-white tracking-widest hover:bg-purple-700">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+                                    </svg>
+                                    สร้างใบส่งสินค้า
+                                </a>
+                                @endif
                             @endif
                             
                             @if($order->status == 'shipped')
@@ -461,13 +462,159 @@
                     </div>
                 </div>
             </div>
+
+            <!-- เพิ่มส่วนแสดงใบส่งสินค้าที่เกี่ยวข้อง -->
+            @if($order->deliveryOrders->count() > 0)
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mt-6">
+                <div class="p-6 text-gray-900 dark:text-gray-100">
+                    <h3 class="text-lg font-medium mb-4">ใบส่งสินค้าที่เกี่ยวข้อง</h3>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead>
+                                <tr>
+                                    <th class="px-6 py-3 bg-gray-50 dark:bg-gray-700 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">เลขที่ใบส่งสินค้า</th>
+                                    <th class="px-6 py-3 bg-gray-50 dark:bg-gray-700 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">วันที่</th>
+                                    <th class="px-6 py-3 bg-gray-50 dark:bg-gray-700 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">สถานะ</th>
+                                    <th class="px-6 py-3 bg-gray-50 dark:bg-gray-700 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">เลขพัสดุ</th>
+                                    <th class="px-6 py-3 bg-gray-50 dark:bg-gray-700 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ดำเนินการ</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                @foreach($order->deliveryOrders as $deliveryOrder)
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">{{ $deliveryOrder->delivery_number }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $deliveryOrder->delivery_date ? $deliveryOrder->delivery_date->format('d/m/Y') : '-' }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                        @if($deliveryOrder->delivery_status === 'pending')
+                                            <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200">รอดำเนินการ</span>
+                                        @elseif($deliveryOrder->delivery_status === 'processing')
+                                            <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-200">กำลังดำเนินการ</span>
+                                        @elseif($deliveryOrder->delivery_status === 'shipped')
+                                            <span class="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-200">จัดส่งแล้ว</span>
+                                        @elseif($deliveryOrder->delivery_status === 'delivered')
+                                            <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200">ส่งมอบแล้ว</span>
+                                        @elseif($deliveryOrder->delivery_status === 'cancelled')
+                                            <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-200">ยกเลิก</span>
+                                        @else
+                                            <span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">{{ $deliveryOrder->delivery_status }}</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $deliveryOrder->tracking_number ?: '-' }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <a href="{{ route('delivery-orders.show', $deliveryOrder) }}" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-200">รายละเอียด</a>
+                                        <a href="{{ route('delivery-orders.print', $deliveryOrder) }}" target="_blank" class="ml-3 text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-200">พิมพ์</a>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            @endif
+            
+            <!-- ประวัติสถานะของใบสั่งขาย -->
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
+                <div class="p-6 text-gray-900 dark:text-gray-100">
+                    <h3 class="text-lg font-semibold mb-3">ประวัติสถานะของใบสั่งขาย</h3>
+                    <div class="overflow-hidden">
+                        <div class="border-l-4 border-gray-200 dark:border-gray-700 ml-3 pl-8 relative">
+                            <!-- สถานะร่าง -->
+                            <div class="mb-8 relative">
+                                <span class="w-4 h-4 bg-gray-300 rounded-full absolute -left-10 top-0"></span>
+                                <div class="text-sm">
+                                    <p class="font-semibold">สถานะใบสั่งขาย</p>
+                                    <p class="text-gray-600 dark:text-gray-400">{{ $order->created_at->format('d/m/Y H:i') }}</p>
+                                    <p class="text-gray-600 dark:text-gray-400">โดย: {{ $order->creator->name ?? 'ไม่ระบุ' }}</p>
+                                </div>
+                            </div>
+
+                            <!-- ยืนยันใบสั่งขาย -->
+                            @if($order->confirmed_at)
+                                <div class="mb-8 relative">
+                                    <span class="w-4 h-4 bg-blue-500 rounded-full absolute -left-10 top-0"></span>
+                                    <div class="text-sm">
+                                        <p class="font-semibold">ยืนยันใบสั่งขาย</p>
+                                        <p class="text-gray-600 dark:text-gray-400">{{ $order->confirmed_at->format('d/m/Y H:i') }}</p>
+                                        <p class="text-gray-600 dark:text-gray-400">โดย: {{ $order->confirmedBy->name ?? 'ไม่ระบุ' }}</p>
+                                    </div>
+                                </div>
+                            @endif
+
+                            <!-- กำลังดำเนินการ -->
+                            @if($order->processed_at)
+                                <div class="mb-8 relative">
+                                    <span class="w-4 h-4 bg-yellow-500 rounded-full absolute -left-10 top-0"></span>
+                                    <div class="text-sm">
+                                        <p class="font-semibold">กำลังดำเนินการ</p>
+                                        <p class="text-gray-600 dark:text-gray-400">{{ $order->processed_at->format('d/m/Y H:i') }}</p>
+                                        <p class="text-gray-600 dark:text-gray-400">โดย: {{ $order->processedBy->name ?? 'ไม่ระบุ' }}</p>
+                                    </div>
+                                </div>
+                            @endif
+
+                            <!-- จัดส่งสินค้า -->
+                            @if($order->shipped_at)
+                                <div class="mb-8 relative">
+                                    <span class="w-4 h-4 bg-purple-500 rounded-full absolute -left-10 top-0"></span>
+                                    <div class="text-sm">
+                                        <p class="font-semibold">จัดส่งสินค้า</p>
+                                        <p class="text-gray-600 dark:text-gray-400">{{ $order->shipped_at->format('d/m/Y H:i') }}</p>
+                                        <p class="text-gray-600 dark:text-gray-400">โดย: {{ $order->shippedBy->name ?? 'ไม่ระบุ' }}</p>
+                                        @if($order->tracking_number)
+                                            <p class="text-gray-600 dark:text-gray-400">เลขพัสดุ: {{ $order->tracking_number }}</p>
+                                        @endif
+                                        @if($order->shipping_notes)
+                                            <p class="text-gray-600 dark:text-gray-400">หมายเหตุการจัดส่ง: {{ $order->shipping_notes }}</p>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endif
+
+                            <!-- ส่งมอบสินค้า -->
+                            @if($order->delivered_at)
+                                <div class="mb-8 relative">
+                                    <span class="w-4 h-4 bg-green-500 rounded-full absolute -left-10 top-0"></span>
+                                    <div class="text-sm">
+                                        <p class="font-semibold">ส่งมอบเรียบร้อย</p>
+                                        <p class="text-gray-600 dark:text-gray-400">{{ $order->delivered_at->format('d/m/Y H:i') }}</p>
+                                        <p class="text-gray-600 dark:text-gray-400">โดย: {{ $order->deliveredBy->name ?? 'ไม่ระบุ' }}</p>
+                                    </div>
+                                </div>
+                            @endif
+
+                            <!-- ยกเลิกใบสั่งขาย -->
+                            @if($order->cancelled_at)
+                                <div class="mb-8 relative">
+                                    <span class="w-4 h-4 bg-red-500 rounded-full absolute -left-10 top-0"></span>
+                                    <div class="text-sm">
+                                        <p class="font-semibold">ยกเลิกใบสั่งขาย</p>
+                                        <p class="text-gray-600 dark:text-gray-400">{{ $order->cancelled_at->format('d/m/Y H:i') }}</p>
+                                        <p class="text-gray-600 dark:text-gray-400">โดย: {{ $order->cancelledBy->name ?? 'ไม่ระบุ' }}</p>
+                                        @if($order->cancellation_reason)
+                                            <p class="text-gray-600 dark:text-gray-400">สาเหตุการยกเลิก: {{ $order->cancellation_reason }}</p>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Modal จัดส่งสินค้า -->
     <div id="shipModal" class="modal-hidden">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md">
-            <h3 class="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">จัดส่งสินค้า</h3>
+            <h3 class="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">จัดส่งสินค้า - ขั้นตอนที่ 2</h3>
+            
+            <div class="mb-4 bg-blue-50 border-l-4 border-blue-400 p-3 rounded dark:bg-blue-900 dark:border-blue-700 dark:text-blue-200">
+                <div class="text-sm text-blue-800 dark:text-blue-200">
+                    <strong>ใบส่งสินค้าถูกสร้างแล้ว</strong> - ตอนนี้คุณสามารถบันทึกข้อมูลการจัดส่งได้
+                </div>
+            </div>
             
             <form action="{{ route('orders.ship', $order) }}" method="POST" id="shipForm">
                 @csrf
@@ -527,14 +674,10 @@
         </div>
     </div>
 
-    <!-- เรียกใช้ไฟล์ประกอบ แทนการมีโค้ดทั้งหมดในไฟล์เดียวกัน -->
-    @include('orders.preview')
-    @include('orders.pdf-view')
-
     <!-- เพิ่มหรือแก้ไข CSS เพื่อให้แน่ใจว่า modal แสดงผลได้อย่างถูกต้อง -->
     <style>
         /* ปรับแต่งการแสดงผล Modal */
-        #preview-modal, #shipModal, #cancelModal {
+        #shipModal, #cancelModal {
             position: fixed;
             top: 0;
             right: 0;
@@ -548,29 +691,12 @@
             padding: 1rem;
         }
         
-        #preview-modal.modal-hidden, #shipModal.modal-hidden, #cancelModal.modal-hidden {
+        #shipModal.modal-hidden, #cancelModal.modal-hidden {
             display: none;
         }
         
-        .modal-content {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            width: 90%;
-            max-width: 900px;
-            max-height: 85vh;
-            overflow-y: auto;
-        }
-        
-        #preview-content {
-            padding: 25px 40px;
-            background-color: white;
-            margin: 0 auto;
-        }
-        
         @media (prefers-color-scheme: dark) {
-            .modal-content {
+            .bg-white {
                 background-color: #1f2937;
                 color: #f3f4f6;
             }
@@ -611,191 +737,20 @@
             const shipForm = document.getElementById('shipForm');
             if (shipForm) {
                 shipForm.addEventListener('submit', function(e) {
-                    // ถ้า checkbox redirect_to_delivery ถูกติ๊ก
-                    if (document.getElementById('redirect_to_delivery').checked) {
-                        // เปลี่ยนเป็นไม่ต้อง prevent default เพื่อส่งฟอร์มตามปกติ
-                        // และให้ Controller จัดการการ redirect
-                    } else {
-                        // ถ้าไม่ต้องการ redirect ให้ใส่ input hidden เพื่อบอก controller
-                        const noRedirectInput = document.createElement('input');
-                        noRedirectInput.type = 'hidden';
-                        noRedirectInput.name = 'no_redirect';
-                        noRedirectInput.value = '1';
-                        shipForm.appendChild(noRedirectInput);
-                    }
+                    // ใส่ input hidden เพื่อบอก controller
+                    const noRedirectInput = document.createElement('input');
+                    noRedirectInput.type = 'hidden';
+                    noRedirectInput.name = 'no_redirect';
+                    noRedirectInput.value = '1';
+                    shipForm.appendChild(noRedirectInput);
                 });
             }
             
-            // ควบคุมปุ่ม "ดูตัวอย่าง" (Preview)
-            const previewButton = document.getElementById('preview-button');
-            const previewModal = document.getElementById('preview-modal');
-            const closePreview = document.getElementById('close-preview');
-            
-            if (previewButton) {
-                previewButton.addEventListener('click', function() {
-                    previewModal.classList.remove('modal-hidden');
-                });
-            }
-            
-            if (closePreview) {
-                closePreview.addEventListener('click', function() {
-                    previewModal.classList.add('modal-hidden');
-                });
-            }
-            
-            // ปุ่ม "พิมพ์" (Print) - แก้ไขวิธีการพิมพ์
-            const printButton = document.getElementById('print-button');
-            if (printButton) {
-                // ลบ event listener เดิมทั้งหมดก่อน (ป้องกันซ้ำซ้อน)
-                printButton.replaceWith(printButton.cloneNode(true));
-                const newPrintButton = document.getElementById('print-button');
-                newPrintButton.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    
-                    // สร้างหน้าต่างใหม่สำหรับพิมพ์
-                    const printWindow = window.open('', '_blank', 'width=800,height=600');
-                    const printContent = document.getElementById('preview-content').cloneNode(true);
-                    
-                    // สร้าง HTML สำหรับการพิมพ์
-                    printWindow.document.write(`
-                        <!DOCTYPE html>
-                        <html>
-                        <head>
-                            <title>ใบสั่งขายเลขที่ {{ $order->order_number }}</title>
-                            <meta charset="utf-8">
-                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                            <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
-                            <style>
-                                @page {
-                                    size: A4;
-                                    margin: 10mm;
-                                }
-                                body {
-                                    font-family: 'Sarabun', sans-serif;
-                                    margin: 0;
-                                    padding: 15px;
-                                    font-size: 12pt;
-                                    line-height: 1.3;
-                                }
-                                .container {
-                                    width: 100%;
-                                    max-width: 210mm;
-                                    margin: 0 auto;
-                                    padding: 0;
-                                }
-                                .grid-cols-2 {
-                                    display: flex;
-                                    justify-content: space-between;
-                                    width: 100%;
-                                    margin-bottom: 15px;
-                                }
-                                .grid-cols-2 > div {
-                                    width: 48%;
-                                }
-                                .text-right {
-                                    text-align: right;
-                                }
-                                .text-center {
-                                    text-align: center;
-                                }
-                                .font-bold {
-                                    font-weight: bold;
-                                }
-                                .mb-6 {
-                                    margin-bottom: 15px;
-                                }
-                                .border-b-2 {
-                                    border-bottom: 2px solid #000;
-                                    margin-bottom: 15px;
-                                    padding-bottom: 5px;
-                                }
-                                table {
-                                    width: 100%;
-                                    border-collapse: collapse;
-                                }
-                                th, td {
-                                    border: 1px solid #ddd;
-                                    padding: 6px 8px;
-                                    font-size: 10pt;
-                                }
-                                th {
-                                    background-color: #f0f0f0;
-                                    font-weight: bold;
-                                    text-align: left;
-                                }
-                                .mt-12 {
-                                    margin-top: 30px;
-                                }
-                                .w-48 {
-                                    width: 48mm;
-                                }
-                                .border-t {
-                                    border-top: 1px solid #ddd;
-                                }
-                                .pt-2 {
-                                    padding-top: 5px;
-                                }
-                                .inline-block {
-                                    display: inline-block;
-                                }
-                                h1 { font-size: 14pt; margin-bottom: 5px; }
-                                h2 { font-size: 12pt; margin-bottom: 5px; }
-                                p { margin: 1px 0; }
-                                
-                                /* แก้ไข CSS สำหรับส่วนของยอดรวม */
-                                .flex.justify-end {
-                                    display: flex;
-                                    justify-content: flex-end;
-                                    width: 100%;
-                                }
-                                .flex.justify-end > div {
-                                    width: 40%;  /* ปรับขนาดให้เหมาะสม */
-                                }
-                                .flex.justify-between {
-                                    display: flex;
-                                    justify-content: space-between;
-                                    width: 100%;
-                                    border-bottom: 1px solid #ddd;
-                                    padding: 5px 0;
-                                }
-                                .font-bold {
-                                    font-weight: bold;
-                                }
-                            </style>
-                        </head>
-                        <body>
-                            <div class="container">
-                                ${printContent.outerHTML}
-                            </div>
-                            <script>
-                                // พิมพ์อัตโนมัติเมื่อโหลดเสร็จ
-                                window.onload = function() {
-                                    setTimeout(function() {
-                                        window.print();
-                                        setTimeout(function() { window.close(); }, 500);
-                                    }, 500);
-                                };
-                            <\/script>
-                        </body>
-                        </html>
-                    `);
-                    
-                    printWindow.document.close();
-                });
-            }
-
             // ซ่อน modal เมื่อกดปุ่ม Escape หรือคลิกพื้นหลัง
             document.addEventListener('keydown', function(event) {
                 if (event.key === 'Escape') {
-                    previewModal?.classList.add('modal-hidden');
                     document.getElementById('shipModal')?.classList.add('modal-hidden');
                     document.getElementById('cancelModal')?.classList.add('modal-hidden');
-                }
-            });
-            
-            previewModal?.addEventListener('click', function(event) {
-                if (event.target === previewModal) {
-                    previewModal.classList.add('modal-hidden');
                 }
             });
             
@@ -811,9 +766,16 @@
                 }
             });
         });
+        
+        // Function to handle print window opening
+        function openPrintWindow(event) {
+            // ถ้ากดที่ icon ให้ไปหา element a ที่เป็น parent
+            var target = event.target.closest('a');
+            if (!target) return true;
+            
+            // เปิดในแท็บใหม่ปกติด้วย _blank
+            // ไม่ต้องป้องกัน popup blocker แล้วเพราะเป็นแท็บปกติ ไม่ใช่หน้าต่างป๊อปอัพ
+            return true; // ให้ทำงานปกติตาม target="_blank"
+        }
     </script>
-
-    <!-- เรียกใช้ไฟล์ประกอบ แทนการมีโค้ดทั้งหมดในไฟล์เดียวกัน -->
-    @include('orders.preview')
-    @include('orders.pdf-view')
 </x-app-layout>
